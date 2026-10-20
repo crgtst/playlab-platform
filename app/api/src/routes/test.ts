@@ -7,6 +7,7 @@ import { createUser, FIXTURES } from '../db/seed/fixtures';
 import { clock } from '../lib/clock';
 import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
 import { resetRateLimits } from '../middleware/rateLimit';
+import { faults } from '../middleware/testFaults';
 import { asyncHandler, parse } from '../middleware/validate';
 
 /** Only mounted when TEST_HOOKS=true. Otherwise every /test/* path is a 404. */
@@ -15,7 +16,15 @@ export const testRouter = Router();
 testRouter.get('/', (_req, res) => {
   res.json({
     testHooks: true,
-    hooks: ['POST /test/reset', 'POST /test/seed', 'POST /test/users', 'GET /test/mailbox/{email}', 'GET|POST /test/clock'],
+    hooks: [
+      'POST /test/reset',
+      'POST /test/seed',
+      'POST /test/users',
+      'GET /test/mailbox/{email}',
+      'GET|POST /test/clock',
+      'GET|POST|DELETE /test/latency',
+      'GET|POST|DELETE /test/chaos',
+    ],
     fixtures: Object.keys(FIXTURES),
   });
 });
@@ -25,6 +34,7 @@ testRouter.post(
   asyncHandler(async (_req: Request, res: Response) => {
     const started = Date.now();
     clock.reset();
+    faults.clearAll();
     await resetDatabase();
     resetRateLimits();
     res.json({ status: 'reset', durationMs: Date.now() - started });
@@ -122,4 +132,61 @@ testRouter.post('/clock', (req: Request, res: Response) => {
   else if (body.advanceMs !== undefined) clock.setOffset(clock.state().offsetMs + body.advanceMs);
   else clock.reset();
   res.json(clock.state());
+});
+
+const methodSchema = z
+  .string()
+  .trim()
+  .transform((m) => m.toUpperCase())
+  .refine((m) => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(m), 'Use GET, POST, PUT, PATCH or DELETE')
+  .optional();
+const pathSchema = z
+  .string({ required_error: 'path is required, e.g. /api/v1/products*' })
+  .trim()
+  .refine((p) => p.startsWith('/'), 'path must start with /')
+  .refine((p) => !p.startsWith('/test'), 'Test hooks cannot be slowed down or failed');
+
+const latencySchema = z.object({
+  path: pathSchema,
+  method: methodSchema,
+  delayMs: z.number({ required_error: 'delayMs is required' }).int().min(1).max(60_000),
+});
+
+const chaosSchema = z
+  .object({
+    path: pathSchema,
+    method: methodSchema,
+    failureRate: z.number().min(0).max(1).optional(),
+    failNext: z.number().int().min(1).max(1000).optional(),
+    status: z.number().int().min(400).max(599).default(500),
+  })
+  .refine((v) => (v.failureRate === undefined) !== (v.failNext === undefined), {
+    message: 'Send exactly one of failureRate (0-1) or failNext (a count)',
+  });
+
+testRouter.get('/latency', (_req, res) => res.json({ data: faults.latency() }));
+testRouter.post('/latency', (req: Request, res: Response) => {
+  const body = parse(latencySchema, req.body ?? {});
+  res.status(201).json({ data: faults.addLatency({ path: body.path, method: body.method ?? null, delayMs: body.delayMs }) });
+});
+testRouter.delete('/latency', (_req, res) => {
+  faults.clearLatency();
+  res.status(204).end();
+});
+
+testRouter.get('/chaos', (_req, res) => res.json({ data: faults.chaos() }));
+testRouter.post('/chaos', (req: Request, res: Response) => {
+  const body = parse(chaosSchema, req.body ?? {});
+  const rule = faults.addChaos({
+    path: body.path,
+    method: body.method ?? null,
+    failureRate: body.failureRate ?? 0,
+    failNext: body.failNext ?? null,
+    status: body.status,
+  });
+  res.status(201).json({ data: rule });
+});
+testRouter.delete('/chaos', (_req, res) => {
+  faults.clearChaos();
+  res.status(204).end();
 });

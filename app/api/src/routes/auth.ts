@@ -11,6 +11,7 @@ import { CART_COOKIE, REFRESH_COOKIE, requireAuth, SESSION_COOKIE } from '../mid
 import { noStore } from '../middleware/noStore';
 import { asyncHandler, parse } from '../middleware/validate';
 import { mergeGuestCart } from '../services/cart';
+import { avatarUrl } from './users';
 
 export const authRouter = Router();
 authRouter.use(noStore);
@@ -25,7 +26,10 @@ interface UserRow {
   failed_logins: number;
   locked_until: Date | null;
   created_at: Date;
+  avatar_updated_at?: Date | null;
 }
+
+const SELECT_USER = 'SELECT u.*, a.updated_at AS avatar_updated_at FROM users u LEFT JOIN avatars a ON a.user_id = u.id';
 
 export function publicUser(u: UserRow) {
   return {
@@ -34,6 +38,7 @@ export function publicUser(u: UserRow) {
     name: u.name,
     role: u.role,
     emailVerified: u.email_verified,
+    avatarUrl: avatarUrl(u.id, u.avatar_updated_at),
     createdAt: u.created_at,
   };
 }
@@ -142,7 +147,7 @@ authRouter.post(
   '/login',
   asyncHandler(async (req: Request, res: Response) => {
     const body = parse(loginSchema, req.body);
-    const rows = await query<UserRow>('SELECT * FROM users WHERE email = $1', [body.email]);
+    const rows = await query<UserRow>(`${SELECT_USER} WHERE u.email = $1`, [body.email]);
     const user = rows[0];
     const badCredentials = new ApiError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect');
     if (!user) throw badCredentials;
@@ -220,7 +225,7 @@ authRouter.get(
   '/me',
   requireAuth,
   asyncHandler(async (req: Request, res: Response) => {
-    const rows = await query<UserRow>('SELECT * FROM users WHERE id = $1', [req.user!.id]);
+    const rows = await query<UserRow>(`${SELECT_USER} WHERE u.id = $1`, [req.user!.id]);
     if (!rows[0]) throw unauthorized();
     res.json({ user: publicUser(rows[0]) });
   }),

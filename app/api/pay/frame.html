@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PlayLab Pay</title>
+    <style>
+      :root { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #1d1d1b; line-height: 1.5; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 16px; background: #ffffff; }
+      .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.9rem; color: #5c5c57; }
+      .brand strong { color: #3a2f8f; }
+      .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      label { font-weight: 600; }
+      input { font: inherit; padding: 8px 10px; border: 1px solid #d6d6d0; border-radius: 6px; width: 100%; }
+      input[aria-invalid='true'] { border-color: #a3221b; }
+      input:focus-visible, button:focus-visible { outline: 3px solid #f2b705; outline-offset: 2px; }
+      .error { color: #a3221b; font-size: 0.9rem; margin: 2px 0 0; }
+      .alert { background: #fdecea; color: #a3221b; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; }
+      .success { background: #e6f4ea; color: #1d6b2f; padding: 8px 12px; border-radius: 6px; }
+      button { font: inherit; width: 100%; padding: 10px 16px; border-radius: 6px; border: 1px solid #3a2f8f; background: #3a2f8f; color: #fff; cursor: pointer; }
+      button:disabled { opacity: 0.55; cursor: not-allowed; }
+      .muted { color: #5c5c57; font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <strong>PlayLab Pay</strong>
+        <span>Secure test payment · <span data-testid="frame-amount" id="amount">…</span></span>
+      </div>
+      <div id="status" role="alert" class="alert" data-testid="frame-error" hidden></div>
+      <form id="form" novalidate data-testid="frame-form" aria-label="Card details">
+        <div class="field">
+          <label for="nameOnCard">Name on card</label>
+          <input id="nameOnCard" name="nameOnCard" autocomplete="cc-name" data-testid="frame-card-name" aria-describedby="nameOnCard-error" />
+          <p class="error" id="nameOnCard-error" data-testid="frame-card-name-error"></p>
+        </div>
+        <div class="field">
+          <label for="cardNumber">Card number</label>
+          <input id="cardNumber" name="cardNumber" inputmode="numeric" autocomplete="cc-number" data-testid="frame-card-number" aria-describedby="cardNumber-error" />
+          <p class="error" id="cardNumber-error" data-testid="frame-card-number-error"></p>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="expiry">Expiry (MM/YY)</label>
+            <input id="expiry" name="expiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/YY" data-testid="frame-card-expiry" aria-describedby="expiry-error" />
+            <p class="error" id="expiry-error" data-testid="frame-card-expiry-error"></p>
+          </div>
+          <div class="field">
+            <label for="cvc">Security code</label>
+            <input id="cvc" name="cvc" inputmode="numeric" autocomplete="cc-csc" data-testid="frame-card-cvc" aria-describedby="cvc-error" />
+            <p class="error" id="cvc-error" data-testid="frame-card-cvc-error"></p>
+          </div>
+        </div>
+        <button type="submit" id="pay" data-testid="frame-pay-button">Pay</button>
+        <p class="muted" id="processing" role="status" data-testid="frame-processing" hidden>Processing your payment…</p>
+      </form>
+      <p class="success" id="done" role="status" data-testid="frame-success" hidden>Payment approved.</p>
+    </main>
+    <script>
+      (function () {
+        var SHOP_ORIGINS = __SHOP_ORIGINS__;
+        var params = new URLSearchParams(location.search);
+        var intentId = params.get('intent');
+        var secret = params.get('secret');
+        var form = document.getElementById('form');
+        var payButton = document.getElementById('pay');
+        var statusBox = document.getElementById('status');
+        var processing = document.getElementById('processing');
+        var amountCents = null;
+        var fields = ['nameOnCard', 'cardNumber', 'expiry', 'cvc'];
+
+        // Only ever post results to the shop that embedded us.
+        var parentOrigin = SHOP_ORIGINS[0];
+        try {
+          var ref = document.referrer ? new URL(document.referrer).origin : null;
+          if (ref && SHOP_ORIGINS.indexOf(ref) !== -1) parentOrigin = ref;
+        } catch (e) {}
+
+        function notify(message) {
+          message.type = 'playlab-payment';
+          message.intentId = intentId;
+          if (window.parent !== window) window.parent.postMessage(message, parentOrigin);
+        }
+
+        function euro(cents) {
+          return new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+        }
+
+        function showStatus(text) {
+          statusBox.textContent = text;
+          statusBox.hidden = !text;
+        }
+
+        function setError(name, text) {
+          var input = document.getElementById(name);
+          document.getElementById(name + '-error').textContent = text || '';
+          if (text) input.setAttribute('aria-invalid', 'true');
+          else input.removeAttribute('aria-invalid');
+        }
+
+        function validate(values) {
+          var errors = {};
+          var digits = values.cardNumber.replace(/[\s-]/g, '');
+          if (!values.nameOnCard.trim()) errors.nameOnCard = 'Name on card is required';
+          if (!/^\d{12,19}$/.test(digits)) errors.cardNumber = 'Enter a valid card number';
+          if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(values.expiry.trim())) errors.expiry = 'Use the format MM/YY';
+          if (!/^\d{3,4}$/.test(values.cvc.trim())) errors.cvc = 'Enter 3 or 4 digits';
+          return errors;
+        }
+
+        function setBusy(busy) {
+          payButton.disabled = busy;
+          payButton.setAttribute('aria-busy', busy ? 'true' : 'false');
+          processing.hidden = !busy;
+          payButton.textContent = busy ? 'Processing…' : amountCents === null ? 'Pay' : 'Pay ' + euro(amountCents);
+        }
+
+        if (!intentId || !secret) {
+          showStatus('This payment link is incomplete.');
+          payButton.disabled = true;
+          return;
+        }
+
+        fetch('/pay/intents/' + encodeURIComponent(intentId) + '?secret=' + encodeURIComponent(secret))
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+          .then(function (r) {
+            if (!r.ok) throw new Error(r.body && r.body.error ? r.body.error.message : 'Payment not found');
+            amountCents = r.body.data.amountCents;
+            document.getElementById('amount').textContent = euro(amountCents);
+            setBusy(false);
+            notify({ status: 'ready', amountCents: amountCents });
+          })
+          .catch(function (err) {
+            showStatus(err.message);
+            payButton.disabled = true;
+            notify({ status: 'error', message: err.message });
+          });
+
+        // The shop's "Retry payment" button asks us to resubmit the same card details.
+        window.addEventListener('message', function (e) {
+          if (SHOP_ORIGINS.indexOf(e.origin) === -1 || !e.data || e.data.type !== 'playlab-retry') return;
+          if (form.requestSubmit) form.requestSubmit();
+          else form.dispatchEvent(new Event('submit', { cancelable: true }));
+        });
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (payButton.disabled) return;
+          showStatus('');
+          var values = {};
+          fields.forEach(function (f) { values[f] = document.getElementById(f).value; });
+          var errors = validate(values);
+          fields.forEach(function (f) { setError(f, errors[f]); });
+          var first = fields.filter(function (f) { return errors[f]; })[0];
+          if (first) {
+            document.getElementById(first).focus();
+            return;
+          }
+          setBusy(true);
+          notify({ status: 'processing' });
+          values.cardNumber = values.cardNumber.replace(/[\s-]/g, '');
+          values.clientSecret = secret;
+          fetch('/pay/intents/' + encodeURIComponent(intentId) + '/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(values),
+          })
+            .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
+            .then(function (r) {
+              if (r.status === 200) {
+                form.hidden = true;
+                document.getElementById('done').hidden = false;
+                notify({ status: 'succeeded', cardLast4: r.body.data.cardLast4 });
+                return;
+              }
+              var message = r.body && r.body.error ? r.body.error.message : 'Payment failed';
+              if (r.status === 422 && r.body.error && Array.isArray(r.body.error.details)) {
+                r.body.error.details.forEach(function (d) { if (fields.indexOf(d.field) !== -1) setError(d.field, d.message); });
+              }
+              showStatus(message);
+              setBusy(false);
+              notify({
+                status: r.status === 402 ? 'declined' : r.status === 504 ? 'timed_out' : 'error',
+                httpStatus: r.status,
+                code: r.body && r.body.error ? r.body.error.code : null,
+                message: message,
+              });
+            })
+            .catch(function () {
+              var message = 'We could not reach the payment provider. Please try again.';
+              showStatus(message);
+              setBusy(false);
+              notify({ status: 'error', message: message });
+            });
+        });
+      })();
+    </script>
+  </body>
+</html>

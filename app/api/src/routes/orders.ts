@@ -4,12 +4,15 @@ import { z } from 'zod';
 import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound } from '../lib/errors';
-import { chargeCard, luhnValid } from '../lib/payments';
+import { cardSchema } from '../lib/cardSchema';
+import { chargeCard } from '../lib/payments';
 import { lineTotal } from '../lib/pricing';
-import { requireAuth } from '../middleware/auth';
+import { requireAuth, requireRole } from '../middleware/auth';
 import { noStore } from '../middleware/noStore';
 import { asyncHandler, parse } from '../middleware/validate';
 import { buildCartView, CartView, stockError } from '../services/cart';
+import { euros, toCsv } from '../lib/csv';
+import { events } from '../lib/events';
 
 export const ordersRouter = Router();
 ordersRouter.use(noStore, requireAuth);
@@ -29,39 +32,47 @@ const shippingSchema = z.object({
   phone: z.string().trim().max(30).optional().default(''),
 });
 
-const paymentSchema = z.object({
-  cardNumber: z
-    .string({ required_error: 'Card number is required' })
-    .transform((s) => s.replace(/[\s-]/g, ''))
-    .refine((s) => /^\d{12,19}$/.test(s) && luhnValid(s), 'Enter a valid card number'),
-  expiry: z
-    .string({ required_error: 'Expiry date is required' })
-    .trim()
-    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Use the format MM/YY'),
-  cvc: z.string({ required_error: 'Security code is required' }).trim().regex(/^\d{3,4}$/, 'Enter 3 or 4 digits'),
-  nameOnCard: z.string({ required_error: 'Name on card is required' }).trim().min(1, 'Name on card is required').max(200),
-});
-
 const orderSchema = z.object({
   shipping: shippingSchema,
   deliveryDate: z.string({ required_error: 'Choose a delivery date' }).regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD'),
   instructions: z.string().max(200, 'Instructions must be at most 200 characters').optional().default(''),
-  payment: paymentSchema,
+  // Pay either with card details directly (API clients) or with an intent confirmed in the payment iframe (the web app).
+  payment: cardSchema.optional(),
+  paymentIntentId: z.string().uuid('paymentIntentId must be a UUID').optional(),
   acceptPriceChanges: z.boolean().optional().default(false),
   // Anything else the client sends (e.g. item prices) is ignored: prices always come from the database.
+}).refine((v) => (v.payment === undefined) !== (v.paymentIntentId === undefined), {
+  message: 'Send either payment (card details) or paymentIntentId, not both',
+  path: ['payment'],
 });
 
-const listSchema = z.object({
+export const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
+const statusSchema = z.enum(ORDER_STATUSES, {
+  errorMap: () => ({ message: `Status must be one of: ${ORDER_STATUSES.join(', ')}` }),
+});
+
+const ORDER_SORTS = {
+  newest: 'o.created_at DESC, o.id DESC',
+  oldest: 'o.created_at ASC, o.id ASC',
+  total_desc: 'o.total_cents DESC, o.id DESC',
+  total_asc: 'o.total_cents ASC, o.id ASC',
+} as const;
+
+const filterSchema = z.object({
+  status: statusSchema.optional(),
+  q: z.string().trim().max(200).optional(),
+  sort: z.enum(Object.keys(ORDER_SORTS) as [keyof typeof ORDER_SORTS, ...(keyof typeof ORDER_SORTS)[]]).default('newest'),
+});
+
+const listSchema = filterSchema.extend({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
-function cardExpired(expiry: string): boolean {
-  const [mm, yy] = expiry.split('/').map(Number);
-  const now = clock.now();
-  const endOfMonth = Date.UTC(2000 + yy, mm, 1); // first day of the following month
-  return endOfMonth <= now.getTime();
-}
+const bulkSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1, 'Select at least one order').max(200),
+  status: statusSchema,
+});
 
 function validateDeliveryDate(value: string) {
   const today = clock.now();
@@ -100,7 +111,10 @@ function assertCartReady(cart: CartView, acceptPriceChanges: boolean) {
 }
 
 export async function loadOrder(id: number, db: PoolClient | typeof pool = pool) {
-  const orders = await db.query('SELECT * FROM orders WHERE id = $1', [id]);
+  const orders = await db.query(
+    'SELECT o.*, u.email AS customer_email, u.name AS customer_name FROM orders o JOIN users u ON u.id = o.user_id WHERE o.id = $1',
+    [id],
+  );
   const o = orders.rows[0];
   if (!o) return null;
   const items = await db.query('SELECT * FROM order_items WHERE order_id = $1 ORDER BY name', [id]);
@@ -112,6 +126,7 @@ function orderView(o: any, items: any[]) {
     id: o.id,
     number: o.number,
     userId: o.user_id,
+    customer: { id: o.user_id, email: o.customer_email, name: o.customer_name },
     status: o.status,
     createdAt: o.created_at,
     items: items.map((i) => ({
@@ -135,6 +150,23 @@ function orderView(o: any, items: any[]) {
     instructions: o.instructions,
     cardLast4: o.card_last4,
   };
+}
+
+/** A payment intent can pay for an order once, only for its owner, and only for the amount it was created for. */
+async function checkIntent(id: string, userId: number, totalCents: number, db: PoolClient | typeof pool = pool) {
+  const rows = await db.query(`SELECT * FROM payment_intents WHERE id = $1 AND user_id = $2${db === pool ? '' : ' FOR UPDATE'}`, [id, userId]);
+  const intent = rows.rows[0];
+  if (!intent) throw new ApiError(422, 'PAYMENT_NOT_FOUND', 'Payment not found');
+  if (intent.status === 'declined') throw new ApiError(402, 'PAYMENT_DECLINED', 'Your card was declined');
+  if (intent.status !== 'succeeded') throw new ApiError(409, 'PAYMENT_NOT_COMPLETED', 'This payment has not been completed');
+  if (intent.used_at) throw new ApiError(409, 'PAYMENT_ALREADY_USED', 'This payment has already been used for an order');
+  if (intent.amount_cents !== totalCents) {
+    throw new ApiError(409, 'PAYMENT_AMOUNT_MISMATCH', 'Your order total changed after payment. Please pay again.', {
+      paidCents: intent.amount_cents,
+      totalCents,
+    });
+  }
+  return intent;
 }
 
 async function findByIdempotencyKey(userId: number, key: string) {
@@ -162,16 +194,19 @@ ordersRouter.post(
 
     const body = parse(orderSchema, req.body);
     validateDeliveryDate(body.deliveryDate);
-    if (cardExpired(body.payment.expiry)) {
-      throw new ApiError(422, 'VALIDATION_ERROR', 'Validation failed', [{ field: 'payment.expiry', message: 'This card has expired' }]);
-    }
 
     // Pre-flight checks without locks, so a slow payment never holds row locks.
     const cartRow = await query<{ id: string }>('SELECT id FROM carts WHERE user_id = $1', [user.id]);
     const preCart = await buildCartView(cartRow[0]?.id ?? null);
     assertCartReady(preCart, body.acceptPriceChanges);
 
-    await chargeCard(body.payment.cardNumber);
+    let cardLast4: string;
+    if (body.payment) {
+      await chargeCard(body.payment.cardNumber);
+      cardLast4 = body.payment.cardNumber.slice(-4);
+    } else {
+      cardLast4 = (await checkIntent(body.paymentIntentId!, user.id, preCart.totals.totalCents)).card_last4;
+    }
 
     let order;
     try {
@@ -195,11 +230,17 @@ ordersRouter.post(
           await client.query('UPDATE discount_codes SET used_count = used_count + 1 WHERE id = $1', [d.rows[0].id]);
         }
 
+        if (body.paymentIntentId) {
+          const intent = await checkIntent(body.paymentIntentId, user.id, cart.totals.totalCents, client);
+          await client.query('UPDATE payment_intents SET used_at = $1 WHERE id = $2', [clock.now(), intent.id]);
+        }
+
         const seq = await client.query("SELECT 'PL-' || lpad(nextval('order_number_seq')::text, 6, '0') AS number");
         const inserted = await client.query(
           `INSERT INTO orders (number, user_id, status, subtotal_cents, discount_cents, vat_cents, delivery_cents, total_cents,
-                               discount_code, shipping, delivery_date, instructions, card_last4, idempotency_key, created_at)
-           VALUES ($1, $2, 'paid', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+                               discount_code, shipping, delivery_date, instructions, card_last4, idempotency_key, created_at,
+                               payment_intent_id)
+           VALUES ($1, $2, 'paid', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
           [
             seq.rows[0].number,
             user.id,
@@ -212,9 +253,10 @@ ordersRouter.post(
             JSON.stringify(body.shipping),
             body.deliveryDate,
             body.instructions,
-            body.payment.cardNumber.slice(-4),
+            cardLast4,
             idemKey ?? null,
             clock.now(),
+            body.paymentIntentId ?? null,
           ],
         );
         const orderId = inserted.rows[0].id;
@@ -244,18 +286,39 @@ ordersRouter.post(
   }),
 );
 
+function canSeeAll(role: string) {
+  return role === 'admin' || role === 'support';
+}
+
+/** Builds the WHERE clause shared by the order list and the CSV export. */
+function orderFilters(user: { id: number; role: string }, f: z.infer<typeof filterSchema>) {
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (!canSeeAll(user.role)) {
+    params.push(user.id);
+    where.push(`o.user_id = $${params.length}`);
+  }
+  if (f.status) {
+    params.push(f.status);
+    where.push(`o.status = $${params.length}`);
+  }
+  if (f.q) {
+    params.push(`%${f.q.replace(/[\\%_]/g, (m) => `\\${m}`)}%`);
+    where.push(`(o.number ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.name ILIKE $${params.length})`);
+  }
+  return { sql: where.length ? `WHERE ${where.join(' AND ')}` : '', params, order: ORDER_SORTS[f.sort] };
+}
+
 ordersRouter.get(
   '/',
   asyncHandler(async (req: Request, res: Response) => {
     const q = parse(listSchema, req.query);
-    const user = req.user!;
-    const seeAll = user.role === 'admin' || user.role === 'support';
-    const where = seeAll ? '' : 'WHERE user_id = $1';
-    const params: unknown[] = seeAll ? [] : [user.id];
-    const count = await query<{ n: number }>(`SELECT COUNT(*)::int AS n FROM orders ${where}`, params);
+    const f = orderFilters(req.user!, q);
+    const count = await query<{ n: number }>(`SELECT COUNT(*)::int AS n FROM orders o JOIN users u ON u.id = o.user_id ${f.sql}`, f.params);
     const rows = await query<{ id: number }>(
-      `SELECT id FROM orders ${where} ORDER BY created_at DESC, id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-      [...params, q.limit, (q.page - 1) * q.limit],
+      `SELECT o.id FROM orders o JOIN users u ON u.id = o.user_id ${f.sql} ORDER BY ${f.order}
+        LIMIT $${f.params.length + 1} OFFSET $${f.params.length + 2}`,
+      [...f.params, q.limit, (q.page - 1) * q.limit],
     );
     const data = [];
     for (const r of rows) data.push(await loadOrder(r.id));
@@ -267,15 +330,148 @@ ordersRouter.get(
 );
 
 ordersRouter.get(
+  '/export.csv',
+  requireRole('admin'),
+  asyncHandler(async (req: Request, res: Response) => {
+    const f = orderFilters(req.user!, parse(filterSchema, req.query));
+    const rows = await query(
+      `SELECT o.*, u.email AS customer_email,
+              (SELECT string_agg(oi.quantity || ' x ' || oi.name, '; ' ORDER BY oi.name) FROM order_items oi WHERE oi.order_id = o.id) AS items
+         FROM orders o JOIN users u ON u.id = o.user_id ${f.sql} ORDER BY ${f.order}`,
+      f.params,
+    );
+    const csv = toCsv(
+      ['number', 'created_at', 'customer_email', 'status', 'items', 'subtotal', 'discount_code', 'discount', 'vat', 'delivery', 'total', 'currency'],
+      rows.map((o: any) => [
+        o.number,
+        new Date(o.created_at).toISOString(),
+        o.customer_email,
+        o.status,
+        o.items ?? '',
+        euros(o.subtotal_cents),
+        o.discount_code ?? '',
+        euros(o.discount_cents),
+        euros(o.vat_cents),
+        euros(o.delivery_cents),
+        euros(o.total_cents),
+        'EUR',
+      ]),
+    );
+    const stamp = clock.now().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="orders-${stamp}.csv"`);
+    res.send(csv);
+  }),
+);
+
+ordersRouter.post(
+  '/bulk-status',
+  requireRole('admin'),
+  asyncHandler(async (req: Request, res: Response) => {
+    const body = parse(bulkSchema, req.body);
+    const ids = [...new Set(body.ids)];
+    const changed = await withTransaction(async (client) => {
+      const rows = await client.query('SELECT id, number, user_id, status FROM orders WHERE id = ANY($1) FOR UPDATE', [ids]);
+      if (rows.rowCount !== ids.length) {
+        const found = new Set(rows.rows.map((r: any) => r.id));
+        throw new ApiError(422, 'VALIDATION_ERROR', 'Some orders do not exist', ids.filter((i) => !found.has(i)).map((i) => ({ field: 'ids', message: `Order ${i} not found` })));
+      }
+      await client.query('UPDATE orders SET status = $1 WHERE id = ANY($2)', [body.status, ids]);
+      return rows.rows;
+    });
+    for (const o of changed) emitStatusChange(o, body.status, req.user!.id);
+    const data = [];
+    for (const id of ids) data.push(await loadOrder(id));
+    res.json({ data, meta: { updated: data.length } });
+  }),
+);
+
+function emitStatusChange(o: { id: number; number: string; user_id: number; status: string }, to: string, changedBy: number) {
+  if (o.status === to) return;
+  events.emitEvent('orderStatusChanged', {
+    orderId: o.id,
+    number: o.number,
+    userId: o.user_id,
+    from: o.status,
+    to,
+    changedBy,
+    at: clock.now().toISOString(),
+  });
+}
+
+function orderIdParam(raw: string): number {
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) throw notFound('Order not found');
+  return id;
+}
+
+/** Loads an order the current user may see. Other customers' orders are a 404, so ids are not revealed. */
+async function visibleOrder(req: Request) {
+  const order = await loadOrder(orderIdParam(req.params.id));
+  const user = req.user!;
+  if (!order || (!canSeeAll(user.role) && order.userId !== user.id)) throw notFound('Order not found');
+  return order;
+}
+
+ordersRouter.get(
   '/:id',
   asyncHandler(async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id) || id <= 0) throw notFound('Order not found');
-    const order = await loadOrder(id);
-    const user = req.user!;
-    const seeAll = user.role === 'admin' || user.role === 'support';
-    // 404 rather than 403 so other customers' order ids are not revealed.
-    if (!order || (!seeAll && order.userId !== user.id)) throw notFound('Order not found');
-    res.json({ data: order });
+    res.json({ data: await visibleOrder(req) });
+  }),
+);
+
+ordersRouter.patch(
+  '/:id/status',
+  requireRole('admin'),
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = orderIdParam(req.params.id);
+    const { status } = parse(z.object({ status: statusSchema }), req.body);
+    const before = await withTransaction(async (client) => {
+      const rows = await client.query('SELECT id, number, user_id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
+      if (!rows.rows[0]) throw notFound('Order not found');
+      await client.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+      return rows.rows[0];
+    });
+    emitStatusChange(before, status, req.user!.id);
+    res.json({ data: await loadOrder(id) });
+  }),
+);
+
+const CARRIER = 'PlayLab Post';
+const STEP_ORDER = ['paid', 'processing', 'shipped', 'delivered'];
+
+ordersRouter.get(
+  '/:id/tracking',
+  asyncHandler(async (req: Request, res: Response) => {
+    const order = await visibleOrder(req);
+    const placed = new Date(order.createdAt).getTime();
+    const hour = 3_600_000;
+    const reached = STEP_ORDER.indexOf(order.status);
+    const steps = [
+      { status: 'placed', label: 'Order placed', at: new Date(placed) },
+      { status: 'paid', label: 'Payment confirmed', at: new Date(placed + 60_000) },
+      { status: 'processing', label: 'Being packed', at: new Date(placed + 20 * hour) },
+      { status: 'shipped', label: `Handed to ${CARRIER}`, at: new Date(placed + 44 * hour) },
+      {
+        status: 'delivered',
+        label: 'Delivered',
+        at: order.deliveryDate ? new Date(`${order.deliveryDate}T14:00:00Z`) : new Date(placed + 72 * hour),
+      },
+    ];
+    const timeline =
+      order.status === 'cancelled'
+        ? [steps[0], { status: 'cancelled', label: 'Order cancelled', at: new Date(placed + 2 * hour) }]
+        : steps.filter((s, i) => i === 0 || (reached >= 0 && i - 1 <= reached));
+    res.json({
+      data: {
+        orderId: order.id,
+        number: order.number,
+        status: order.status,
+        carrier: CARRIER,
+        trackingNumber: `PLP${order.number.replace(/\D/g, '')}IE`,
+        estimatedDelivery: order.deliveryDate,
+        events: timeline.map((t) => ({ status: t.status, label: t.label, at: t.at.toISOString() })),
+      },
+    });
   }),
 );
