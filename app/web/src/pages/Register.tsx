@@ -2,12 +2,15 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiRequestError, api, errorMessage } from '../api/client';
 import { Field } from '../components/Field';
+import { useBug } from '../context/ConfigContext';
 
 type Errors = { name?: string; email?: string; password?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function Register() {
+  // missing-label: the email field's label is no longer tied to the input.
+  const missingLabel = useBug('missing-label');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,7 +95,7 @@ export function Register() {
           testId="register-name"
           hint={<span data-testid="register-name-counter">{name.length}/500 characters</span>}
         />
-        <Field id="register-email" label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} testId="register-email" />
+        <Field id="register-email" label="Email" unlabelled={missingLabel} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} testId="register-email" />
         <Field
           id="register-password"
           label="Password"

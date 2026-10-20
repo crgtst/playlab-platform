@@ -3,7 +3,10 @@ import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { t } from '../lib/i18n';
 import { AccountMenu } from './AccountMenu';
+import { OfflineBanner } from './OfflineBanner';
+import { PrefsControls } from './PrefsControls';
 import { isStaff } from './RequireRole';
 
 export function Header() {
@@ -57,7 +60,7 @@ export function Header() {
         <Link to="/" className="brand" data-testid="nav-home">
           PlayLab Shop
         </Link>
-        <Link to="/cart" className="cart-link cart-link-compact" data-testid="nav-cart-compact" aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
+        <Link to="/cart" className="cart-link cart-link-compact" data-testid="nav-cart-compact" aria-label={`${t('nav.cart')}, ${count}`}>
           🛒 <span className="badge" data-testid="cart-count-compact">{count}</span>
         </Link>
         <button
@@ -69,64 +72,69 @@ export function Header() {
           onClick={() => setMenuOpen((o) => !o)}
           data-testid="nav-menu-button"
         >
-          <span aria-hidden="true">☰</span> Menu
+          <span aria-hidden="true">☰</span> {t('nav.menu')}
         </button>
         <div id="main-menu" className={menuOpen ? 'main-menu open' : 'main-menu'} data-testid="main-menu">
-          <nav aria-label="Main" className="main-nav">
-            <NavLink to="/products" data-testid="nav-products">
-              Shop
+          <nav aria-label={t('nav.main')} className="main-nav">
+            <NavLink to="/products" end data-testid="nav-products">
+              {t('nav.shop')}
+            </NavLink>
+            <NavLink to="/new-arrivals" data-testid="nav-new-arrivals">
+              {t('nav.newArrivals')}
             </NavLink>
             {user && (
               <NavLink to="/wishlist" data-testid="nav-wishlist">
-                Wishlist
+                {t('nav.wishlist')}
               </NavLink>
             )}
             {user && (
               <NavLink to="/account" data-testid="nav-account">
-                My account
+                {t('nav.account')}
               </NavLink>
             )}
             {isStaff(user?.role) && (
               <NavLink to="/admin/orders" data-testid="nav-admin">
-                Admin
+                {t('nav.admin')}
               </NavLink>
             )}
           </nav>
           <form role="search" className="header-search" onSubmit={onSearch} data-testid="header-search-form">
             <label htmlFor="header-search" className="visually-hidden">
-              Search products
+              {t('search.label')}
             </label>
             <input
               id="header-search"
               type="search"
-              placeholder="Search products"
+              placeholder={t('search.label')}
               value={term}
               onChange={(e) => setTerm(e.target.value)}
               data-testid="header-search-input"
             />
             <button type="submit" data-testid="header-search-button">
-              Search
+              {t('search.button')}
             </button>
           </form>
           <div className="header-actions">
-            <Link to="/cart" className="cart-link" data-testid="nav-cart" aria-label={`Cart, ${count} ${count === 1 ? 'item' : 'items'}`}>
-              Cart <span className="badge" data-testid="cart-count">{count}</span>
+            <PrefsControls />
+            <Link to="/cart" className="cart-link" data-testid="nav-cart" aria-label={`${t('nav.cart')}, ${count}`}>
+              {t('nav.cart')} <span className="badge" data-testid="cart-count">{count}</span>
             </Link>
             {user ? (
               <AccountMenu onLogout={onLogout} />
             ) : (
               <>
                 <Link to="/login" data-testid="nav-login">
-                  Log in
+                  {t('nav.login')}
                 </Link>
                 <Link to="/register" data-testid="nav-register">
-                  Register
+                  {t('nav.register')}
                 </Link>
               </>
             )}
           </div>
         </div>
       </div>
+      <OfflineBanner />
     </header>
   );
 }

@@ -68,6 +68,7 @@ export interface Cart {
   items: CartItem[];
   itemCount: number;
   discount: { code: string; description: string; type: 'percent' | 'fixed'; value: number; amountCents: number } | null;
+  discounts: { code: string; description: string; type: 'percent' | 'fixed'; value: number; amountCents: number }[];
   totals: Totals;
   currency: 'EUR';
   priceChanged: boolean;
@@ -149,7 +150,27 @@ export interface PaymentIntent {
   frameUrl: string;
 }
 
+export type Currency = 'EUR' | 'GBP';
+
 export interface AppConfig {
   paymentFrameUrl: string;
   testHooks: boolean;
+  currencies: Record<Currency, number>;
+  /** Bug-mode defects currently on (empty unless the API runs with TEST_HOOKS=true). */
+  bugs: string[];
+}
+
+export interface Review {
+  id: number;
+  productId: number;
+  rating: number;
+  title: string;
+  body: string;
+  author: { id: number; name: string };
+  createdAt: string;
+}
+
+export interface ReviewList {
+  data: Review[];
+  meta: { count: number; average: number | null };
 }

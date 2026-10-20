@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { errorMessage } from '../api/client';
 import { useCart } from '../context/CartContext';
+import { t } from '../lib/i18n';
 
 export function DiscountForm() {
   const { cart, applyCode, removeCode } = useCart();
@@ -14,13 +15,13 @@ export function DiscountForm() {
     setError('');
     setSuccess('');
     if (!code.trim()) {
-      setError('Enter a discount code');
+      setError(t('discount.required'));
       return;
     }
     setBusy(true);
     try {
       const c = await applyCode(code);
-      setSuccess(`Discount applied: ${c.discount?.code}`);
+      setSuccess(t('discount.applied', { code: c.discounts.map((d) => d.code).join(' + ') || (c.discount?.code ?? '') }));
       setCode('');
     } catch (err) {
       setError(errorMessage(err));
@@ -42,18 +43,19 @@ export function DiscountForm() {
   return (
     <section className="discount" aria-labelledby="discount-heading" data-testid="discount-section">
       <h2 id="discount-heading" className="h3">
-        Discount code
+        {t('discount.heading')}
       </h2>
       {cart?.discount && (
         <p className="applied" data-testid="discount-applied">
-          <strong data-testid="discount-applied-code">{cart.discount.code}</strong> – {cart.discount.description}{' '}
+          <strong data-testid="discount-applied-code">{cart.discounts.map((d) => d.code).join(' + ')}</strong> –{' '}
+          {cart.discounts.map((d) => d.description).join(' + ')}{' '}
           <button type="button" className="link-button" onClick={onRemove} data-testid="discount-remove-button">
-            Remove
+            {t('discount.remove')}
           </button>
         </p>
       )}
       <form onSubmit={onApply} noValidate className="inline-form" data-testid="discount-form">
-        <label htmlFor="discount-code">Enter a code</label>
+        <label htmlFor="discount-code">{t('discount.label')}</label>
         <input
           id="discount-code"
           value={code}
@@ -64,7 +66,7 @@ export function DiscountForm() {
           data-testid="discount-code-input"
         />
         <button type="submit" disabled={busy} data-testid="discount-apply-button">
-          Apply
+          {t('discount.apply')}
         </button>
       </form>
       {error && (

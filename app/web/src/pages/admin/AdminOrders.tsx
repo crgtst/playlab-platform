@@ -2,7 +2,10 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, errorMessage } from '../../api/client';
 import { Order, ORDER_STATUSES, OrderStatus, PageMeta } from '../../api/types';
+import { LiveIndicator } from '../../components/LiveIndicator';
 import { Modal } from '../../components/Modal';
+import { useOnline } from '../../components/OfflineBanner';
+import { useOrderEvents } from '../../context/RealtimeContext';
 import { Pagination } from '../../components/Pagination';
 import { useToast } from '../../context/ToastContext';
 import { formatDateTime, formatPrice } from '../../lib/format';
@@ -59,6 +62,10 @@ export function AdminOrders() {
     setSelected(new Set());
     setEditing(null);
   }, [load]);
+  useOnline(load);
+
+  // Status changes made anywhere (another admin, a bulk action) arrive over the WebSocket.
+  useOrderEvents((e) => setOrders((list) => list?.map((o) => (o.id === e.orderId ? { ...o, status: e.status as OrderStatus } : o)) ?? null));
 
   const setFilter = (key: 'status' | 'q', value: string) => {
     const p = new URLSearchParams(params);
@@ -129,6 +136,7 @@ export function AdminOrders() {
   return (
     <section aria-labelledby="admin-orders-heading">
       <h2 id="admin-orders-heading">Orders</h2>
+      <LiveIndicator />
       <div className="admin-toolbar">
         <div className="field">
           <label htmlFor="admin-status-filter">Status</label>

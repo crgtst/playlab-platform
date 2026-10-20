@@ -1,4 +1,5 @@
 import { KeyboardEvent, useEffect, useState } from 'react';
+import { useBug } from '../context/ConfigContext';
 
 interface Props {
   id: string;
@@ -16,13 +17,15 @@ interface Props {
  */
 export function QuantityStepper({ id, label, value, max = 99, disabled, onCommit, onInvalid }: Props) {
   const [text, setText] = useState(String(value));
+  // quantity-negative: the "at least 1" check is missing, so 0 and negative numbers go to the API.
+  const minimum = useBug('quantity-negative') ? -Infinity : 1;
 
   useEffect(() => setText(String(value)), [value]);
 
   const commit = async (raw: string) => {
     const trimmed = raw.trim();
     const n = Number(trimmed);
-    if (trimmed === '' || !Number.isInteger(n) || n < 1) {
+    if (trimmed === '' || !Number.isInteger(n) || n < minimum) {
       setText(String(value));
       onInvalid?.('Quantity must be at least 1');
       return;

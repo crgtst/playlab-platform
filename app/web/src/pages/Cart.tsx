@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { errorMessage } from '../api/client';
 import { DiscountForm } from '../components/DiscountForm';
+import { useOnline } from '../components/OfflineBanner';
 import { QuantityStepper } from '../components/QuantityStepper';
 import { Totals } from '../components/Totals';
 import { useCart } from '../context/CartContext';
+import type { Currency } from '../api/types';
+import { useBug } from '../context/ConfigContext';
 import { formatPrice } from '../lib/format';
+import { t } from '../lib/i18n';
 
 export function CartNotices() {
   const { cart } = useCart();
@@ -22,7 +26,11 @@ export function CartNotices() {
 }
 
 export function Cart() {
-  const { cart, loading, setQuantity, removeItem } = useCart();
+  const { cart, loading, setQuantity, removeItem, refresh } = useCart();
+  useOnline(refresh);
+  // currency-switch-stale: the cart keeps showing euro prices after switching to GBP.
+  const stale = useBug('currency-switch-stale');
+  const priceOpts: { currency?: Currency } = stale ? { currency: 'EUR' } : {};
   const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
 
   useEffect(() => {
@@ -56,11 +64,11 @@ export function Cart() {
   if (!cart || cart.items.length === 0) {
     return (
       <div data-testid="cart-empty">
-        <h1>Your cart</h1>
+        <h1>{t('cart.title')}</h1>
         <CartNotices />
-        <p>Your cart is empty.</p>
+        <p>{t('cart.empty')}</p>
         <Link to="/products" className="button" data-testid="continue-shopping-link">
-          Continue shopping
+          {t('cart.continue')}
         </Link>
       </div>
     );
@@ -68,18 +76,18 @@ export function Cart() {
 
   return (
     <div className="cart-page">
-      <h1>Your cart</h1>
+      <h1>{t('cart.title')}</h1>
       <CartNotices />
       <table className="cart-table" data-testid="cart-table">
-        <caption className="visually-hidden">Items in your cart</caption>
+        <caption className="visually-hidden">{t('cart.items')}</caption>
         <thead>
           <tr>
-            <th scope="col">Product</th>
-            <th scope="col">Price</th>
-            <th scope="col">Quantity</th>
-            <th scope="col">Total</th>
+            <th scope="col">{t('cart.product')}</th>
+            <th scope="col">{t('cart.price')}</th>
+            <th scope="col">{t('cart.quantity')}</th>
+            <th scope="col">{t('cart.total')}</th>
             <th scope="col">
-              <span className="visually-hidden">Actions</span>
+              <span className="visually-hidden">{t('cart.actions')}</span>
             </th>
           </tr>
         </thead>
@@ -92,7 +100,7 @@ export function Cart() {
                 </Link>
                 {item.priceChanged && (
                   <span className="badge warn" data-testid="cart-item-price-changed">
-                    Price changed from {formatPrice(item.priceAtAddCents)}
+                    {t('cart.priceChanged', { price: formatPrice(item.priceAtAddCents, priceOpts) })}
                   </span>
                 )}
                 {rowErrors[item.productId] && (
@@ -101,24 +109,24 @@ export function Cart() {
                   </p>
                 )}
               </th>
-              <td data-label="Price" data-testid="cart-item-price" data-cents={item.unitPriceCents}>
-                {formatPrice(item.unitPriceCents)}
+              <td data-label={t('cart.price')} data-testid="cart-item-price" data-cents={item.unitPriceCents}>
+                {formatPrice(item.unitPriceCents, priceOpts)}
               </td>
-              <td data-label="Quantity">
+              <td data-label={t('cart.quantity')}>
                 <QuantityStepper
                   id={`qty-${item.productId}`}
-                  label={`Quantity for ${item.name}`}
+                  label={`${t('cart.quantity')}: ${item.name}`}
                   value={item.quantity}
                   onCommit={(q) => onQuantity(item.productId, q)}
                   onInvalid={(m) => setRowError(item.productId, m)}
                 />
               </td>
-              <td data-label="Total" data-testid="cart-item-line-total" data-cents={item.lineTotalCents}>
-                {formatPrice(item.lineTotalCents)}
+              <td data-label={t('cart.total')} data-testid="cart-item-line-total" data-cents={item.lineTotalCents}>
+                {formatPrice(item.lineTotalCents, priceOpts)}
               </td>
               <td>
-                <button type="button" className="link-button" onClick={() => onRemove(item.productId)} aria-label={`Remove ${item.name}`} data-testid="cart-item-remove">
-                  Remove
+                <button type="button" className="link-button" onClick={() => onRemove(item.productId)} aria-label={`${t('cart.remove')}: ${item.name}`} data-testid="cart-item-remove">
+                  {t('cart.remove')}
                 </button>
               </td>
             </tr>
@@ -130,11 +138,11 @@ export function Cart() {
         <DiscountForm />
         <section aria-labelledby="summary-heading">
           <h2 id="summary-heading" className="h3">
-            Order summary
+            {t('cart.summary')}
           </h2>
-          <Totals totals={cart.totals} discount={cart.discount} />
+          <Totals totals={cart.totals} discount={cart.discount} currency={priceOpts.currency} />
           <Link to="/checkout/shipping" className="button" data-testid="checkout-button">
-            Go to checkout
+            {t('cart.checkout')}
           </Link>
         </section>
       </div>

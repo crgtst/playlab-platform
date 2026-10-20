@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, ApiRequestError, errorMessage } from '../api/client';
 import type { Tracking } from '../api/types';
+import { LiveIndicator } from '../components/LiveIndicator';
+import { useOrderEvents } from '../context/RealtimeContext';
 import { formatDate, formatDateTime } from '../lib/format';
 
 /** Opened in a new tab from an order ("Track parcel"). */
@@ -10,8 +12,7 @@ export function Track() {
   const [tracking, setTracking] = useState<Tracking | null>(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    document.title = 'Track parcel – PlayLab Shop';
+  const load = useCallback(() => {
     api<{ data: Tracking }>(`/orders/${id}/tracking`)
       .then((r) => {
         setTracking(r.data);
@@ -19,6 +20,15 @@ export function Track() {
       })
       .catch((err) => setError(err instanceof ApiRequestError && err.status === 404 ? 'Order not found' : errorMessage(err)));
   }, [id]);
+
+  useEffect(() => {
+    document.title = 'Track parcel – PlayLab Shop';
+    load();
+  }, [load]);
+
+  useOrderEvents((e) => {
+    if (e.orderId === Number(id)) load();
+  });
 
   if (error) {
     return (
@@ -32,6 +42,11 @@ export function Track() {
   return (
     <div data-testid="tracking-page" data-status={tracking.status}>
       <h1>Track order {tracking.number}</h1>
+      <LiveIndicator />
+      {/* Planted a11y fault (Phase 3): an icon-only link with no accessible name. */}
+      <a href={`mailto:?subject=Tracking%20${tracking.number}`} className="icon-link" data-testid="tracking-share-link">
+        <span aria-hidden="true">✉</span>
+      </a>
       <dl className="meta">
         <div>
           <dt>Carrier</dt>

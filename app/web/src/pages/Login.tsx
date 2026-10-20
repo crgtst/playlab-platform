@@ -2,10 +2,13 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { errorMessage } from '../api/client';
 import { Field } from '../components/Field';
+import { useBug } from '../context/ConfigContext';
 import { useAuth } from '../context/AuthContext';
 import { safeReturnTo } from '../lib/format';
 
 export function Login() {
+  // missing-label: the email field's label is no longer tied to the input.
+  const missingLabel = useBug('missing-label');
   const { login, user } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -57,7 +60,7 @@ export function Login() {
             {formError}
           </p>
         )}
-        <Field id="login-email" label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} testId="login-email" />
+        <Field id="login-email" label="Email" unlabelled={missingLabel} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} testId="login-email" />
         <Field id="login-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} testId="login-password" />
         <button type="submit" disabled={busy} data-testid="login-submit">
           {busy ? 'Logging in…' : 'Log in'}

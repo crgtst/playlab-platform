@@ -18,6 +18,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Mailbox } from './pages/Mailbox';
+import { NewArrivals } from './pages/NewArrivals';
 import { NotFound } from './pages/NotFound';
 import { OrderConfirmation } from './pages/OrderConfirmation';
 import { OrderDetail } from './pages/OrderDetail';
@@ -67,6 +68,7 @@ export const routes: RouteObject[] = [
       { path: '/', element: <Home /> },
       { path: '/products', element: <Products /> },
       { path: '/products/:id', element: <ProductDetail /> },
+      { path: '/new-arrivals', element: <NewArrivals /> },
       { path: '/cart', element: <Cart /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },

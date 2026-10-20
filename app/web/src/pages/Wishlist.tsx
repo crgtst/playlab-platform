@@ -101,7 +101,8 @@ export function Wishlist() {
       )}
       {items.length > 0 && (
         <>
-          <p className="muted" id="wishlist-help">
+          {/* Planted a11y fault (Phase 3): this helper text fails colour contrast. */}
+          <p className="low-contrast" id="wishlist-help">
             Drag items to reorder them, or use the Move up and Move down buttons. Your order is saved automatically.
           </p>
           <ol className="wishlist" aria-describedby="wishlist-help" data-testid="wishlist-list">

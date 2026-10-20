@@ -1,9 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, ApiRequestError, errorMessage } from '../api/client';
 import type { Product } from '../api/types';
 import { stockLabel } from '../components/ProductCard';
 import { WishlistToggle } from '../components/WishlistToggle';
+import { useOnline } from '../components/OfflineBanner';
+import { Reviews } from '../components/Reviews';
+import { useStockStream } from '../lib/useStockStream';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { formatPrice } from '../lib/format';
@@ -17,9 +20,11 @@ export function ProductDetail() {
   const [qty, setQty] = useState('1');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const productId = Number(id);
+  // Live stock over Server-Sent Events (PLS-8.6).
+  const { stock: liveStock, state: streamState } = useStockStream(Number.isInteger(productId) && productId > 0 ? [productId] : []);
 
-  useEffect(() => {
-    setStatus('loading');
+  const load = useCallback(() => {
     api<{ data: Product }>(`/products/${id}`)
       .then((r) => {
         setProduct(r.data);
@@ -28,6 +33,12 @@ export function ProductDetail() {
       })
       .catch((err) => setStatus(err instanceof ApiRequestError && err.status === 404 ? 'notfound' : 'error'));
   }, [id]);
+
+  useEffect(() => {
+    setStatus('loading');
+    load();
+  }, [load]);
+  useOnline(load);
 
   const onAdd = async (e: FormEvent) => {
     e.preventDefault();
@@ -65,6 +76,8 @@ export function ProductDetail() {
     );
   }
 
+  const stock = liveStock[product.id] ?? product.stock;
+
   return (
     <article className="product-detail" data-testid="product-detail" data-product-id={product.id}>
       <nav aria-label="Breadcrumb" className="breadcrumb">
@@ -81,8 +94,14 @@ export function ProductDetail() {
             {formatPrice(product.priceCents)} <span className="muted small">excl. VAT</span>
           </p>
           <p data-testid="product-description">{product.description}</p>
-          <p className={product.stock === 0 ? 'stock out' : 'stock'} data-testid="product-stock" data-stock={product.stock}>
-            {stockLabel(product.stock)}
+          <p className={stock === 0 ? 'stock out' : 'stock'} data-testid="product-stock" data-stock={stock} aria-live="polite">
+            {stockLabel(stock)}
+          </p>
+          <p className="muted small">
+            <span data-testid="product-stock-count">{stock} available</span> ·{' '}
+            <span className={`live live-${streamState}`} data-testid="stock-live-indicator" data-state={streamState}>
+              <span aria-hidden="true">●</span> {streamState === 'open' ? 'Live stock' : streamState === 'error' ? 'Reconnecting…' : 'Connecting…'}
+            </span>
           </p>
           <form onSubmit={onAdd} noValidate className="inline-form" data-testid="add-to-cart-form">
             <label htmlFor="detail-qty">Quantity</label>
@@ -98,7 +117,7 @@ export function ProductDetail() {
               aria-describedby={error ? 'detail-qty-error' : undefined}
               data-testid="product-qty-input"
             />
-            <button type="submit" disabled={busy || !product.inStock} data-testid="add-to-cart-button">
+            <button type="submit" disabled={busy || stock === 0} data-testid="add-to-cart-button">
               {busy ? 'Adding…' : 'Add to cart'}
             </button>
             <WishlistToggle productId={product.id} name={product.name} />
@@ -110,6 +129,7 @@ export function ProductDetail() {
           )}
         </div>
       </div>
+      <Reviews productId={product.id} />
     </article>
   );
 }

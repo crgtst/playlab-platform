@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import type { Order } from '../api/types';
 import { AvatarUpload } from '../components/AvatarUpload';
+import { LiveIndicator } from '../components/LiveIndicator';
+import { useOrderEvents } from '../context/RealtimeContext';
 import { useAuth } from '../context/AuthContext';
 import { formatDate, formatPrice } from '../lib/format';
 
@@ -10,6 +12,8 @@ export function Account() {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [error, setError] = useState('');
+
+  useOrderEvents((e) => setOrders((list) => list?.map((o) => (o.id === e.orderId ? { ...o, status: e.status as Order['status'] } : o)) ?? null));
 
   useEffect(() => {
     document.title = 'My account – PlayLab Shop';
@@ -54,6 +58,7 @@ export function Account() {
 
       <section aria-labelledby="orders-heading" id="orders">
         <h2 id="orders-heading">Order history</h2>
+        <LiveIndicator />
         {error && (
           <p className="alert error" role="alert" data-testid="order-history-error">
             {error}
@@ -92,7 +97,9 @@ export function Account() {
                       {formatDate(o.createdAt)}
                     </time>
                   </td>
-                  <td data-testid="order-row-status">{o.status}</td>
+                  <td data-testid="order-row-status" data-status={o.status}>
+                    {o.status}
+                  </td>
                   <td data-testid="order-row-total">{formatPrice(o.totals.totalCents)}</td>
                 </tr>
               ))}
