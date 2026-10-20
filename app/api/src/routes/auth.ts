@@ -12,6 +12,7 @@ import { noStore } from '../middleware/noStore';
 import { asyncHandler, parse } from '../middleware/validate';
 import { mergeGuestCart } from '../services/cart';
 import { avatarUrl } from './users';
+import { isBugOn } from '../lib/bugs';
 
 export const authRouter = Router();
 authRouter.use(noStore);
@@ -54,7 +55,13 @@ const name = z
   .min(1, 'Name is required')
   .max(500, 'Name must be at most 500 characters');
 
-const registerSchema = z.object({ name, email, password });
+// fada-rejected: an "ASCII letters only" rule that wrongly rejects names like Seán or Aoife Ní Bhriain.
+const registerSchema = () =>
+  z.object({
+    name: isBugOn('fada-rejected') ? name.pipe(z.string().regex(/^[A-Za-z .'-]+$/, 'Name contains invalid characters')) : name,
+    email,
+    password,
+  });
 const loginSchema = z.object({
   email: z.string({ required_error: 'Email is required' }).trim().toLowerCase().min(1, 'Email is required'),
   password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
@@ -91,7 +98,7 @@ function clearSessionCookies(res: Response) {
 authRouter.post(
   '/register',
   asyncHandler(async (req: Request, res: Response) => {
-    const body = parse(registerSchema, req.body);
+    const body = parse(registerSchema(), req.body);
     const hash = await bcrypt.hash(body.password, 10);
     const user = await withTransaction(async (client) => {
       const existing = await client.query('SELECT 1 FROM users WHERE email = $1', [body.email]);
@@ -209,6 +216,8 @@ authRouter.post(
 authRouter.post(
   '/logout',
   asyncHandler(async (req: Request, res: Response) => {
+    // logout-incomplete: report success but leave the session cookie and refresh token working.
+    if (isBugOn('logout-incomplete')) return res.status(204).end();
     const token: string | undefined = req.body?.refreshToken ?? req.cookies?.[REFRESH_COOKIE];
     if (token) {
       await query('UPDATE refresh_tokens SET revoked_at = $1 WHERE token_hash = $2 AND revoked_at IS NULL', [

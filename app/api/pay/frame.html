@@ -62,6 +62,7 @@
     <script>
       (function () {
         var SHOP_ORIGINS = __SHOP_ORIGINS__;
+        var BUGS = __BUGS__;
         var params = new URLSearchParams(location.search);
         var intentId = params.get('intent');
         var secret = params.get('secret');
@@ -132,6 +133,17 @@
             document.getElementById('amount').textContent = euro(amountCents);
             setBusy(false);
             notify({ status: 'ready', amountCents: amountCents });
+            // Bug mode "button-moves": a late banner pushes the Pay button down 500 ms after load.
+            if (BUGS.indexOf('button-moves') !== -1) {
+              setTimeout(function () {
+                var banner = document.createElement('p');
+                banner.className = 'muted';
+                banner.style.cssText = 'margin:8px 0;padding:12px;background:#eef;border-radius:6px';
+                banner.textContent = 'Protected by PlayLab Pay Secure. Your card details never touch the shop.';
+                banner.setAttribute('data-testid', 'frame-late-banner');
+                form.insertBefore(banner, payButton);
+              }, 500);
+            }
           })
           .catch(function (err) {
             showStatus(err.message);

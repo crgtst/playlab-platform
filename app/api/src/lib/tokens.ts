@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { isBugOn } from './bugs';
 import { clock } from './clock';
 
 export type Role = 'customer' | 'admin' | 'support';
@@ -28,6 +29,7 @@ export function verifyAccessToken(token: string): AccessClaims {
   return jwt.verify(token, config.jwtSecret, {
     algorithms: ['HS256'],
     clockTimestamp: clock.nowSec(),
+    ignoreExpiration: isBugOn('token-never-expires'),
   }) as unknown as AccessClaims;
 }
 

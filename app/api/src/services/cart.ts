@@ -3,7 +3,8 @@ import { PoolClient } from 'pg';
 import { pool } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict } from '../lib/errors';
-import { calculateTotals, Discount, lineTotal, Totals } from '../lib/pricing';
+import { isBugOn } from '../lib/bugs';
+import { calculateTotals, Discount, lineTotal, PricingOptions, Totals } from '../lib/pricing';
 import { CART_COOKIE } from '../middleware/auth';
 
 type Db = PoolClient | typeof pool;
@@ -39,11 +40,21 @@ export interface CartNotice {
   message: string;
 }
 
+export interface AppliedDiscount {
+  code: string;
+  description: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  amountCents: number;
+}
+
 export interface CartView {
   id: string;
   items: CartItemView[];
   itemCount: number;
-  discount: { code: string; description: string; type: 'percent' | 'fixed'; value: number; amountCents: number } | null;
+  discount: AppliedDiscount | null;
+  /** Always 0 or 1 entries, except with the discount-stacking defect. */
+  discounts: AppliedDiscount[];
   totals: Totals;
   currency: 'EUR';
   priceChanged: boolean;
@@ -83,19 +94,23 @@ export async function getOrCreateCartId(req: Request, res: Response, db: Db = po
   return rows.rows[0].id;
 }
 
-/** Throws the right ApiError when a code cannot be used. `subtotalCents` is the goods subtotal. */
-export function assertDiscountUsable(d: DiscountRow, subtotalCents: number): void {
+/**
+ * Throws the right ApiError when a code cannot be used. `subtotalCents` is the goods subtotal.
+ * `phase` is 'apply' when a shopper enters a code and 'revalidate' when the cart is recalculated.
+ */
+export function assertDiscountUsable(d: DiscountRow, subtotalCents: number, phase: 'apply' | 'revalidate' = 'apply'): void {
   const now = clock.now();
-  if (d.expires_at && d.expires_at <= now) {
+  if (d.expires_at && d.expires_at <= now && !isBugOn('expired-discount-accepted')) {
     throw new ApiError(422, 'DISCOUNT_EXPIRED', 'This code has expired');
   }
   if (d.starts_at && d.starts_at > now) {
     throw new ApiError(422, 'DISCOUNT_NOT_ACTIVE', 'This code is not active yet');
   }
-  if (d.single_use && d.used_count > 0) {
+  if (d.single_use && d.used_count > 0 && !isBugOn('single-use-reused')) {
     throw new ApiError(422, 'DISCOUNT_ALREADY_USED', 'This code has already been used');
   }
-  if (d.min_spend_cents > 0 && subtotalCents < d.min_spend_cents) {
+  const skipMinSpend = phase === 'revalidate' && isBugOn('discount-survives-cart-change');
+  if (d.min_spend_cents > 0 && subtotalCents < d.min_spend_cents && !skipMinSpend) {
     throw new ApiError(422, 'DISCOUNT_MIN_SPEND', `Spend at least ${formatEuro(d.min_spend_cents)} to use this code`, {
       minSpendCents: d.min_spend_cents,
     });
@@ -103,7 +118,16 @@ export function assertDiscountUsable(d: DiscountRow, subtotalCents: number): voi
 }
 
 export function normaliseCode(raw: string): string {
-  return raw.replace(/\s+/g, '').toUpperCase();
+  const trimmed = raw.replace(/\s+/g, '');
+  return isBugOn('discount-case-sensitive') ? trimmed : trimmed.toUpperCase();
+}
+
+export function pricingOptions(): PricingOptions {
+  return {
+    vatBeforeDiscount: isBugOn('vat-before-discount'),
+    allowNegative: isBugOn('discount-negative-total'),
+    roundingBug: isBugOn('cart-total-rounding'),
+  };
 }
 
 export async function findDiscountByCode(code: string, db: Db = pool): Promise<DiscountRow | null> {
@@ -114,13 +138,19 @@ export async function findDiscountByCode(code: string, db: Db = pool): Promise<D
 /**
  * Builds the cart view. Re-validates the applied discount every time: if it is no longer usable
  * (e.g. the cart dropped below the minimum spend) it is removed and a notice explains why.
+ * `priceOverrides` (productId -> cents) exists only for the price-tamper defect.
  */
-export async function buildCartView(cartId: string | null, db: Db = pool): Promise<CartView> {
+export async function buildCartView(
+  cartId: string | null,
+  db: Db = pool,
+  opts: { priceOverrides?: Map<number, number> } = {},
+): Promise<CartView> {
   const empty: CartView = {
     id: cartId ?? '',
     items: [],
     itemCount: 0,
     discount: null,
+    discounts: [],
     totals: calculateTotals([], null),
     currency: 'EUR',
     priceChanged: false,
@@ -135,60 +165,70 @@ export async function buildCartView(cartId: string | null, db: Db = pool): Promi
       ORDER BY ci.added_at, ci.product_id`,
     [cartId],
   );
-  const items: CartItemView[] = itemRows.rows.map((r: any) => ({
-    productId: r.product_id,
-    sku: r.sku,
-    name: r.name,
-    imageUrl: r.image_url,
-    quantity: r.quantity,
-    stock: r.stock,
-    unitPriceCents: r.price_cents,
-    priceAtAddCents: r.unit_price_cents_at_add,
-    priceChanged: r.price_cents !== r.unit_price_cents_at_add,
-    lineTotalCents: lineTotal({ unitPriceCents: r.price_cents, quantity: r.quantity }),
-  }));
+  const items: CartItemView[] = itemRows.rows.map((r: any) => {
+    const unit = opts.priceOverrides?.get(r.product_id) ?? r.price_cents;
+    return {
+      productId: r.product_id,
+      sku: r.sku,
+      name: r.name,
+      imageUrl: r.image_url,
+      quantity: r.quantity,
+      stock: r.stock,
+      unitPriceCents: unit,
+      priceAtAddCents: r.unit_price_cents_at_add,
+      priceChanged: r.price_cents !== r.unit_price_cents_at_add,
+      lineTotalCents: lineTotal({ unitPriceCents: unit, quantity: r.quantity }),
+    };
+  });
 
   const notices: CartNotice[] = [];
-  const cartRow = await db.query(
-    `SELECT dc.* FROM carts c LEFT JOIN discount_codes dc ON dc.id = c.discount_code_id WHERE c.id = $1`,
-    [cartId],
-  );
-  let discountRow: DiscountRow | null = cartRow.rows[0]?.id ? cartRow.rows[0] : null;
+  const cartRow = await db.query('SELECT discount_code_id, extra_discount_code_id FROM carts WHERE id = $1', [cartId]);
+  const applied: { column: 'discount_code_id' | 'extra_discount_code_id'; row: DiscountRow }[] = [];
+  for (const column of ['discount_code_id', 'extra_discount_code_id'] as const) {
+    const id = cartRow.rows[0]?.[column];
+    if (!id) continue;
+    const d = await db.query('SELECT * FROM discount_codes WHERE id = $1', [id]);
+    if (d.rows[0]) applied.push({ column, row: d.rows[0] });
+  }
 
   const lines = items.map((i) => ({ unitPriceCents: i.unitPriceCents, quantity: i.quantity }));
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
 
-  if (discountRow) {
+  const valid: DiscountRow[] = [];
+  for (const { column, row } of applied) {
     try {
       if (items.length === 0) throw new ApiError(422, 'DISCOUNT_CART_EMPTY', 'Your cart is empty');
-      assertDiscountUsable(discountRow, subtotal);
+      assertDiscountUsable(row, subtotal, 'revalidate');
+      valid.push(row);
     } catch (err) {
       if (!(err instanceof ApiError)) throw err;
-      await db.query('UPDATE carts SET discount_code_id = NULL, updated_at = now() WHERE id = $1', [cartId]);
+      await db.query(`UPDATE carts SET ${column} = NULL, updated_at = now() WHERE id = $1`, [cartId]);
       notices.push({
         code: 'DISCOUNT_REMOVED',
-        message: `Code ${discountRow.code} was removed: ${err.message.charAt(0).toLowerCase()}${err.message.slice(1)}`,
+        message: `Code ${row.code} was removed: ${err.message.charAt(0).toLowerCase()}${err.message.slice(1)}`,
       });
-      discountRow = null;
     }
   }
 
-  const discount: Discount | null = discountRow ? { type: discountRow.type, value: discountRow.value } : null;
-  const totals = calculateTotals(lines, discount);
+  const options = pricingOptions();
+  const asDiscount = (d: DiscountRow): Discount => ({ type: d.type, value: d.value });
+  // discount-not-applied: the code is reported as applied, but the totals ignore it.
+  const effective = isBugOn('discount-not-applied') ? [] : valid.map(asDiscount);
+  const totals = calculateTotals(lines, effective, options);
+  const discounts: AppliedDiscount[] = valid.map((d) => ({
+    code: d.code,
+    description: d.description,
+    type: d.type,
+    value: d.value,
+    amountCents: calculateTotals(lines, asDiscount(d), options).discountCents,
+  }));
 
   return {
     id: cartId,
     items,
     itemCount: items.reduce((s, i) => s + i.quantity, 0),
-    discount: discountRow
-      ? {
-          code: discountRow.code,
-          description: discountRow.description,
-          type: discountRow.type,
-          value: discountRow.value,
-          amountCents: totals.discountCents,
-        }
-      : null,
+    discount: discounts[0] ?? null,
+    discounts,
     totals,
     currency: 'EUR',
     priceChanged: items.some((i) => i.priceChanged),

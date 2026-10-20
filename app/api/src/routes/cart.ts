@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { withTransaction } from '../db/pool';
+import { isBugOn } from '../lib/bugs';
 import { ApiError, conflict, notFound } from '../lib/errors';
 import { lineTotal } from '../lib/pricing';
 import { optionalAuth } from '../middleware/auth';
@@ -19,17 +20,25 @@ import {
 export const cartRouter = Router();
 cartRouter.use(noStore, optionalAuth);
 
-const quantity = z
-  .number({ required_error: 'Quantity is required', invalid_type_error: 'Quantity must be a number' })
-  .int('Quantity must be a whole number')
-  .min(1, 'Quantity must be at least 1')
-  .max(99, 'Quantity must be 99 or fewer');
+// Built per request so the quantity-negative defect can relax the minimum.
+function quantitySchema() {
+  return z
+    .number({ required_error: 'Quantity is required', invalid_type_error: 'Quantity must be a number' })
+    .int('Quantity must be a whole number')
+    .min(isBugOn('quantity-negative') ? -99 : 1, 'Quantity must be at least 1')
+    .max(99, 'Quantity must be 99 or fewer');
+}
 
-const addSchema = z.object({
-  productId: z.number({ required_error: 'productId is required' }).int().positive(),
-  quantity: quantity.default(1),
-});
-const updateSchema = z.object({ quantity });
+const addSchema = () =>
+  z.object({
+    productId: z.number({ required_error: 'productId is required' }).int().positive(),
+    quantity: quantitySchema().default(1),
+  });
+const updateSchema = () => z.object({ quantity: quantitySchema() });
+
+const checkStock = (wanted: number, stock: number) => {
+  if (wanted > stock && !isBugOn('stock-oversell')) throw stockError(stock);
+};
 const discountSchema = z.object({
   code: z.string({ required_error: 'Enter a discount code' }).refine((s) => s.trim().length > 0, 'Enter a discount code'),
 });
@@ -51,7 +60,7 @@ cartRouter.get(
 cartRouter.post(
   '/items',
   asyncHandler(async (req: Request, res: Response) => {
-    const body = parse(addSchema, req.body);
+    const body = parse(addSchema(), req.body);
     const view = await withTransaction(async (client) => {
       const product = await lockProduct(client, body.productId);
       const cartId = await getOrCreateCartId(req, res, client);
@@ -60,7 +69,7 @@ cartRouter.post(
         body.productId,
       ]);
       const newQty = (existing.rows[0]?.quantity ?? 0) + body.quantity;
-      if (newQty > product.stock) throw stockError(product.stock);
+      checkStock(newQty, product.stock);
       await client.query(
         `INSERT INTO cart_items (cart_id, product_id, quantity, unit_price_cents_at_add) VALUES ($1, $2, $3, $4)
          ON CONFLICT (cart_id, product_id) DO UPDATE SET quantity = EXCLUDED.quantity`,
@@ -78,12 +87,12 @@ cartRouter.patch(
   asyncHandler(async (req: Request, res: Response) => {
     const productId = productIdParam.safeParse(req.params.productId);
     if (!productId.success) throw notFound('Item is not in your cart');
-    const body = parse(updateSchema, req.body);
+    const body = parse(updateSchema(), req.body);
     const view = await withTransaction(async (client) => {
       const cartId = await findCartId(req, client);
       if (!cartId) throw notFound('Item is not in your cart');
       const product = await lockProduct(client, productId.data);
-      if (body.quantity > product.stock) throw stockError(product.stock);
+      checkStock(body.quantity, product.stock);
       const rows = await client.query(
         'UPDATE cart_items SET quantity = $1 WHERE cart_id = $2 AND product_id = $3 RETURNING product_id',
         [body.quantity, cartId, productId.data],
@@ -118,7 +127,7 @@ cartRouter.delete(
       const cartId = await findCartId(req, client);
       if (cartId) {
         await client.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
-        await client.query('UPDATE carts SET discount_code_id = NULL WHERE id = $1', [cartId]);
+        await client.query('UPDATE carts SET discount_code_id = NULL, extra_discount_code_id = NULL WHERE id = $1', [cartId]);
       }
       return buildCartView(cartId, client);
     });
@@ -137,8 +146,10 @@ cartRouter.post(
       if (!cartId || !current || current.items.length === 0) {
         throw new ApiError(422, 'DISCOUNT_CART_EMPTY', 'Add something to your cart before using a code');
       }
-      if (current.discount) {
-        if (current.discount.code === code) return current;
+      if (current.discounts.some((d) => d.code === code)) return current;
+      // discount-stacking lets a second code through instead of the 409.
+      const stacking = isBugOn('discount-stacking') && current.discounts.length === 1;
+      if (current.discount && !stacking) {
         throw conflict('DISCOUNT_ONE_PER_ORDER', 'Only one code per order', { applied: current.discount.code });
       }
       const discount = await findDiscountByCode(code, client);
@@ -148,7 +159,8 @@ cartRouter.post(
         0,
       );
       assertDiscountUsable(discount, subtotal);
-      await client.query('UPDATE carts SET discount_code_id = $1, updated_at = now() WHERE id = $2', [discount.id, cartId]);
+      const column = stacking ? 'extra_discount_code_id' : 'discount_code_id';
+      await client.query(`UPDATE carts SET ${column} = $1, updated_at = now() WHERE id = $2`, [discount.id, cartId]);
       return buildCartView(cartId, client);
     });
     res.json(view);
@@ -161,7 +173,7 @@ cartRouter.delete(
     const cartId = await findCartId(req);
     if (cartId) {
       await withTransaction((client) =>
-        client.query('UPDATE carts SET discount_code_id = NULL, updated_at = now() WHERE id = $1', [cartId]),
+        client.query('UPDATE carts SET discount_code_id = NULL, extra_discount_code_id = NULL, updated_at = now() WHERE id = $1', [cartId]),
       );
     }
     res.json(await buildCartView(cartId));

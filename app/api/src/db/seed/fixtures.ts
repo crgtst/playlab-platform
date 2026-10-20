@@ -181,11 +181,32 @@ async function customerWithAvatar(client: PoolClient) {
   return { user: publicFixtureUser(user), avatarUrl: `/api/v1/users/${user.id}/avatar` };
 }
 
+async function productWithReviews(client: PoolClient) {
+  const product = await client.query("SELECT id, name FROM products WHERE sku = 'EL-001'");
+  const reviews = [
+    { name: 'Róisín Review', rating: 5, title: 'Brilliant sound', body: 'Battery lasts for days. Would buy again.' },
+    { name: 'Tadhg Tester', rating: 4, title: 'Good, not perfect', body: 'The case is a bit bulky.' },
+    { name: 'Mallory Markup', rating: 2, title: '<b>Bold claim</b>', body: "<script>alert('xss')</script> This text must show as text." },
+  ];
+  const created = [];
+  for (let i = 0; i < reviews.length; i++) {
+    const r = reviews[i];
+    const user = await createUser(client, { name: r.name, email: uniqueEmail('reviewer') });
+    const row = await client.query(
+      'INSERT INTO reviews (product_id, user_id, rating, title, body, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+      [product.rows[0].id, user.id, r.rating, r.title, r.body, new Date(clock.nowMs() - (reviews.length - i) * DAY)],
+    );
+    created.push({ id: row.rows[0].id, rating: r.rating, title: r.title, author: r.name });
+  }
+  return { product: { id: product.rows[0].id, name: product.rows[0].name }, reviews: created.reverse(), average: 3.7 };
+}
+
 export const FIXTURES: Record<string, (client: PoolClient) => Promise<unknown>> = {
   'customer-with-orders': customerWithOrders,
   'orders-for-admin': ordersForAdmin,
   'customer-with-wishlist': customerWithWishlist,
   'customer-with-avatar': customerWithAvatar,
+  'product-with-reviews': productWithReviews,
   'out-of-stock-product': (c) => upsertProduct(c, 'FX-OOS', 'Sold Out Synthesiser', 0),
   'low-stock-product': (c) => upsertProduct(c, 'FX-LOW', 'Last One Lamp', 1),
   'expired-discount': (c) =>

@@ -1,8 +1,13 @@
 import { ErrorRequestHandler, RequestHandler } from 'express';
 import { ZodError } from 'zod';
+import { isBugOn } from '../lib/bugs';
 import { ApiError } from '../lib/errors';
 
 export function sendError(res: Parameters<RequestHandler>[1], err: ApiError) {
+  // wrong-status-code: validation failures surface as a 500.
+  if (err.status === 422 && err.code === 'VALIDATION_ERROR' && isBugOn('wrong-status-code')) {
+    err = new ApiError(500, 'INTERNAL_ERROR', 'Something went wrong');
+  }
   for (const [k, v] of Object.entries(err.headers)) res.setHeader(k, v);
   res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details ?? null } });
 }
