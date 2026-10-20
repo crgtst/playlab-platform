@@ -19,6 +19,12 @@ export const config = {
   refreshTokenTtlSec: int(process.env.REFRESH_TOKEN_TTL_SEC, 7 * 24 * 60 * 60),
   rateLimitPerMin: int(process.env.RATE_LIMIT_PER_MIN, 100),
   paymentTimeoutMs: int(process.env.PAYMENT_TIMEOUT_MS, 5000),
+  // The payment iframe is served by the API on its own origin, like a real provider's hosted fields.
+  paymentFrameUrl: process.env.PAYMENT_FRAME_URL ?? 'http://localhost:3000/pay/frame',
+  // Origins allowed to embed the payment frame and receive its postMessage results.
+  shopOrigins: (process.env.SHOP_ORIGINS ?? process.env.PUBLIC_WEB_URL ?? 'http://localhost:5173')
+    .split(',')
+    .map((o) => new URL(o.trim()).origin),
   lockoutThreshold: 5,
   lockoutMinutes: 15,
   resetLinkTtlSec: 60 * 60,

@@ -7,13 +7,18 @@ import YAML from 'yaml';
 import { config } from './config';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimit } from './middleware/rateLimit';
+import { testFaults } from './middleware/testFaults';
 import { addressesRouter } from './routes/addresses';
 import { authRouter } from './routes/auth';
 import { cartRouter } from './routes/cart';
+import { configRouter } from './routes/config';
 import { healthRouter } from './routes/health';
 import { ordersRouter } from './routes/orders';
+import { payFrameRouter, paymentsRouter } from './routes/payments';
 import { categoriesRouter, productsRouter } from './routes/products';
 import { testRouter } from './routes/test';
+import { usersRouter } from './routes/users';
+import { wishlistRouter } from './routes/wishlist';
 
 export function loadOpenApi(): Record<string, unknown> {
   const file = path.join(process.cwd(), 'openapi', 'openapi.yaml');
@@ -27,9 +32,12 @@ export function createApp() {
   app.set('etag', false); // product reads set their own ETag
   app.use(cookieParser());
   app.use(express.json({ limit: '100kb' }));
+  // Injected latency and failures (POST /test/latency, /test/chaos). Never applies to /test/* or /health.
+  if (config.testHooks) app.use(testFaults);
 
   const v1 = Router();
   v1.use('/health', healthRouter);
+  v1.use('/config', configRouter);
   v1.use(apiRateLimit);
   v1.use('/auth', authRouter);
   v1.use('/products', productsRouter);
@@ -37,7 +45,11 @@ export function createApp() {
   v1.use('/cart', cartRouter);
   v1.use('/orders', ordersRouter);
   v1.use('/addresses', addressesRouter);
+  v1.use('/payments', paymentsRouter);
+  v1.use('/users', usersRouter);
+  v1.use('/wishlist', wishlistRouter);
   app.use('/api/v1', v1);
+  app.use('/pay', payFrameRouter);
 
   const spec = loadOpenApi();
   app.get('/api/openapi.json', (_req, res) => res.json(spec));

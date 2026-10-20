@@ -28,6 +28,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:-playlab-dev-secret-not-for-production}
       RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-100}
       PAYMENT_TIMEOUT_MS: ${PAYMENT_TIMEOUT_MS:-5000}
+      # The payment iframe is served by the API on its own origin (cross-origin to the shop).
+      PAYMENT_FRAME_URL: ${PAYMENT_FRAME_URL:-http://localhost:${API_PORT:-3000}/pay/frame}
+      SHOP_ORIGINS: ${SHOP_ORIGINS:-http://localhost:${WEB_PORT:-5173}}
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:

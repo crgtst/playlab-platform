@@ -21,6 +21,11 @@ tags:
   - name: Cart
   - name: Orders
   - name: Addresses
+  - name: Payments
+  - name: Users
+  - name: Wishlist
+  - name: Admin
+    description: Admin-only order management. Support users can read orders but get 403 on every change.
   - name: Test hooks
     description: Only available when `TEST_HOOKS=true`. Paths are relative to the server root, not `/api/v1`.
 
@@ -469,6 +474,9 @@ paths:
         Test cards: `4242 4242 4242 4242` succeeds, `4000 0000 0000 0002` is declined (402),
         `4000 0000 0000 0119` times out (504 after a delay). No order is created on 402 or 504 and the cart is kept.
         If prices changed since items were added, returns 409 `PRICE_CHANGED` unless `acceptPriceChanges` is true.
+        Instead of card details you can send `paymentIntentId` for an intent confirmed in the payment iframe:
+        it must be yours, succeeded, unused and for the current total (409 `PAYMENT_NOT_COMPLETED`,
+        `PAYMENT_ALREADY_USED` or `PAYMENT_AMOUNT_MISMATCH` otherwise; 402 if it was declined).
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       parameters:
         - name: Idempotency-Key
@@ -511,9 +519,12 @@ paths:
     get:
       tags: [Orders]
       summary: List orders, newest first
-      description: Customers see only their own orders. Admin and support users see every order.
+      description: Customers see only their own orders. Admin and support users see every order and can filter them.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       parameters:
+        - { $ref: '#/components/parameters/OrderStatusFilter' }
+        - { $ref: '#/components/parameters/OrderSearch' }
+        - { $ref: '#/components/parameters/OrderSort' }
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
       responses:
@@ -560,6 +571,405 @@ paths:
                     type: array
                     items: { $ref: '#/components/schemas/AddressSuggestion' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /config:
+    get:
+      tags: [Health]
+      summary: Public runtime settings for the web app
+      responses:
+        '200':
+          description: Settings
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [paymentFrameUrl, testHooks]
+                properties:
+                  paymentFrameUrl: { type: string, format: uri }
+                  testHooks: { type: boolean }
+
+  /orders/export.csv:
+    get:
+      tags: [Admin]
+      summary: Download orders as CSV (admin)
+      description: One row per order plus a header row. Honours the same `status`, `q` and `sort` filters as `GET /orders`.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { $ref: '#/components/parameters/OrderStatusFilter' }
+        - { $ref: '#/components/parameters/OrderSearch' }
+        - { $ref: '#/components/parameters/OrderSort' }
+      responses:
+        '200':
+          description: CSV file
+          headers:
+            Content-Disposition:
+              schema: { type: string, example: 'attachment; filename="orders-2026-10-20.csv"' }
+          content:
+            text/csv:
+              schema:
+                type: string
+                example: "number,created_at,customer_email,status,items,subtotal,discount_code,discount,vat,delivery,total,currency\r\n"
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /orders/bulk-status:
+    post:
+      tags: [Admin]
+      summary: Change the status of several orders at once (admin)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids, status]
+              properties:
+                ids:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items: { type: integer }
+                status: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200':
+          description: Updated orders
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Order' }
+                  meta:
+                    type: object
+                    properties:
+                      updated: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /orders/{id}/status:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    patch:
+      tags: [Admin]
+      summary: Change an order's status (admin)
+      description: Emits an `orderStatusChanged` event (delivered over WebSocket from Phase 3).
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200':
+          description: Updated order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /orders/{id}/tracking:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Orders]
+      summary: Parcel tracking timeline for an order
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Tracking
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/Tracking' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /payments/intents:
+    post:
+      tags: [Payments]
+      summary: Create a payment intent for the current cart total
+      description: |
+        Returns a `frameUrl` for the hosted payment iframe (served on the API origin, cross-origin to the shop).
+        The frame confirms the intent and reports the result to the parent window with
+        `postMessage({ type: 'playlab-payment', status, intentId, ... })`. Then pay with `POST /orders { paymentIntentId }`.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '201':
+          description: Intent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/PaymentIntent'
+                      - type: object
+                        required: [clientSecret, frameUrl]
+                        properties:
+                          clientSecret: { type: string }
+                          frameUrl: { type: string, format: uri }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /payments/intents/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Payments]
+      summary: Get one of your payment intents
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Intent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/PaymentIntent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /users/me/avatar:
+    post:
+      tags: [Users]
+      summary: Upload your avatar
+      description: PNG or JPG, at most 2 MB. The type is detected from the file contents, not its name or MIME type.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar: { type: string, format: binary }
+      responses:
+        '201':
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [avatarUrl, contentType, sizeBytes]
+                    properties:
+                      avatarUrl: { type: string }
+                      contentType: { type: string, enum: [image/png, image/jpeg] }
+                      sizeBytes: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '415':
+          description: Not a PNG or JPG
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Users]
+      summary: Remove your avatar
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '204':
+          description: Removed
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /users/{id}/avatar:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Users]
+      summary: A user's avatar image
+      responses:
+        '200':
+          description: Image
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+            image/jpeg:
+              schema: { type: string, format: binary }
+        '304':
+          description: Not modified
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /wishlist:
+    get:
+      tags: [Wishlist]
+      summary: Your wishlist, in your chosen order
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Wishlist
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wishlist' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /wishlist/items:
+    post:
+      tags: [Wishlist]
+      summary: Add a product to your wishlist (at the end)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId: { type: integer }
+      responses:
+        '201':
+          description: Wishlist
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wishlist' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /wishlist/items/{productId}:
+    parameters:
+      - { name: productId, in: path, required: true, schema: { type: integer } }
+    delete:
+      tags: [Wishlist]
+      summary: Remove a product from your wishlist
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Wishlist
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wishlist' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /wishlist/order:
+    put:
+      tags: [Wishlist]
+      summary: Reorder your wishlist
+      description: '`productIds` must list exactly the products currently in the wishlist, in the new order.'
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productIds]
+              properties:
+                productIds:
+                  type: array
+                  items: { type: integer }
+      responses:
+        '200':
+          description: Wishlist
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wishlist' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---- Hosted payment frame: served from the server root (/pay/*), not /api/v1 ----
+  /pay/frame:
+    get:
+      tags: [Payments]
+      summary: 'GET /pay/frame - the hosted payment page loaded in the checkout iframe'
+      servers: [{ url: / }]
+      parameters:
+        - { name: intent, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: secret, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: HTML page. Sends `Content-Security-Policy frame-ancestors` for the shop origin.
+          content:
+            text/html:
+              schema: { type: string }
+  /pay/intents/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Payments]
+      summary: 'GET /pay/intents/{id} - intent status, authorised by its client secret'
+      servers: [{ url: / }]
+      parameters:
+        - { name: secret, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Intent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PaymentIntent' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /pay/intents/{id}/confirm:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    post:
+      tags: [Payments]
+      summary: 'POST /pay/intents/{id}/confirm - charge a card for this intent (called from inside the frame)'
+      description: Test cards as for `POST /orders`. A declined or timed-out intent can be retried.
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientSecret, cardNumber, expiry, cvc, nameOnCard]
+              properties:
+                clientSecret: { type: string }
+                cardNumber: { type: string }
+                expiry: { type: string, example: '12/30' }
+                cvc: { type: string }
+                nameOnCard: { type: string }
+      responses:
+        '200':
+          description: Payment succeeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/PaymentIntent' }
+        '402':
+          description: Card declined
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '504':
+          description: Payment provider timed out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
 
   # ---- Test hooks: served from the server root (/test/*), not /api/v1 ----
   /test:
@@ -610,6 +1020,9 @@ paths:
                     type: string
                     enum:
                       - customer-with-orders
+                      - orders-for-admin
+                      - customer-with-wishlist
+                      - customer-with-avatar
                       - out-of-stock-product
                       - low-stock-product
                       - expired-discount
@@ -717,6 +1130,93 @@ paths:
               schema: { $ref: '#/components/schemas/ClockState' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  /test/latency:
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test/latency - list latency rules'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Rules
+          content:
+            application/json:
+              schema: { type: object }
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/latency - delay matching requests'
+      description: '`path` matches the request path without its query string; `*` is a wildcard. Never applies to /test/* or /health.'
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [path, delayMs]
+              properties:
+                path: { type: string, example: '/api/v1/products*' }
+                method: { type: string, enum: [GET, POST, PUT, PATCH, DELETE] }
+                delayMs: { type: integer, minimum: 1, maximum: 60000 }
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema: { type: object }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Test hooks]
+      summary: 'DELETE /test/latency - remove every latency rule'
+      servers: [{ url: / }]
+      responses:
+        '204':
+          description: Cleared
+  /test/chaos:
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test/chaos - list failure rules'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Rules
+          content:
+            application/json:
+              schema: { type: object }
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/chaos - make matching requests fail'
+      description: |
+        Send exactly one of `failureRate` (0-1, random) or `failNext` (fail the next N matching requests, deterministic).
+        Failures use the standard error shape with code `CHAOS_INJECTED` and an `X-Chaos-Rule` header.
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [path]
+              properties:
+                path: { type: string, example: /api/v1/orders }
+                method: { type: string, enum: [GET, POST, PUT, PATCH, DELETE] }
+                failureRate: { type: number, minimum: 0, maximum: 1 }
+                failNext: { type: integer, minimum: 1, maximum: 1000 }
+                status: { type: integer, minimum: 400, maximum: 599, default: 500 }
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema: { type: object }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Test hooks]
+      summary: 'DELETE /test/chaos - remove every failure rule'
+      servers: [{ url: / }]
+      responses:
+        '204':
+          description: Cleared
+
 components:
   securitySchemes:
     bearerAuth:
@@ -727,6 +1227,21 @@ components:
       type: apiKey
       in: cookie
       name: session
+
+  parameters:
+    OrderStatusFilter:
+      name: status
+      in: query
+      schema: { $ref: '#/components/schemas/OrderStatus' }
+    OrderSearch:
+      name: q
+      in: query
+      description: Order number, customer email or customer name (admin and support)
+      schema: { type: string, maxLength: 200 }
+    OrderSort:
+      name: sort
+      in: query
+      schema: { type: string, enum: [newest, oldest, total_desc, total_asc], default: newest }
 
   responses:
     BadRequest:
@@ -817,13 +1332,14 @@ components:
       enum: [customer, admin, support]
     User:
       type: object
-      required: [id, email, name, role, emailVerified, createdAt]
+      required: [id, email, name, role, emailVerified, avatarUrl, createdAt]
       properties:
         id: { type: integer }
         email: { type: string, format: email }
         name: { type: string, maxLength: 500 }
         role: { $ref: '#/components/schemas/Role' }
         emailVerified: { type: boolean }
+        avatarUrl: { type: string, nullable: true }
         createdAt: { type: string, format: date-time }
     UserEnvelope:
       type: object
@@ -1003,12 +1519,14 @@ components:
         phone: { type: string, maxLength: 30 }
     OrderRequest:
       type: object
-      required: [shipping, deliveryDate, payment]
+      description: Send exactly one of `payment` or `paymentIntentId`.
+      required: [shipping, deliveryDate]
       properties:
         shipping: { $ref: '#/components/schemas/ShippingAddress' }
         deliveryDate: { type: string, format: date, description: Between tomorrow and 30 days from today }
         instructions: { type: string, maxLength: 200 }
         acceptPriceChanges: { type: boolean, default: false }
+        paymentIntentId: { type: string, format: uuid }
         payment:
           type: object
           required: [cardNumber, expiry, cvc, nameOnCard]
@@ -1019,12 +1537,19 @@ components:
             nameOnCard: { type: string }
     Order:
       type: object
-      required: [id, number, userId, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
+      required: [id, number, userId, customer, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
       properties:
         id: { type: integer }
         number: { type: string, example: PL-000001 }
         userId: { type: integer }
-        status: { type: string, enum: [pending, paid, processing, shipped, delivered, cancelled] }
+        customer:
+          type: object
+          required: [id, email, name]
+          properties:
+            id: { type: integer }
+            email: { type: string }
+            name: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
         createdAt: { type: string, format: date-time }
         items:
           type: array
@@ -1063,6 +1588,57 @@ components:
           type: array
           items: { $ref: '#/components/schemas/Order' }
         meta: { $ref: '#/components/schemas/PageMeta' }
+
+    OrderStatus:
+      type: string
+      enum: [pending, paid, processing, shipped, delivered, cancelled]
+    Tracking:
+      type: object
+      required: [orderId, number, status, carrier, trackingNumber, estimatedDelivery, events]
+      properties:
+        orderId: { type: integer }
+        number: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        carrier: { type: string }
+        trackingNumber: { type: string, example: PLP000001IE }
+        estimatedDelivery: { type: string, format: date, nullable: true }
+        events:
+          type: array
+          items:
+            type: object
+            required: [status, label, at]
+            properties:
+              status: { type: string }
+              label: { type: string }
+              at: { type: string, format: date-time }
+    PaymentIntent:
+      type: object
+      required: [id, amountCents, currency, status, cardLast4, used, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        amountCents: { type: integer }
+        currency: { type: string, enum: [EUR] }
+        status: { type: string, enum: [requires_payment, processing, succeeded, declined, timed_out] }
+        cardLast4: { type: string, nullable: true }
+        used: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    Wishlist:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required: [position, addedAt, product]
+            properties:
+              position: { type: integer }
+              addedAt: { type: string, format: date-time }
+              product: { $ref: '#/components/schemas/Product' }
+        meta:
+          type: object
+          properties:
+            count: { type: integer }
 
     AddressSuggestion:
       type: object

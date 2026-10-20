@@ -14,5 +14,6 @@ RUN npm install --omit=dev --no-audit --no-fund
 COPY --from=build /app/dist ./dist
 COPY src/db/migrations ./dist/db/migrations
 COPY openapi ./openapi
+COPY pay ./pay
 EXPOSE 3000
 CMD ["node", "dist/index.js"]
