@@ -31,6 +31,9 @@ If one of the ports is already in use, override it, for example `API_PORT=3001 d
 | Live order status (WebSocket) | ws://localhost:5173/ws/orders (proxied) or ws://localhost:3000/ws/orders |
 | Live stock (Server-Sent Events) | http://localhost:5173/api/v1/stock/stream?ids=1,2 |
 | New arrivals (infinite scroll) | http://localhost:5173/new-arrivals |
+| Store finder (geolocation) | http://localhost:5173/stores |
+| Service worker | http://localhost:5173/sw.js (registered by the production build that Docker serves) |
+| Price-tracker extension | [`extensions/price-tracker/`](extensions/price-tracker/) (load it unpacked) |
 | Postgres | `postgres://playlab:playlab@localhost:5432/playlab` |
 
 The web app proxies `/api` and `/test` to the API. A browser therefore talks to one origin, and cookies are first-party.
@@ -189,6 +192,11 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   - `POST` the same path with `{ rating 1-5, title, body? }`. You must be logged in; it's one review per user per product (409 for a second), and invalid input gets 422.
   - Text is stored exactly as written.
 - **Cart discounts**: the cart has `discount` (the applied code) and `discounts` (a list). The list only ever holds more than one code with the `discount-stacking` defect.
+- **Stores**: there's a fixed list of 12 stores (11 in Ireland, plus Belfast).
+  - `GET /stores?q=` searches by town or name.
+  - `GET /stores/nearest?lat=&lng=&limit=3` sorts by straight-line (haversine) distance and adds `distanceKm`. Missing or out-of-range coordinates get 422.
+- **Offers**: `GET /offers` returns the public, active discount codes (`SAVE10`, `FIXED20`) shown in the "Current offers" strip.
+- **Product images**: each product has `images` (3 URLs: the main image, a side view and a detail view) for the gallery.
 
 ## Web pages
 
@@ -210,6 +218,11 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
 | `/admin/products` | Product table with create and edit in a modal; Delete asks with a native `confirm()` |
 | `/new-arrivals` | Newest products, 12 at a time. More load when `infinite-sentinel` scrolls into view; `load-more-button` is the fallback, and `new-arrivals-end` appears after all 40. |
 | `/products/:id` (Phase 3) | Adds a live stock counter (SSE) and reviews, rated with the `<review-stars>` web component |
+| `/products/:id` (Phase 4) | The image is now a gallery: swipe or tap the image, or use ‹ › and the dots (arrow keys work when it's focused) |
+| `/stores` | Store finder: "Find stores near me" uses geolocation and lists the 3 nearest. If location is denied or unavailable, it shows a message and offers a town search. |
+| `/`, `/cart` | A "Current offers" strip with "Copy code" buttons |
+| `/account`, `/account/orders/:id` | A "Notify me about my orders" toggle. Once on, live status changes show a browser notification. Order pages also have "Copy order number". |
+| Every page | A "Low battery: animations paused" banner when the Battery Status API reports under 20% and not charging |
 
 ## Playwright notes
 
@@ -241,6 +254,44 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   2. `/wishlist`: the helper text above the list fails colour contrast (`color-contrast`, serious).
   3. `/track/:id`: the envelope "share" link has no accessible name (`link-name`, serious).
 - **Visual testing**: the home and product pages are stable after `/test/reset`. Mask `live-indicator`, `stock-live-indicator`, `toast-region` and any dates. Use `colorScheme: 'light'` (or set the theme) for consistent baselines.
+
+### Phase 4: browser APIs
+
+- **Geolocation** (`/stores`): use `context.grantPermissions(['geolocation'])` with `geolocation: { latitude: 53.2707, longitude: -9.0568 }` (Galway), then click `store-locate-button`; three `store-result` items appear, Galway first. Leaving permission ungranted (or denying it) shows `store-finder-denied`, and `store-search-input` searches by town. `store-finder-loading` is the spinner.
+- **Notifications**: grant `notifications`, or replace `window.Notification` with a counting fake via `page.addInitScript` (headless browsers don't show real notifications). Click `notifications-toggle` (calls `Notification.requestPermission()`; `notifications-status` has `data-status` on, off, blocked or unsupported), then change the order's status with the API. Each change creates one notification, titled "Order PL-000123 is now shipped", with a `tag` so repeats collapse.
+- **Clipboard**: `context.grantPermissions(['clipboard-read', 'clipboard-write'])`. Click `copy-code-SAVE10` or `copy-order-number-button`, then read the clipboard back with `page.evaluate(() => navigator.clipboard.readText())`. A "Copied …" toast confirms it.
+- **Battery** (Chromium only): mock it before the page loads. The banner (`battery-banner`) and `<html data-battery-saver="on">` follow `levelchange` and `chargingchange` events, and the battery saver stops the CSS animations (`.pulse`, `.offer-code` and spinners). Use `page.exposeFunction` if you'd rather drive the mock from the test.
+  ```ts
+  await page.addInitScript(() => {
+    const battery = Object.assign(new EventTarget(), { level: 0.1, charging: false });
+    (window as any).__battery = battery;
+    (navigator as any).getBattery = () => Promise.resolve(battery);
+  });
+  // later: await page.evaluate(() => { __battery.charging = true; __battery.dispatchEvent(new Event('chargingchange')); });
+  ```
+- **Service worker** (production build only, which is what Docker serves): it caches the app shell and the catalogue (`/api/v1/products*`, `/api/v1/categories`, `/img/*`). The footer shows `offline-ready` once it controls the page.
+  - When offline, `/products` still loads from the cache with `offline-catalogue-notice`, and cached responses carry `X-SW-Cache: hit`.
+  - Requests the worker handles **are not seen by `page.route`**, so use `serviceWorkers: 'block'` in every project that isn't testing the worker.
+  - To test it, let it install (load a page, reload), then `context.setOffline(true)` and reload.
+- **Touch** (gallery): with `hasTouch: true` (any mobile device profile), `locator.tap()` on `gallery-stage` advances. A swipe is a horizontal pointer drag of more than 40 px; dispatch `touchstart`, `touchmove` and `touchend`, or use the mouse with `page.mouse` on desktop. `gallery-status` reads "Image 2 of 3", and the dots have `aria-current`.
+- **Aria snapshots**: the product card, the order summary and the header (`site-header`) have stable accessible structure. Generate a starting point with `await locator.ariaSnapshot()` and replace the values that change with regexes. For example, a product card looks roughly like this:
+  ```yaml
+  - article "Wireless Earbuds":
+    - heading "Wireless Earbuds" [level=3]:
+      - link "Wireless Earbuds"
+    - paragraph: Electronics
+    - paragraph: /€\d+\.\d{2}/
+    - paragraph: In stock
+    - button "Add Wireless Earbuds to cart"
+    - button "Add Wireless Earbuds to wishlist"
+  ```
+  The order summary is a region named "Order summary": an h2, then h3 headings for Items, Totals and Delivery address.
+- **Component tests**: the harness lives in `web/` (`@playwright/experimental-ct-react` 1.49.1, `playwright-ct.config.ts`, `playwright/index.tsx`).
+  - Write `*.ct.tsx` files under `web/src` and run `cd web && npm run test-ct` (install browsers with `npx playwright install chromium` first).
+  - Every mount is wrapped by `src/testing/ComponentHarness.tsx`. Pass `hooksConfig: { lang: 'ga', currency: 'GBP', theme: 'dark', bugs: ['quantity-negative'], route: '/cart' }` as needed. Add `app: true` to also mount auth, cart and wishlist, and mock `/api/v1/**` with `page.route`.
+  - Good first candidates: `Totals`, `QuantityStepper`, `ReviewStars`, `Pagination`, `ProductGallery` and `CopyButton`.
+  - Keep `@playwright/test` in your suite on the same version as the CT package.
+- **Extension**: see [`extensions/price-tracker/README.md`](extensions/price-tracker/README.md). Load it with `chromium.launchPersistentContext` plus `--load-extension`, using Playwright's bundled Chromium (branded Chrome ignores the flag). On product pages it adds `price-tracker-badge`.
 
 ## Bug mode
 
@@ -282,8 +333,15 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
 | `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
+| `geolocation-ignored` | Phase 4: store finder | API | `/stores/nearest` ignores the position and always returns Dublin stores |
+| `permission-denied-crash` | Phase 4: store finder | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
+| `clipboard-wrong-value` | Phase 4: copy buttons | Web | Each "Copy code" button copies the previous code in the list (`SAVE10` copies `FIXED20`) |
+| `notification-spam` | Phase 4: notifications | Web | One status change fires two notifications, with no `tag` |
+| `battery-banner-stuck` | Phase 4: battery saver | Web | `chargingchange` is ignored, so the banner stays after charging starts |
+| `offline-stale-prices` | Phase 4: offline cache | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
+| `aria-heading-skip` | Phase 4: stable regions | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-Each defect changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 
@@ -319,6 +377,12 @@ Each defect changes only its own behaviour (PLS-12.3). There are two unavoidable
 | Reviews | `reviews`, `reviews-summary` (`data-count`, `data-average`), `review-list`, `review` (`data-review-id`, `data-rating`), `review-title`, `review-body`, `review-author`, `review-stars`, `review-form`, `review-rating` (the `<review-stars>` input), `review-rating-error`, `review-title-input`, `review-body-input`, `review-body-counter`, `review-submit`, `review-submitted`, `review-login-link`. Inside each `<review-stars>` shadow root: `stars-display`, `stars-input`, `star-1`…`star-5`, `stars-value`. |
 | New arrivals | `new-arrivals-count` (`data-count`), `new-arrivals-grid`, `infinite-sentinel`, `load-more-button`, `new-arrivals-loading`, `new-arrivals-end`, `new-arrivals-error`, `new-arrivals-banner` |
 | Payment frame (bug mode) | `frame-late-banner` (appears with `button-moves`) |
+| Store finder | `store-locate-button`, `store-finder-loading`, `store-finder-denied`, `store-finder-unavailable`, `store-finder-position`, `nearest-stores`, `store-result` (`data-store-id`), `store-name`, `store-distance` (`data-km`), `store-search-input`, `store-search-button`, `store-search-results`, `store-search-empty`, `store-finder-error`, `nav-stores` |
+| Offers and copy | `offers-strip`, `offer` (`data-code`), `offer-code`, `copy-code-SAVE10`, `copy-code-FIXED20`, `copy-order-number-button` (`data-copied`) |
+| Notifications | `notifications`, `notifications-toggle` (`aria-pressed`), `notifications-status` (`data-status`) |
+| Battery and offline | `battery-banner` (`data-level`), `offline-ready`, `offline-catalogue-notice` |
+| Gallery | `product-gallery` (`data-index`), `gallery-stage`, `gallery-image` (`data-index`), `gallery-prev`, `gallery-next`, `gallery-dot-1`…`gallery-dot-3` (`aria-current`), `gallery-status` |
+| Regions | `site-header`, `order-summary` (a region labelled "Order summary") |
 | Auth | `login-email`, `login-password`, `login-submit`, `login-error`, `register-name`, `register-name-counter`, `register-email`, `register-password`, `register-submit`, `register-success`, `forgot-password-email`, `forgot-password-submit`, `reset-password-input`, `reset-password-confirm`, `reset-password-submit`, `email-unverified-banner` |
 | Mailbox | `mailbox-email-input`, `mailbox-open-button`, `mailbox-message` (`data-type`), `mailbox-subject`, `mailbox-body`, `mailbox-link` |
 | Toasts | `toast-region`, `toast` (`data-type`), `toast-message`, `toast-dismiss` |
@@ -338,11 +402,12 @@ Each defect changes only its own behaviour (PLS-12.3). There are two unavoidable
 
 ## Scope
 
-All three build phases in the spec are done.
+Build phases 1–4 in the spec are done. Phases 5 (framework maturity) and 6 (Playwright Test Agents) are yours.
 
 - **Phase 1:** auth, catalogue, cart, discounts, checkout, the core API and the test hooks.
 - **Phase 2:** roles, admin grid, iframe payments, files, dialogs, windows, drag-and-drop, the mobile menu, and latency/chaos.
 - **Phase 3:** WebSocket and SSE, shadow DOM, infinite scroll, i18n, currency and timezone, planted a11y faults, bug mode, theme toggle and offline.
+- **Phase 4:** store finder (geolocation), order notifications, copy buttons, the battery-saver banner, the service-worker offline cache, the swipeable gallery, stable regions for aria snapshots, the component-test harness, the price-tracker extension and 7 more defects.
 
 Every AC in `tests/ACCEPTANCE_CRITERIA.md` now has an implementation to test against.
 
@@ -377,3 +442,10 @@ Two edge-case scenarios from the spec's checklist, which aren't in any phase, ar
 23. Bug mode: `discount-not-applied` and `vat-before-discount` also break PLS-5.6 (see [Bug mode](#bug-mode)). `double-submit` adds a 300 ms pause when placing an order, so concurrent requests overlap reliably. `search-apostrophe` simulates a SQL error rather than actually building unsafe SQL.
 24. The product page shows `product-stock-count` ("N available") next to `product-stock`. The text of `product-stock` is unchanged, so exact-text locators still work.
 25. Reviews (PLS-11.2) are new in Phase 3: one per user per product, with no editing or deleting.
+26. The Phase 4 defects have no AC IDs, because `ACCEPTANCE_CRITERIA.md` has no stories for Phase 4 yet. `/test/bugs` labels them "Phase 4: <feature>".
+27. The service worker is registered only by the production build (`vite preview`, which Docker runs), not the dev server. It handles requests before `page.route` can see them, so block service workers in tests that mock the network.
+28. The Battery Status API exists only in Chromium, so the battery banner never appears in Firefox or WebKit unless you mock `navigator.getBattery`.
+29. "Copy discount code" lives in a "Current offers" strip on the home and cart pages (new `GET /offers`, plus a `public` flag on discount codes). The strip changes those pages' visual baselines.
+30. The order summary is now a labelled region with an h2 "Order summary" and h3 sub-headings, for stable aria snapshots. Its test ids are unchanged.
+31. The component harness ships with no component tests; they're part of your Phase 5. The CT package is pinned to 1.49.1.
+32. The price-tracker extension has a small background service worker so tests can find its ID. It runs only in Chromium.
