@@ -19,6 +19,13 @@ export interface Totals {
   totalCents: number;
 }
 
+/** Switches used only by bug-mode defects. All off means correct pricing. */
+export interface PricingOptions {
+  vatBeforeDiscount?: boolean;
+  allowNegative?: boolean;
+  roundingBug?: boolean;
+}
+
 export function lineTotal(line: PricedLine): number {
   return line.unitPriceCents * line.quantity;
 }
@@ -28,25 +35,36 @@ export function lineTotal(line: PricedLine): number {
  * - Percent codes come off goods only.
  * - Fixed codes come off goods, then delivery; the total never goes below zero.
  * - VAT is charged on the discounted goods value.
+ * Normally there is at most one discount; a list exists for the discount-stacking defect.
  */
-export function calculateTotals(lines: PricedLine[], discount: Discount | null): Totals {
-  const subtotalCents = lines.reduce((sum, l) => sum + lineTotal(l), 0);
+export function calculateTotals(lines: PricedLine[], discounts: Discount | Discount[] | null, opts: PricingOptions = {}): Totals {
+  const list = discounts === null ? [] : Array.isArray(discounts) ? discounts : [discounts];
+  const quantity = lines.reduce((sum, l) => sum + l.quantity, 0);
+  let subtotalCents = lines.reduce((sum, l) => sum + lineTotal(l), 0);
+  if (opts.roundingBug && quantity >= 3) subtotalCents += 1;
   const fullDelivery = lines.length > 0 ? DELIVERY_CENTS : 0;
 
   let goodsDiscount = 0;
   let deliveryDiscount = 0;
-  if (discount && subtotalCents > 0) {
-    if (discount.type === 'percent') {
-      goodsDiscount = Math.round((subtotalCents * discount.value) / 100);
-    } else {
-      goodsDiscount = Math.min(discount.value, subtotalCents);
-      deliveryDiscount = Math.min(discount.value - goodsDiscount, fullDelivery);
+  if (subtotalCents > 0) {
+    for (const d of list) {
+      const remainingGoods = subtotalCents - goodsDiscount;
+      if (d.type === 'percent') {
+        const amount = Math.round((subtotalCents * d.value) / 100);
+        goodsDiscount += opts.allowNegative ? amount : Math.min(amount, Math.max(remainingGoods, 0));
+      } else if (opts.allowNegative) {
+        goodsDiscount += d.value;
+      } else {
+        const g = Math.min(d.value, Math.max(remainingGoods, 0));
+        goodsDiscount += g;
+        deliveryDiscount += Math.min(d.value - g, fullDelivery - deliveryDiscount);
+      }
     }
   }
 
   const goodsAfter = subtotalCents - goodsDiscount;
   const deliveryCents = fullDelivery - deliveryDiscount;
-  const vatCents = Math.round(goodsAfter * VAT_RATE);
+  const vatCents = Math.round((opts.vatBeforeDiscount ? subtotalCents : goodsAfter) * VAT_RATE);
   return {
     subtotalCents,
     discountCents: goodsDiscount + deliveryDiscount,

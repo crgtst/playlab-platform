@@ -13,6 +13,8 @@ import { asyncHandler, parse } from '../middleware/validate';
 import { buildCartView, CartView, stockError } from '../services/cart';
 import { euros, toCsv } from '../lib/csv';
 import { events } from '../lib/events';
+import { isBugOn } from '../lib/bugs';
+import { emitStock } from '../services/stock';
 
 export const ordersRouter = Router();
 ordersRouter.use(noStore, requireAuth);
@@ -40,7 +42,10 @@ const orderSchema = z.object({
   payment: cardSchema.optional(),
   paymentIntentId: z.string().uuid('paymentIntentId must be a UUID').optional(),
   acceptPriceChanges: z.boolean().optional().default(false),
-  // Anything else the client sends (e.g. item prices) is ignored: prices always come from the database.
+  // Item prices sent by the client are ignored (prices always come from the database), except by the price-tamper defect.
+  items: z
+    .array(z.object({ productId: z.number().int(), unitPriceCents: z.number().int().optional(), priceCents: z.number().int().optional() }))
+    .optional(),
 }).refine((v) => (v.payment === undefined) !== (v.paymentIntentId === undefined), {
   message: 'Send either payment (card details) or paymentIntentId, not both',
   path: ['payment'],
@@ -101,7 +106,7 @@ function assertCartReady(cart: CartView, acceptPriceChanges: boolean) {
     );
   }
   for (const item of cart.items) {
-    if (item.quantity > item.stock) {
+    if (item.quantity > item.stock && !isBugOn('stock-oversell')) {
       const err = stockError(item.stock);
       err.message = `${item.name}: ${err.message}`;
       err.details = { productId: item.productId, available: item.stock };
@@ -154,12 +159,13 @@ function orderView(o: any, items: any[]) {
 
 /** A payment intent can pay for an order once, only for its owner, and only for the amount it was created for. */
 async function checkIntent(id: string, userId: number, totalCents: number, db: PoolClient | typeof pool = pool) {
-  const rows = await db.query(`SELECT * FROM payment_intents WHERE id = $1 AND user_id = $2${db === pool ? '' : ' FOR UPDATE'}`, [id, userId]);
+  const lock = db !== pool && !isBugOn('double-submit');
+  const rows = await db.query(`SELECT * FROM payment_intents WHERE id = $1 AND user_id = $2${lock ? ' FOR UPDATE' : ''}`, [id, userId]);
   const intent = rows.rows[0];
   if (!intent) throw new ApiError(422, 'PAYMENT_NOT_FOUND', 'Payment not found');
   if (intent.status === 'declined') throw new ApiError(402, 'PAYMENT_DECLINED', 'Your card was declined');
   if (intent.status !== 'succeeded') throw new ApiError(409, 'PAYMENT_NOT_COMPLETED', 'This payment has not been completed');
-  if (intent.used_at) throw new ApiError(409, 'PAYMENT_ALREADY_USED', 'This payment has already been used for an order');
+  if (intent.used_at && !isBugOn('double-submit')) throw new ApiError(409, 'PAYMENT_ALREADY_USED', 'This payment has already been used for an order');
   if (intent.amount_cents !== totalCents) {
     throw new ApiError(409, 'PAYMENT_AMOUNT_MISMATCH', 'Your order total changed after payment. Please pay again.', {
       paidCents: intent.amount_cents,
@@ -197,7 +203,11 @@ ordersRouter.post(
 
     // Pre-flight checks without locks, so a slow payment never holds row locks.
     const cartRow = await query<{ id: string }>('SELECT id FROM carts WHERE user_id = $1', [user.id]);
-    const preCart = await buildCartView(cartRow[0]?.id ?? null);
+    // price-tamper: trust prices sent by the client.
+    const priceOverrides = isBugOn('price-tamper') && body.items
+      ? new Map(body.items.map((i) => [i.productId, i.unitPriceCents ?? i.priceCents ?? NaN]).filter(([, v]) => Number.isInteger(v)) as [number, number][])
+      : undefined;
+    const preCart = await buildCartView(cartRow[0]?.id ?? null, pool, { priceOverrides });
     assertCartReady(preCart, body.acceptPriceChanges);
 
     let cardLast4: string;
@@ -208,23 +218,34 @@ ordersRouter.post(
       cardLast4 = (await checkIntent(body.paymentIntentId!, user.id, preCart.totals.totalCents)).card_last4;
     }
 
+    // double-submit: no locking, and a slow "processing" step, so two concurrent submits both succeed.
+    const doubleSubmit = isBugOn('double-submit');
+    if (doubleSubmit) await new Promise((r) => setTimeout(r, 300));
+
     let order;
     try {
       order = await withTransaction(async (client) => {
-        // Locking the cart row serialises double submits: the second request waits, then finds an empty cart.
-        const locked = await client.query('SELECT id FROM carts WHERE user_id = $1 FOR UPDATE', [user.id]);
-        const cartId = locked.rows[0]?.id ?? null;
-        if (cartId) {
-          await client.query(
-            'SELECT p.id FROM products p JOIN cart_items ci ON ci.product_id = p.id WHERE ci.cart_id = $1 ORDER BY p.id FOR UPDATE OF p',
-            [cartId],
-          );
+        let cartId: string | null;
+        let cart: CartView;
+        if (doubleSubmit) {
+          cartId = cartRow[0]?.id ?? null;
+          cart = preCart;
+        } else {
+          // Locking the cart row serialises double submits: the second request waits, then finds an empty cart.
+          const locked = await client.query('SELECT id FROM carts WHERE user_id = $1 FOR UPDATE', [user.id]);
+          cartId = locked.rows[0]?.id ?? null;
+          if (cartId) {
+            await client.query(
+              'SELECT p.id FROM products p JOIN cart_items ci ON ci.product_id = p.id WHERE ci.cart_id = $1 ORDER BY p.id FOR UPDATE OF p',
+              [cartId],
+            );
+          }
+          cart = await buildCartView(cartId, client, { priceOverrides });
+          assertCartReady(cart, body.acceptPriceChanges);
         }
-        const cart = await buildCartView(cartId, client);
-        assertCartReady(cart, body.acceptPriceChanges);
-        if (cart.discount) {
-          const d = await client.query('SELECT * FROM discount_codes WHERE code = $1 FOR UPDATE', [cart.discount.code]);
-          if (d.rows[0]?.single_use && d.rows[0].used_count > 0) {
+        for (const applied of cart.discounts) {
+          const d = await client.query('SELECT * FROM discount_codes WHERE code = $1 FOR UPDATE', [applied.code]);
+          if (d.rows[0]?.single_use && d.rows[0].used_count > 0 && !isBugOn('single-use-reused')) {
             throw new ApiError(422, 'DISCOUNT_ALREADY_USED', 'This code has already been used');
           }
           await client.query('UPDATE discount_codes SET used_count = used_count + 1 WHERE id = $1', [d.rows[0].id]);
@@ -249,14 +270,14 @@ ordersRouter.post(
             cart.totals.vatCents,
             cart.totals.deliveryCents,
             cart.totals.totalCents,
-            cart.discount?.code ?? null,
+            cart.discounts.length ? cart.discounts.map((d) => d.code).join('+') : null,
             JSON.stringify(body.shipping),
             body.deliveryDate,
             body.instructions,
             cardLast4,
             idemKey ?? null,
             clock.now(),
-            body.paymentIntentId ?? null,
+            doubleSubmit ? null : body.paymentIntentId ?? null,
           ],
         );
         const orderId = inserted.rows[0].id;
@@ -265,10 +286,11 @@ ordersRouter.post(
             'INSERT INTO order_items (order_id, product_id, name, unit_price_cents, quantity) VALUES ($1, $2, $3, $4, $5)',
             [orderId, item.productId, item.name, item.unitPriceCents, item.quantity],
           );
-          await client.query('UPDATE products SET stock = stock - $1 WHERE id = $2', [item.quantity, item.productId]);
+          // Clamped at 0: only reachable below 0 with the stock-oversell defect.
+          await client.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2', [item.quantity, item.productId]);
         }
         await client.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
-        await client.query('UPDATE carts SET discount_code_id = NULL, updated_at = now() WHERE id = $1', [cartId]);
+        await client.query('UPDATE carts SET discount_code_id = NULL, extra_discount_code_id = NULL, updated_at = now() WHERE id = $1', [cartId]);
         return loadOrder(orderId, client);
       });
     } catch (err: any) {
@@ -282,6 +304,7 @@ ordersRouter.post(
       }
       throw err;
     }
+    await emitStock(order!.items.map((i) => i.productId));
     res.status(201).location(`/api/v1/orders/${order!.id}`).json({ data: order });
   }),
 );
@@ -409,7 +432,8 @@ function orderIdParam(raw: string): number {
 async function visibleOrder(req: Request) {
   const order = await loadOrder(orderIdParam(req.params.id));
   const user = req.user!;
-  if (!order || (!canSeeAll(user.role) && order.userId !== user.id)) throw notFound('Order not found');
+  const leak = isBugOn('order-leak');
+  if (!order || (!canSeeAll(user.role) && order.userId !== user.id && !leak)) throw notFound('Order not found');
   return order;
 }
 

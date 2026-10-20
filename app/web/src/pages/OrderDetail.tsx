@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, ApiRequestError, errorMessage } from '../api/client';
 import type { Order } from '../api/types';
+import { LiveIndicator } from '../components/LiveIndicator';
 import { OrderSummary } from '../components/OrderSummary';
+import { useOrderEvents } from '../context/RealtimeContext';
 
 export function OrderDetail() {
   const { id } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
+
+  // Live status over the WebSocket (PLS-7.4): no refresh needed.
+  useOrderEvents((e) => {
+    setOrder((o) => (o && o.id === e.orderId ? { ...o, status: e.status as Order['status'] } : o));
+  });
 
   useEffect(() => {
     document.title = 'Order – PlayLab Shop';
@@ -32,6 +39,7 @@ export function OrderDetail() {
       {order && (
         <>
           <h1>Order {order.number}</h1>
+          <LiveIndicator />
           <OrderSummary order={order} />
         </>
       )}

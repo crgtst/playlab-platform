@@ -9,6 +9,8 @@ import { useCart } from '../../context/CartContext';
 import { useConfig } from '../../context/ConfigContext';
 import { useToast } from '../../context/ToastContext';
 import { clearCheckoutState, useCheckoutState } from '../../lib/checkoutState';
+import { useBug } from '../../context/ConfigContext';
+import { t } from '../../lib/i18n';
 import { PriceChangeWarning } from './Review';
 
 type Failure =
@@ -41,6 +43,8 @@ export function Payment() {
   // One key per checkout attempt: retries and double submits can never create two orders.
   const idempotencyKey = useRef(newKey());
   const placingRef = useRef(false);
+  // double-submit: the "already placing" guard is missing, so a successful payment places the order twice.
+  const doubleSubmit = useBug('double-submit');
 
   const total = cart?.totals.totalCents ?? 0;
   const blocked = !!cart?.priceChanged && !state.acceptPriceChanges;
@@ -69,14 +73,14 @@ export function Payment() {
 
   const placeOrder = useCallback(
     async (paymentIntentId: string) => {
-      if (placingRef.current) return;
+      if (placingRef.current && !doubleSubmit) return;
       placingRef.current = true;
       setPlacing(true);
       setFailure(null);
       try {
         const res = await api<{ data: Order }>('/orders', {
           method: 'POST',
-          headers: { 'Idempotency-Key': idempotencyKey.current },
+          headers: { 'Idempotency-Key': doubleSubmit ? newKey() : idempotencyKey.current },
           body: {
             shipping: state.shipping,
             deliveryDate: state.deliveryDate,
@@ -110,7 +114,7 @@ export function Payment() {
         setPlacing(false);
       }
     },
-    [state, navigate, refresh, update, createIntent, show],
+    [state, navigate, refresh, update, createIntent, show, doubleSubmit],
   );
 
   // Results from the payment iframe arrive by postMessage. Only trust messages from the frame's origin.
@@ -126,6 +130,7 @@ export function Payment() {
         case 'succeeded':
           setProcessing(false);
           placeOrder(intent.id);
+          if (doubleSubmit) placeOrder(intent.id);
           break;
         case 'declined':
           setProcessing(false);
@@ -143,7 +148,7 @@ export function Payment() {
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [intent, frameOrigin, placeOrder]);
+  }, [intent, frameOrigin, placeOrder, doubleSubmit]);
 
   if (!state.shippingComplete) return <Navigate to="/checkout/shipping" replace />;
   if (!cart) return null;
@@ -155,24 +160,24 @@ export function Payment() {
 
   return (
     <div className="checkout">
-      <h1>Checkout</h1>
+      <h1>{t('checkout.title')}</h1>
       <CheckoutSteps current={3} />
-      <h2>Payment</h2>
+      <h2>{t('payment.heading')}</h2>
       <PriceChangeWarning accepted={state.acceptPriceChanges} onAccept={() => update({ acceptPriceChanges: true })} />
       <div className="payment-grid">
         <section aria-labelledby="card-heading" data-testid="payment-section">
-          <h3 id="card-heading">Card details</h3>
+          <h3 id="card-heading">{t('payment.card')}</h3>
           {failure?.kind === 'declined' && (
             <div className="alert error" role="alert" data-testid="payment-declined">
               <p>{failure.message}</p>
-              <p className="small">Your cart has been kept. Try another card.</p>
+              <p className="small">{t('payment.declinedKept')}</p>
             </div>
           )}
           {failure?.kind === 'timeout' && (
             <div className="alert error" role="alert" data-testid="payment-timeout">
               <p>{failure.message}</p>
               <button type="button" onClick={retryPayment} disabled={processing} data-testid="payment-retry-button">
-                Retry payment
+                {t('payment.retry')}
               </button>
             </div>
           )}
@@ -181,7 +186,7 @@ export function Payment() {
               <p>{failure.message}</p>
               {failure.kind === 'order' && failure.retryable && intent && (
                 <button type="button" onClick={() => placeOrder(intent.id)} disabled={placing} data-testid="payment-order-retry-button">
-                  Try again
+                  {t('payment.tryAgain')}
                 </button>
               )}
             </div>
@@ -190,40 +195,40 @@ export function Payment() {
             <div className="alert error" role="alert" data-testid="payment-setup-error">
               <p>{intentError}</p>
               <button type="button" onClick={createIntent} data-testid="payment-setup-retry-button">
-                Try again
+                {t('payment.tryAgain')}
               </button>
             </div>
           )}
           {blocked ? (
             <p className="muted" data-testid="payment-blocked">
-              Accept the new prices above to continue to payment.
+              {t('payment.blocked')}
             </p>
           ) : intent ? (
             <PaymentFrame ref={frame} src={intent.frameUrl} />
           ) : (
             !intentError && (
               <p role="status" className="muted" data-testid="payment-loading">
-                Loading the secure payment form…
+                {t('payment.loading')}
               </p>
             )
           )}
           {(processing || placing) && (
             <p role="status" className="muted" data-testid="payment-processing">
-              {placing ? 'Placing your order…' : 'Processing your payment…'}
+              {placing ? t('payment.placing') : t('payment.processing')}
             </p>
           )}
           <div className="form-actions">
             <Link to="/checkout/review" className="button secondary" data-testid="payment-back-link">
-              Back
+              {t('payment.back')}
             </Link>
           </div>
         </section>
         <aside aria-labelledby="payment-summary-heading">
-          <h3 id="payment-summary-heading">Order total</h3>
+          <h3 id="payment-summary-heading">{t('payment.orderTotal')}</h3>
           <Totals totals={cart.totals} discount={cart.discount} />
           <div id="test-cards" className="panel small" data-testid="test-cards">
             <p>
-              <strong>Test cards</strong> (any future expiry, any CVC):
+              <strong>{t('payment.testCards')}</strong> (any future expiry, any CVC):
             </p>
             <ul>
               <li>4242 4242 4242 4242 – succeeds</li>

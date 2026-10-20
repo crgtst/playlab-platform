@@ -13,6 +13,7 @@ import { requireAuth } from '../middleware/auth';
 import { noStore } from '../middleware/noStore';
 import { asyncHandler, parse } from '../middleware/validate';
 import { buildCartView } from '../services/cart';
+import { bugs } from '../lib/bugs';
 
 /** /api/v1/payments: called by the shop (first-party, authenticated). */
 export const paymentsRouter = Router();
@@ -69,7 +70,10 @@ paymentsRouter.get(
 const FRAME_HTML = fs.readFileSync(path.join(process.cwd(), 'pay', 'frame.html'), 'utf8');
 
 payFrameRouter.get('/frame', (_req, res) => {
-  const html = FRAME_HTML.replace('__SHOP_ORIGINS__', JSON.stringify(config.shopOrigins).replace(/</g, '\\u003c'));
+  const html = FRAME_HTML.replace('__SHOP_ORIGINS__', JSON.stringify(config.shopOrigins).replace(/</g, '\\u003c')).replace(
+    '__BUGS__',
+    JSON.stringify(bugs.active()),
+  );
   res.setHeader('Content-Security-Policy', `frame-ancestors ${config.shopOrigins.join(' ')}`);
   res.setHeader('Cache-Control', 'no-store');
   res.type('html').send(html);

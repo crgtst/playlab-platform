@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import type { Category, ProductList } from '../api/types';
 import { Pagination } from '../components/Pagination';
+import { useOnline } from '../components/OfflineBanner';
 import { ProductCard } from '../components/ProductCard';
 
 const SORT_OPTIONS = [
@@ -67,6 +68,7 @@ export function Products() {
   useEffect(() => {
     load();
   }, [load]);
+  useOnline(load);
 
   const apply = (next: typeof form) => {
     const min = next.minPrice === '' ? null : Number(next.minPrice);

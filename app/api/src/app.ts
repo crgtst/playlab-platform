@@ -16,6 +16,8 @@ import { healthRouter } from './routes/health';
 import { ordersRouter } from './routes/orders';
 import { payFrameRouter, paymentsRouter } from './routes/payments';
 import { categoriesRouter, productsRouter } from './routes/products';
+import { reviewsRouter } from './routes/reviews';
+import { stockRouter } from './routes/stock';
 import { testRouter } from './routes/test';
 import { usersRouter } from './routes/users';
 import { wishlistRouter } from './routes/wishlist';
@@ -40,6 +42,7 @@ export function createApp() {
   v1.use('/config', configRouter);
   v1.use(apiRateLimit);
   v1.use('/auth', authRouter);
+  v1.use('/products/:productId/reviews', reviewsRouter);
   v1.use('/products', productsRouter);
   v1.use('/categories', categoriesRouter);
   v1.use('/cart', cartRouter);
@@ -48,6 +51,7 @@ export function createApp() {
   v1.use('/payments', paymentsRouter);
   v1.use('/users', usersRouter);
   v1.use('/wishlist', wishlistRouter);
+  v1.use('/stock', stockRouter);
   app.use('/api/v1', v1);
   app.use('/pay', payFrameRouter);
 

@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom';
+import { MessageKey, t } from '../lib/i18n';
 
-const STEPS = [
-  { path: '/checkout/shipping', label: 'Shipping' },
-  { path: '/checkout/review', label: 'Review' },
-  { path: '/checkout/payment', label: 'Payment' },
+const STEPS: { path: string; label: MessageKey }[] = [
+  { path: '/checkout/shipping', label: 'checkout.step1' },
+  { path: '/checkout/review', label: 'checkout.step2' },
+  { path: '/checkout/payment', label: 'checkout.step3' },
 ];
 
 export function CheckoutSteps({ current }: { current: 1 | 2 | 3 }) {
   return (
-    <nav aria-label="Checkout progress" data-testid="checkout-steps">
+    <nav aria-label={t('checkout.progress')} data-testid="checkout-steps">
       <ol className="steps">
         {STEPS.map((s, i) => {
           const n = i + 1;
@@ -17,11 +18,11 @@ export function CheckoutSteps({ current }: { current: 1 | 2 | 3 }) {
             <li key={s.path} className={state} aria-current={n === current ? 'step' : undefined} data-testid={`checkout-step-${n}`}>
               {n < current ? (
                 <Link to={s.path} data-testid={`checkout-step-${n}-link`}>
-                  {n}. {s.label}
+                  {n}. {t(s.label)}
                 </Link>
               ) : (
                 <span>
-                  {n}. {s.label}
+                  {n}. {t(s.label)}
                 </span>
               )}
             </li>

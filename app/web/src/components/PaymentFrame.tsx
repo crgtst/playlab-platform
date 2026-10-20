@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { t } from '../lib/i18n';
 
 interface Props {
   src: string;
@@ -10,7 +11,7 @@ export const PaymentFrame = forwardRef<HTMLIFrameElement, Props>(function Paymen
     <iframe
       ref={ref}
       src={src}
-      title="Secure payment form"
+      title={t('payment.frameTitle')}
       name="payment-frame"
       className="payment-frame"
       width="100%"

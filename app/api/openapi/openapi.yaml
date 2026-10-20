@@ -11,6 +11,12 @@ info:
     * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
     * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
     * Test hooks under `/test/*` exist only when the API runs with `TEST_HOOKS=true`.
+    * Live order status: WebSocket at `ws://<host>/ws/orders` (not describable in OpenAPI).
+      Authenticate with the `session` cookie or `?token=<accessToken>`; without either the upgrade gets 401.
+      Messages: `{"type":"hello","userId","role"}` on connect, then
+      `{"type":"order.status","orderId","number","status","from","at"}` for your orders (admin and support: every order).
+      Send `{"type":"ping"}` to get `{"type":"pong"}`.
+    * Live stock: Server-Sent Events at `GET /api/v1/stock/stream`.
 servers:
   - url: /api/v1
     description: Versioned API
@@ -330,6 +336,72 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+  /products/{productId}/reviews:
+    parameters:
+      - { name: productId, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Products]
+      summary: Reviews for a product, newest first
+      description: Review text is returned exactly as written. Render it as text, never as HTML.
+      responses:
+        '200':
+          description: Reviews
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReviewList' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Products]
+      summary: Review a product (one review per user per product)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating, title]
+              properties:
+                rating: { type: integer, minimum: 1, maximum: 5 }
+                title: { type: string, maxLength: 100 }
+                body: { type: string, maxLength: 1000 }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data: { $ref: '#/components/schemas/Review' }
+                  meta: { $ref: '#/components/schemas/ReviewMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /stock/stream:
+    get:
+      tags: [Products]
+      summary: Live stock levels (Server-Sent Events)
+      description: |
+        A `text/event-stream`. First an `event: snapshot` with `{ products: [{ productId, stock }], at }`,
+        then an `event: stock` with `{ productId, stock, at }` whenever a watched product's stock changes
+        (orders, admin edits), and a `: ping` comment every 15 s. After `POST /test/reset` a fresh snapshot is sent.
+      parameters:
+        - name: ids
+          in: query
+          description: Comma-separated product ids to watch (up to 100). Omit to watch every product.
+          schema: { type: string, example: '1,2,3' }
+      responses:
+        '200':
+          description: Event stream
+          content:
+            text/event-stream:
+              schema: { type: string, example: "event: stock\ndata: {\"productId\":4,\"stock\":7,\"at\":\"2026-10-20T12:00:00.000Z\"}\n\n" }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   /categories:
     get:
       tags: [Products]
@@ -583,10 +655,19 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [paymentFrameUrl, testHooks]
+                required: [paymentFrameUrl, testHooks, currencies, bugs]
                 properties:
                   paymentFrameUrl: { type: string, format: uri }
                   testHooks: { type: boolean }
+                  currencies:
+                    type: object
+                    description: Display conversion rates from EUR. Every amount in the API is EUR.
+                    additionalProperties: { type: number }
+                    example: { EUR: 1, GBP: 0.85 }
+                  bugs:
+                    type: array
+                    description: Bug-mode defects currently on (always empty unless TEST_HOOKS=true)
+                    items: { type: string }
 
   /orders/export.csv:
     get:
@@ -1023,6 +1104,7 @@ paths:
                       - orders-for-admin
                       - customer-with-wishlist
                       - customer-with-avatar
+                      - product-with-reviews
                       - out-of-stock-product
                       - low-stock-product
                       - expired-discount
@@ -1216,6 +1298,59 @@ paths:
       responses:
         '204':
           description: Cleared
+
+  /test/bugs:
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test/bugs - every named defect, whether it is on, and the AC it breaks'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Defects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [name, enabled, ac, side, description]
+                      properties:
+                        name: { type: string }
+                        enabled: { type: boolean }
+                        ac: { type: string }
+                        side: { type: string, description: 'Where the defect lives: api, web, api+web or payment frame' }
+                        description: { type: string }
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/bugs - switch defects on or off'
+      description: Web and payment-frame defects take effect on the next page load (they read `GET /api/v1/config`).
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enable: { type: array, items: { type: string }, example: [order-leak] }
+                disable: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: The defects after the change
+          content:
+            application/json:
+              schema: { type: object }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Test hooks]
+      summary: 'DELETE /test/bugs - switch every defect off'
+      servers: [{ url: / }]
+      responses:
+        '204':
+          description: All off
 
 components:
   securitySchemes:
@@ -1475,7 +1610,7 @@ components:
         lineTotalCents: { type: integer }
     Cart:
       type: object
-      required: [id, items, itemCount, discount, totals, currency, priceChanged, notices]
+      required: [id, items, itemCount, discount, discounts, totals, currency, priceChanged, notices]
       properties:
         id: { type: string }
         items:
@@ -1492,6 +1627,18 @@ components:
             type: { type: string, enum: [percent, fixed] }
             value: { type: integer }
             amountCents: { type: integer }
+        discounts:
+          type: array
+          description: The applied codes. At most one, except with the discount-stacking defect in bug mode.
+          items:
+            type: object
+            required: [code, description, type, value, amountCents]
+            properties:
+              code: { type: string }
+              description: { type: string }
+              type: { type: string, enum: [percent, fixed] }
+              value: { type: integer }
+              amountCents: { type: integer }
         totals: { $ref: '#/components/schemas/Totals' }
         currency: { type: string, enum: [EUR] }
         priceChanged: { type: boolean }
@@ -1640,6 +1787,36 @@ components:
           properties:
             count: { type: integer }
 
+    Review:
+      type: object
+      required: [id, productId, rating, title, body, author, createdAt]
+      properties:
+        id: { type: integer }
+        productId: { type: integer }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        title: { type: string }
+        body: { type: string }
+        author:
+          type: object
+          required: [id, name]
+          properties:
+            id: { type: integer }
+            name: { type: string }
+        createdAt: { type: string, format: date-time }
+    ReviewMeta:
+      type: object
+      required: [count, average]
+      properties:
+        count: { type: integer }
+        average: { type: number, nullable: true, description: Mean rating to one decimal place }
+    ReviewList:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Review' }
+        meta: { $ref: '#/components/schemas/ReviewMeta' }
     AddressSuggestion:
       type: object
       required: [id, line1, city, county, postcode, country, label]

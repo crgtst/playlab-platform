@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { query } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound, validationError } from '../lib/errors';
+import { isBugOn } from '../lib/bugs';
 import { requireRole } from '../middleware/auth';
+import { emitStock } from '../services/stock';
 import { asyncHandler, parse } from '../middleware/validate';
 
 export const productsRouter = Router();
@@ -92,6 +94,10 @@ productsRouter.get(
   '/',
   asyncHandler(async (req: Request, res: Response) => {
     const q = parse(listSchema, req.query);
+    if (isBugOn('search-apostrophe') && q.q?.includes("'")) {
+      // Simulates a query built by string concatenation breaking on the quote.
+      throw new Error(`syntax error at or near "${q.q.slice(q.q.indexOf("'") + 1)}"`);
+    }
     const where: string[] = [];
     const params: unknown[] = [];
     if (q.q) {
@@ -119,7 +125,8 @@ productsRouter.get(
     const totalPages = Math.ceil(total / q.limit);
     const rows = await query(
       `${SELECT_PRODUCT} ${whereSql} ORDER BY ${SORTS[q.sort]} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
-      [...params, q.limit, (q.page - 1) * q.limit],
+      // pagination-duplicate: page 2 onwards starts one item early, repeating the previous page's last item.
+      [...params, q.limit, Math.max(0, (q.page - 1) * q.limit - (isBugOn('pagination-duplicate') && q.page > 1 ? 1 : 0))],
     );
     res.setHeader('Link', buildLink(req, q.page, totalPages));
     res.setHeader('X-Total-Count', String(total));
@@ -176,6 +183,7 @@ productsRouter.post(
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8) RETURNING id`,
       [body.sku, body.name, body.description, cat, body.priceCents, body.stock, body.imageUrl ?? `/img/${body.category}.svg`, clock.now()],
     ).catch(uniqueSku);
+    await emitStock([rows[0].id]);
     res.status(201).location(`/api/v1/products/${rows[0].id}`).json({ data: await loadProduct(rows[0].id) });
   }),
 );
@@ -205,6 +213,7 @@ async function updateProduct(req: Request, res: Response, partial: boolean) {
             image_url = $7, updated_at = $8 WHERE id = $9`,
     [merged.sku, merged.name, merged.description, cat, merged.priceCents, merged.stock, merged.imageUrl, clock.now(), id.data],
   ).catch(uniqueSku);
+  if (merged.stock !== existing.stock) await emitStock([id.data]);
   res.json({ data: await loadProduct(id.data) });
 }
 

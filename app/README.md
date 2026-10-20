@@ -1,4 +1,4 @@
-# PlayLab Shop: Phases 1 and 2
+# PlayLab Shop
 
 A small, realistic e-commerce site built to be tested with Playwright. This folder holds the app: a React web front end, an Express API and Postgres. The specification and acceptance criteria are in [`../tests/`](../tests/).
 
@@ -28,6 +28,9 @@ If one of the ports is already in use, override it, for example `API_PORT=3001 d
 | Test mailbox page | http://localhost:5173/mailbox?email=you@example.com |
 | Admin area | http://localhost:5173/admin/orders and `/admin/products` (admin and support users) |
 | Payment iframe | http://localhost:3000/pay/frame (embedded by checkout; a different origin from the shop) |
+| Live order status (WebSocket) | ws://localhost:5173/ws/orders (proxied) or ws://localhost:3000/ws/orders |
+| Live stock (Server-Sent Events) | http://localhost:5173/api/v1/stock/stream?ids=1,2 |
+| New arrivals (infinite scroll) | http://localhost:5173/new-arrivals |
 | Postgres | `postgres://playlab:playlab@localhost:5432/playlab` |
 
 The web app proxies `/api` and `/test` to the API. A browser therefore talks to one origin, and cookies are first-party.
@@ -104,6 +107,8 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | `GET /test/clock` | Returns `{ now, offsetMs }`. |
 | `POST /test/clock` | Moves the server's "now". Body `{ "now": "<ISO date>" }`, `{ "offsetMs": n }` or `{ "advanceMs": n }`; an empty body resets it. Drives JWT expiry, lockout, reset-link expiry, discount windows and order dates. |
 | `POST /test/latency` | Delays matching requests. Body `{ "path": "/api/v1/products*", "method"?: "GET", "delayMs": 3000 }`. `GET` lists the rules, `DELETE` clears them. |
+| `GET /test/bugs` | Every named defect, whether it is on, and the AC it breaks. See [Bug mode](#bug-mode). |
+| `POST /test/bugs` | Switches defects on or off: `{ "enable": ["order-leak"], "disable": [...] }`. `DELETE /test/bugs` turns them all off. |
 | `POST /test/chaos` | Makes matching requests fail. Body `{ "path", "method"?, "status"?: 500, ... }` plus exactly one of `failureRate` (0 to 1, random) or `failNext` (fail the next N, deterministic). Failures use code `CHAOS_INJECTED` and an `X-Chaos-Rule` header. `GET` lists the rules, `DELETE` clears them. |
 
 Latency and chaos rules match the path without its query string, and `*` is the only wildcard. They apply to `/api/v1/*` and `/pay/*`, never to `/test/*` or `/health`. `POST /test/reset` clears them.
@@ -116,6 +121,7 @@ Latency and chaos rules match the path without its query string, and `*` is the 
 | `orders-for-admin` | 2 customers (Nora Grid, Liam Grid) with 12 orders: 3 paid, 3 processing, 3 shipped, 2 delivered and 1 cancelled. Two use `SAVE10`. |
 | `customer-with-wishlist` | A customer with 4 wishlist items in a known order |
 | `customer-with-avatar` | A customer who already has an avatar |
+| `product-with-reviews` | 3 reviews (ratings 5, 4, 2; average 3.7) on product 1, Wireless Earbuds. One review contains `<script>alert('xss')</script>`. |
 | `out-of-stock-product` | Product `FX-OOS` with stock 0 |
 | `low-stock-product` | Product `FX-LOW` with stock 1 |
 | `expired-discount` | `EXPIRED10`: 10% off, expired yesterday |
@@ -134,7 +140,7 @@ curl -X POST localhost:3000/test/clock -H 'Content-Type: application/json' -d '{
 curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{"path":"/api/v1/orders","method":"POST","failNext":1}'
 ```
 
-Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
+`POST /test/reset` also switches every bug-mode defect off.
 
 ## API conventions
 
@@ -169,7 +175,20 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
   - The type is detected from the file's first bytes, so a renamed `.exe` gets **415 "Only PNG or JPG images are allowed"**.
   - `GET /users/{id}/avatar` serves the image; `DELETE /users/me/avatar` removes it. `/auth/me` includes `avatarUrl`.
 - **Wishlist**: `GET /wishlist`, `POST /wishlist/items` (409 if already there), `DELETE /wishlist/items/{productId}` and `PUT /wishlist/order { productIds }`. The reorder must list exactly the current items, otherwise 422.
-- **Config**: `GET /api/v1/config` returns `{ paymentFrameUrl, testHooks }` for the web app.
+- **Config**: `GET /api/v1/config` returns `{ paymentFrameUrl, testHooks, currencies, bugs }` for the web app. `currencies` holds the display rates (`{ EUR: 1, GBP: 0.85 }`) and `bugs` lists the active bug-mode defects.
+- **Live order status (WebSocket)** at `/ws/orders`:
+  - Authenticate with the `session` cookie or `?token=<accessToken>`; without either the upgrade gets 401.
+  - On connect you get `{ "type": "hello", "userId", "role" }`.
+  - After that, every status change (inline or bulk) sends `{ "type": "order.status", "orderId", "number", "status", "from", "at" }` to the order's owner and to every admin and support socket.
+  - Send `{ "type": "ping" }` to get a `pong`. The server pings every 30 s.
+- **Live stock (SSE)**: `GET /api/v1/stock/stream?ids=1,2` (omit `ids` to watch everything).
+  - First an `event: snapshot` with `{ products: [{ productId, stock }] }`.
+  - Then an `event: stock` with `{ productId, stock }` after every order and every admin stock change.
+  - A `: ping` comment arrives every 15 s, and a new snapshot follows `/test/reset`.
+- **Reviews**: `GET /products/{id}/reviews` returns `{ data, meta: { count, average } }`, newest first.
+  - `POST` the same path with `{ rating 1-5, title, body? }`. You must be logged in; it's one review per user per product (409 for a second), and invalid input gets 422.
+  - Text is stored exactly as written.
+- **Cart discounts**: the cart has `discount` (the applied code) and `discounts` (a list). The list only ever holds more than one code with the `discount-stacking` defect.
 
 ## Web pages
 
@@ -189,8 +208,10 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
 | `/orders/:id/receipt` | Print receipt in a **popup window** (`window.open`), with no site chrome. It never prints by itself. |
 | `/admin/orders` | Orders grid: status filter, search, pagination, select rows, inline status edit, bulk status change (confirmation modal), Export CSV |
 | `/admin/products` | Product table with create and edit in a modal; Delete asks with a native `confirm()` |
+| `/new-arrivals` | Newest products, 12 at a time. More load when `infinite-sentinel` scrolls into view; `load-more-button` is the fallback, and `new-arrivals-end` appears after all 40. |
+| `/products/:id` (Phase 3) | Adds a live stock counter (SSE) and reviews, rated with the `<review-stars>` web component |
 
-## Playwright notes (Phase 2 patterns)
+## Playwright notes
 
 - **Payment iframe**: the card form is cross-origin. Use `page.frameLocator('[data-testid="payment-frame"]')`, then `getByTestId('frame-card-number')` and so on, and click `frame-pay-button`. The parent page shows `payment-declined`, `payment-timeout` (with `payment-retry-button`, which resubmits the frame) and `payment-error` (with `payment-order-retry-button` when placing the order failed after payment).
 - **Native dialogs**: product delete and wishlist remove use `confirm()`. Leaving checkout for another page in the app also uses `confirm()` ("Your order is not finished. Leave checkout?"). Handle them with `page.on('dialog')`; Playwright dismisses unhandled dialogs.
@@ -201,6 +222,70 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
 - **Hover menu**: the account menu (`account-menu-button`) opens on hover, click, Enter or ArrowDown. **Log out (`logout-button`) is inside this menu**, so open it first.
 - **Tooltips**: `vat-info-button` in the totals, and every disabled control a support user sees. Hover or focus the control, and the `role="tooltip"` element appears.
 - **Mobile**: under 768 px the nav collapses behind `nav-menu-button` (`aria-expanded`, `aria-controls="main-menu"`). Escape or navigating closes it.
+- **WebSocket**:
+  - Order detail, confirmation, account history, the admin grid and the track page update live. Each shows a `live-indicator` with `data-state` (`connecting`, `open`, `closed`); wait for `open` before changing a status.
+  - `page.routeWebSocket('**/ws/orders', ...)` lets you fake `order.status` messages.
+- **SSE**: the product page's `product-stock` (`data-stock`) follows the stream. `stock-live-indicator` shows `data-state="open"` once connected. The stream is a normal HTTP request, so it can be routed or aborted.
+- **Shadow DOM**: `<review-stars>` has an open shadow root, and Playwright's CSS and role locators pierce it.
+  - Use `page.getByTestId('review-rating').getByTestId('star-4')` or `getByRole('radio', { name: '4 stars' })`.
+  - Read-only stars expose `getByRole('img', { name: '2 out of 5 stars' })`.
+  - Arrow keys, Home and End change the rating. A `change` event (bubbling, composed) carries `detail.value`.
+- **Infinite scroll**: scroll `infinite-sentinel` into view, or call `mouse.wheel`, until `new-arrivals-end` appears. Use `toHaveCount` on `product-card`.
+- **Locale, timezone and colour scheme**:
+  - With no saved choice, the language comes from the browser (`locale: 'ga-IE'` gives Irish), the currency from `en-GB` (GBP, otherwise EUR), and the theme from `colorScheme`.
+  - The `language-select`, `currency-select` and `theme-toggle` choices are saved in localStorage.
+  - Dates use the browser's `timezoneId`. Order times come from the server clock, so use `POST /test/clock` to place a late-evening order.
+- **Offline**: `context.setOffline(true)` shows `offline-banner` (`data-state="offline"`). Going back online shows "Back online", and the products, product, cart and admin orders pages reload their data.
+- **Accessibility**: home, product, cart and checkout have no serious or critical axe violations (checked in English, Irish and dark mode). Three faults are **planted on purpose** elsewhere, for practising `@axe-core/playwright`:
+  1. `/new-arrivals`: the promo banner image has no `alt` (`image-alt`, critical).
+  2. `/wishlist`: the helper text above the list fails colour contrast (`color-contrast`, serious).
+  3. `/track/:id`: the envelope "share" link has no accessible name (`link-name`, serious).
+- **Visual testing**: the home and product pages are stable after `/test/reset`. Mask `live-indicator`, `stock-live-indicator`, `toast-region` and any dates. Use `colorScheme: 'light'` (or set the theme) for consistent baselines.
+
+## Bug mode
+
+Switch defects on with `POST /test/bugs` (needs `TEST_HOOKS=true`):
+
+```bash
+curl -X POST localhost:3000/test/bugs -H 'Content-Type: application/json' -d '{"enable":["order-leak"]}'
+curl localhost:3000/test/bugs        # list with enabled flags
+curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
+```
+
+**Web** and **payment frame** defects take effect on the next page load (or `page.reload()`), because the page reads the active list from `GET /api/v1/config` when it loads.
+
+| Defect | AC it breaks | Where | Behaviour when on |
+| --- | --- | --- | --- |
+| `discount-not-applied` | PLS-5.1 | API | The code shows as applied, but the totals ignore it |
+| `expired-discount-accepted` | PLS-5.2 | API | Expired codes are accepted |
+| `discount-stacking` | PLS-5.4 | API | A second code is accepted and both apply (the cart's `discounts` lists both) |
+| `discount-survives-cart-change` | PLS-5.5 | API | The minimum spend is not re-checked when the cart changes |
+| `discount-negative-total` | PLS-5.6 | API | Fixed codes are not capped, so the total goes negative |
+| `single-use-reused` | PLS-5.3 | API | A used single-use code still works |
+| `discount-case-sensitive` | PLS-5.7 | API | `save10` is rejected; only `SAVE10` works |
+| `vat-before-discount` | PLS-5.8 | API | VAT is charged on the pre-discount subtotal |
+| `cart-total-rounding` | PLS-4.4 | API | The subtotal is 1 cent more than the sum of lines with 3 or more items |
+| `currency-switch-stale` | PLS-4.6 | Web | The cart page keeps € prices after switching to GBP |
+| `price-tamper` | PLS-6.7 | API | `POST /orders` uses `items[].unitPriceCents` sent by the client |
+| `quantity-negative` | PLS-4.2 | API + web | A quantity of 0 or below is accepted and saved |
+| `stock-oversell` | PLS-4.3 | API | No stock checks in the cart or orders (stock bottoms out at 0) |
+| `double-submit` | PLS-6.4 | API + web | No locking or payment-reuse check; the payment page places the order twice |
+| `order-leak` | PLS-7.2 | API | Any customer can read any order (and its tracking) by id |
+| `logout-incomplete` | PLS-1.4 | API + web | Logout leaves the session alive, so Back shows the account page |
+| `token-never-expires` | PLS-1.5 | API | Expired access tokens are accepted |
+| `search-apostrophe` | PLS-3.2 | API | A search containing `'` returns 500 |
+| `pagination-duplicate` | PLS-3.5 | API | Page 2 onwards starts with the previous page's last item |
+| `fada-rejected` | PLS-2.3 | API | Names with accents (Seán, Ní Bhriain) get 422 |
+| `timezone-off-by-one` | PLS-7.3 | Web | Dates are shown in UTC, so a 22:30 New York order shows the next day |
+| `upload-extension-only` | PLS-9.3 | API | The avatar type is taken from the file name, so a renamed `.exe` is accepted |
+| `button-moves` | PLS-6.8 | Payment frame | A banner pushes the Pay button down 500 ms after the frame loads |
+| `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
+| `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
+| `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
+
+Each defect changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+- `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
+- `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 
 ## Locators: `data-testid` conventions
 
@@ -212,7 +297,7 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
 
 | Area | Test ids |
 | --- | --- |
-| Header | `nav-home`, `nav-products`, `nav-wishlist`, `nav-account`, `nav-admin`, `nav-cart`, `cart-count`, `nav-menu-button`, `main-menu`, `nav-cart-compact`, `cart-count-compact`, `nav-login`, `nav-register`, `header-search-input`, `header-search-button` |
+| Header | `nav-home`, `nav-products`, `nav-new-arrivals`, `nav-wishlist`, `nav-account`, `nav-admin`, `nav-cart`, `cart-count`, `nav-menu-button`, `main-menu`, `nav-cart-compact`, `cart-count-compact`, `nav-login`, `nav-register`, `header-search-input`, `header-search-button` |
 | Account menu | `account-menu-button`, `header-user-name`, `header-avatar`, `account-menu`, `account-menu-item-account`, `account-menu-item-orders`, `account-menu-item-wishlist`, `account-menu-item-admin`, `logout-button` |
 | Catalogue | `filter-search-input`, `filter-category-select`, `filter-min-price-input`, `filter-max-price-input`, `sort-select`, `filter-apply-button`, `filter-reset-button`, `result-count` (`data-count`), `product-grid`, `empty-state`, `clear-filters-link`, `pagination`, `pagination-prev`, `pagination-next`, `pagination-page-N`, `products-loading`, `products-error`, `products-retry-button` |
 | Product card | `product-card` (`data-product-id`), `product-link`, `product-name`, `product-price`, `product-stock`, `add-to-cart-button`, `wishlist-toggle` (`aria-pressed`) |
@@ -229,6 +314,11 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
 | Admin orders | `admin-status-filter`, `admin-search-input`, `admin-search-button`, `export-csv-link`, `admin-orders-count` (`data-count`), `admin-orders-table`, `select-all`, `admin-order-row` (`data-order-id`, `data-status`), `row-select`, `admin-order-link`, `admin-order-email`, `admin-order-total`, `admin-order-status`, `admin-order-edit`, `admin-order-status-select`, `admin-order-save`, `admin-order-cancel`, `bulk-bar`, `bulk-selected-count`, `bulk-status-select`, `bulk-apply-button`, `bulk-clear-button`, `bulk-confirm-modal`, `bulk-confirm-message`, `bulk-confirm-button`, `bulk-cancel-button`, `read-only-badge`, `read-only-tooltip-*` |
 | Admin products | `admin-product-search-input`, `admin-product-search-button`, `new-product-button`, `admin-products-table`, `admin-product-row` (`data-product-id`), `admin-product-price`, `admin-product-stock`, `admin-product-edit`, `admin-product-delete`, `product-modal`, `product-form-name`, `product-form-sku`, `product-form-category`, `product-form-price`, `product-form-stock`, `product-form-description`, `product-form-save`, `product-form-cancel`, `product-form-error` |
 | 403 | `forbidden`, `forbidden-home-link` |
+| Preferences | `prefs-controls`, `language-select`, `currency-select`, `theme-toggle` (`aria-pressed`) |
+| Live | `live-indicator` (`data-state`), `stock-live-indicator` (`data-state`), `product-stock-count`, `offline-banner` (`data-state`) |
+| Reviews | `reviews`, `reviews-summary` (`data-count`, `data-average`), `review-list`, `review` (`data-review-id`, `data-rating`), `review-title`, `review-body`, `review-author`, `review-stars`, `review-form`, `review-rating` (the `<review-stars>` input), `review-rating-error`, `review-title-input`, `review-body-input`, `review-body-counter`, `review-submit`, `review-submitted`, `review-login-link`. Inside each `<review-stars>` shadow root: `stars-display`, `stars-input`, `star-1`…`star-5`, `stars-value`. |
+| New arrivals | `new-arrivals-count` (`data-count`), `new-arrivals-grid`, `infinite-sentinel`, `load-more-button`, `new-arrivals-loading`, `new-arrivals-end`, `new-arrivals-error`, `new-arrivals-banner` |
+| Payment frame (bug mode) | `frame-late-banner` (appears with `button-moves`) |
 | Auth | `login-email`, `login-password`, `login-submit`, `login-error`, `register-name`, `register-name-counter`, `register-email`, `register-password`, `register-submit`, `register-success`, `forgot-password-email`, `forgot-password-submit`, `reset-password-input`, `reset-password-confirm`, `reset-password-submit`, `email-unverified-banner` |
 | Mailbox | `mailbox-email-input`, `mailbox-open-button`, `mailbox-message` (`data-type`), `mailbox-subject`, `mailbox-body`, `mailbox-link` |
 | Toasts | `toast-region`, `toast` (`data-type`), `toast-message`, `toast-dismiss` |
@@ -246,30 +336,19 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
 | `PAYMENT_FRAME_URL` | `http://localhost:${API_PORT}/pay/frame` | Where the browser loads the payment iframe from |
 | `SHOP_ORIGINS` | `http://localhost:${WEB_PORT}` | Comma-separated origins allowed to embed the frame (`frame-ancestors`) and receive its `postMessage` results |
 
-## Scope so far
+## Scope
 
-**Phase 1:** login and session (PLS-1), registration and password reset (PLS-2.1–2.5), search and browse (PLS-3), cart (PLS-4, except 4.6), discount codes (PLS-5.1–5.8), checkout (PLS-6), order privacy (PLS-7.1–7.2), API standards (PLS-10), long, emoji and right-to-left text (PLS-11.3), and the test environment (PLS-12.1, 12.2, 12.4).
+All three build phases in the spec are done.
 
-**Phase 2:**
-- discount on the confirmation and CSV export (PLS-5.9)
-- payment in an iframe (PLS-6.1–6.3) and the leave-checkout warning (6.6)
-- 403 page for customers (PLS-7.5)
-- admin grid filter, inline edit, bulk change, product CRUD and support read-only (PLS-8.1, 8.3–8.5)
-- PLS-8.2's save (its WebSocket event comes in Phase 3)
-- avatar upload and CSV export (PLS-9)
-- burger menu (PLS-11.4)
-- wishlist drag-and-drop, modals, tooltips, hover menu, new tab and popup
-- `/test/latency` and `/test/chaos`
+- **Phase 1:** auth, catalogue, cart, discounts, checkout, the core API and the test hooks.
+- **Phase 2:** roles, admin grid, iframe payments, files, dialogs, windows, drag-and-drop, the mobile menu, and latency/chaos.
+- **Phase 3:** WebSocket and SSE, shadow DOM, infinite scroll, i18n, currency and timezone, planted a11y faults, bug mode, theme toggle and offline.
 
-**Not built yet** (Phase 3 in the spec):
-- WebSocket and SSE (7.4, 8.2's event, 8.6)
-- shadow DOM review stars and reviews (11.2)
-- infinite scroll
-- EUR/GBP switch (4.6), Irish language (11.5) and timezones (7.3)
-- planted a11y faults (2.6, 11.1)
-- bug mode (12.3)
-- theme toggle
-- offline message (11.6)
+Every AC in `tests/ACCEPTANCE_CRITERIA.md` now has an implementation to test against.
+
+Two edge-case scenarios from the spec's checklist, which aren't in any phase, are **not built**:
+- account deletion that logs out other sessions
+- the UI backing off after a 429
 
 ## Where this differs from or adds to the spec
 
@@ -291,3 +370,10 @@ Not built yet: `/test/bugs` (bug mode), planned for Phase 3.
 16. Support users can see the admin grid but not export CSV: the spec lists the export as admin only.
 17. The leave-checkout warning also covers navigation inside the app (with a `confirm()`), not only `beforeunload`. It never fires between checkout steps, on the way to the confirmation, or on a redirect to login.
 18. Order status changes have no transition rules yet: an admin can set any status, including moving a delivered order back to paid.
+19. **GBP is display-only.** The API is EUR throughout, and the web converts each amount on its own at a fixed 0.85. In GBP the converted lines can therefore differ from the converted subtotal by a penny, so test PLS-4.4 in EUR.
+20. The Irish translations cover navigation, the cart and checkout (PLS-11.5). They are best-effort, not a professional translation, and other pages stay in English.
+21. Language, currency and theme default to the browser's `locale` and `colorScheme`, and a choice made in the header overrides them. Switching language or currency re-renders the page.
+22. The accessibility AC (PLS-11.1) holds on home, product, cart and checkout. The spec's "few planted a11y faults" are on `/new-arrivals`, `/wishlist` and `/track/:id`.
+23. Bug mode: `discount-not-applied` and `vat-before-discount` also break PLS-5.6 (see [Bug mode](#bug-mode)). `double-submit` adds a 300 ms pause when placing an order, so concurrent requests overlap reliably. `search-apostrophe` simulates a SQL error rather than actually building unsafe SQL.
+24. The product page shows `product-stock-count` ("N available") next to `product-stock`. The text of `product-stock` is unchanged, so exact-text locators still work.
+25. Reviews (PLS-11.2) are new in Phase 3: one per user per product, with no editing or deleting.

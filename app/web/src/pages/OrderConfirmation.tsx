@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import type { Order } from '../api/types';
+import { LiveIndicator } from '../components/LiveIndicator';
 import { OrderSummary } from '../components/OrderSummary';
+import { useOrderEvents } from '../context/RealtimeContext';
 
 export function OrderConfirmation() {
   const { id } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
+
+  // Live status over the WebSocket (PLS-7.4): no refresh needed.
+  useOrderEvents((e) => {
+    setOrder((o) => (o && o.id === e.orderId ? { ...o, status: e.status as Order['status'] } : o));
+  });
 
   useEffect(() => {
     document.title = 'Order confirmed – PlayLab Shop';
@@ -31,6 +38,7 @@ export function OrderConfirmation() {
       <p className="alert success" role="status" data-testid="order-confirmation-message">
         Your order <strong>{order.number}</strong> has been placed.
       </p>
+      <LiveIndicator />
       <OrderSummary order={order} />
       <p>
         <Link to="/account" data-testid="confirmation-account-link">

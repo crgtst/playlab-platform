@@ -3,6 +3,7 @@ import { config } from './config';
 import { migrate } from './db/migrate';
 import { pool } from './db/pool';
 import { getSeedPasswordHash, seedIfEmpty } from './db/seed/base';
+import { attachOrderSocket } from './realtime/ws';
 
 async function waitForDatabase(attempts = 30) {
   for (let i = 1; i <= attempts; i++) {
@@ -27,6 +28,7 @@ async function main() {
   const server = app.listen(config.port, () => {
     console.log(`PlayLab Shop API listening on :${config.port} (TEST_HOOKS=${config.testHooks})`);
   });
+  attachOrderSocket(server);
 
   const shutdown = () => {
     server.close(() => pool.end().then(() => process.exit(0)));

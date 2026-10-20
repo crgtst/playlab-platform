@@ -10,11 +10,18 @@ export interface OrderStatusChanged {
   at: string;
 }
 
-interface AppEvents {
-  orderStatusChanged: [OrderStatusChanged];
+export interface StockChanged {
+  productId: number;
+  stock: number;
 }
 
-/** In-process event bus. Phase 3's WebSocket channel subscribes to it. */
+interface AppEvents {
+  orderStatusChanged: [OrderStatusChanged];
+  stockChanged: [StockChanged];
+  stockReset: [];
+}
+
+/** In-process event bus. The WebSocket channel and the SSE stock stream subscribe to it. */
 class TypedEmitter extends EventEmitter {
   emitEvent<K extends keyof AppEvents>(name: K, ...args: AppEvents[K]) {
     return this.emit(name, ...args);
@@ -25,3 +32,4 @@ class TypedEmitter extends EventEmitter {
 }
 
 export const events = new TypedEmitter();
+events.setMaxListeners(0); // one listener per open SSE / WebSocket connection

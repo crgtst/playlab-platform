@@ -25,6 +25,7 @@ export class ApiRequestError extends Error {
 }
 
 export const AUTH_EXPIRED_EVENT = 'playlab:auth-expired';
+export const NETWORK_ERROR_EVENT = 'playlab:network-error';
 
 interface RequestOptions {
   method?: string;
@@ -77,6 +78,7 @@ export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T
   try {
     res = await fetch(`${base}${path}`, init);
   } catch {
+    window.dispatchEvent(new Event(NETWORK_ERROR_EVENT));
     throw new ApiRequestError(0, 'NETWORK_ERROR', 'We could not reach the server. Check your connection and try again.');
   }
 

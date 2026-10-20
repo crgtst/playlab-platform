@@ -1,6 +1,7 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { t } from '../lib/i18n';
 import { isStaff } from './RequireRole';
 
 /**
@@ -100,23 +101,23 @@ export function AccountMenu({ onLogout }: { onLogout: () => void }) {
       <ul id="account-menu" role="menu" aria-label="Account" className="menu" hidden={!open} onKeyDown={onMenuKey} data-testid="account-menu">
         <li role="none">
           <Link role="menuitem" to="/account" onClick={() => setOpen(false)} data-testid="account-menu-item-account">
-            My account
+            {t('nav.account')}
           </Link>
         </li>
         <li role="none">
           <Link role="menuitem" to="/account#orders" onClick={() => setOpen(false)} data-testid="account-menu-item-orders">
-            Order history
+            {t('nav.orders')}
           </Link>
         </li>
         <li role="none">
           <Link role="menuitem" to="/wishlist" onClick={() => setOpen(false)} data-testid="account-menu-item-wishlist">
-            Wishlist
+            {t('nav.wishlist')}
           </Link>
         </li>
         {isStaff(user.role) && (
           <li role="none">
             <Link role="menuitem" to="/admin/orders" onClick={() => setOpen(false)} data-testid="account-menu-item-admin">
-              Admin
+              {t('nav.admin')}
             </Link>
           </li>
         )}
@@ -131,7 +132,7 @@ export function AccountMenu({ onLogout }: { onLogout: () => void }) {
             }}
             data-testid="logout-button"
           >
-            Log out
+            {t('nav.logout')}
           </button>
         </li>
       </ul>

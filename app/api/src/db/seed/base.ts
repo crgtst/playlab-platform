@@ -27,7 +27,7 @@ export function getSeedPasswordHash(): string {
 }
 
 const TABLES = [
-  'wishlist_items', 'avatars', 'order_items', 'orders', 'payment_intents', 'cart_items', 'carts', 'discount_codes', 'products',
+  'reviews', 'wishlist_items', 'avatars', 'order_items', 'orders', 'payment_intents', 'cart_items', 'carts', 'discount_codes', 'products',
   'categories', 'mailbox', 'email_tokens', 'refresh_tokens', 'users',
 ];
 

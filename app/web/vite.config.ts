@@ -7,6 +7,8 @@ const target = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
 const proxy = {
   '/api': { target, changeOrigin: true, xfwd: true },
   '/test': { target, changeOrigin: true, xfwd: true },
+  // Live order status (WebSocket upgrade is proxied too).
+  '/ws': { target, changeOrigin: true, ws: true },
 };
 
 export default defineConfig({

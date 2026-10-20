@@ -8,6 +8,8 @@ import { clock } from '../lib/clock';
 import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
 import { resetRateLimits } from '../middleware/rateLimit';
 import { faults } from '../middleware/testFaults';
+import { BUG_NAMES, bugs } from '../lib/bugs';
+import { events } from '../lib/events';
 import { asyncHandler, parse } from '../middleware/validate';
 
 /** Only mounted when TEST_HOOKS=true. Otherwise every /test/* path is a 404. */
@@ -24,7 +26,9 @@ testRouter.get('/', (_req, res) => {
       'GET|POST /test/clock',
       'GET|POST|DELETE /test/latency',
       'GET|POST|DELETE /test/chaos',
+      'GET|POST|DELETE /test/bugs',
     ],
+    bugs: BUG_NAMES,
     fixtures: Object.keys(FIXTURES),
   });
 });
@@ -35,8 +39,10 @@ testRouter.post(
     const started = Date.now();
     clock.reset();
     faults.clearAll();
+    bugs.clear();
     await resetDatabase();
     resetRateLimits();
+    events.emitEvent('stockReset');
     res.json({ status: 'reset', durationMs: Date.now() - started });
   }),
 );
@@ -188,5 +194,24 @@ testRouter.post('/chaos', (req: Request, res: Response) => {
 });
 testRouter.delete('/chaos', (_req, res) => {
   faults.clearChaos();
+  res.status(204).end();
+});
+
+const bugNameSchema = z.enum(BUG_NAMES as [string, ...string[]], {
+  errorMap: () => ({ message: `Unknown bug. Known bugs: ${BUG_NAMES.join(', ')}` }),
+});
+const bugsSchema = z
+  .object({ enable: z.array(bugNameSchema).optional(), disable: z.array(bugNameSchema).optional() })
+  .refine((v) => (v.enable?.length ?? 0) + (v.disable?.length ?? 0) > 0, { message: 'Send enable and/or disable lists of bug names' });
+
+testRouter.get('/bugs', (_req, res) => res.json({ data: bugs.list() }));
+testRouter.post('/bugs', (req: Request, res: Response) => {
+  const body = parse(bugsSchema, req.body ?? {});
+  bugs.disable((body.disable ?? []) as typeof BUG_NAMES);
+  bugs.enable((body.enable ?? []) as typeof BUG_NAMES);
+  res.json({ data: bugs.list(), active: bugs.active() });
+});
+testRouter.delete('/bugs', (_req, res) => {
+  bugs.clear();
   res.status(204).end();
 });

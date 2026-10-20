@@ -1,6 +1,7 @@
 import { Request, Response, Router, NextFunction } from 'express';
 import multer from 'multer';
 import { query } from '../db/pool';
+import { isBugOn } from '../lib/bugs';
 import { clock } from '../lib/clock';
 import { ApiError, notFound } from '../lib/errors';
 import { requireAuth } from '../middleware/auth';
@@ -17,6 +18,12 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: AVA
 export function sniffImageType(buf: Buffer): 'image/png' | 'image/jpeg' | null {
   if (buf.length >= 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
   if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+  return null;
+}
+
+function typeFromExtension(name: string): 'image/png' | 'image/jpeg' | null {
+  if (/\.png$/i.test(name)) return 'image/png';
+  if (/\.jpe?g$/i.test(name)) return 'image/jpeg';
   return null;
 }
 
@@ -45,7 +52,8 @@ usersRouter.post(
   asyncHandler(async (req: Request, res: Response) => {
     const file = req.file;
     if (!file) throw new ApiError(422, 'VALIDATION_ERROR', 'Choose an image to upload', [{ field: 'avatar', message: 'Choose an image to upload' }]);
-    const type = sniffImageType(file.buffer);
+    // upload-extension-only: trust the file name instead of the file's contents.
+    const type = isBugOn('upload-extension-only') ? typeFromExtension(file.originalname) : sniffImageType(file.buffer);
     if (!type) {
       throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Only PNG or JPG images are allowed', { receivedName: file.originalname });
     }

@@ -1,6 +1,7 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import type { AddressSuggestion } from '../api/types';
+import { t } from '../lib/i18n';
 
 interface Props {
   value: string;
@@ -64,7 +65,7 @@ export function AddressAutocomplete({ value, error, onChange, onSelect }: Props)
 
   return (
     <div className="field autocomplete">
-      <label htmlFor="ship-line1">Address line 1</label>
+      <label htmlFor="ship-line1">{t('shipping.line1')}</label>
       <input
         id="ship-line1"
         role="combobox"
@@ -82,10 +83,10 @@ export function AddressAutocomplete({ value, error, onChange, onSelect }: Props)
         data-testid="shipping-line1"
       />
       <p id="ship-line1-hint" className="hint">
-        Start typing to search addresses
+        {t('shipping.line1Hint')}
       </p>
       {open && (
-        <ul id="address-listbox" role="listbox" aria-label="Address suggestions" className="listbox" data-testid="address-suggestions">
+        <ul id="address-listbox" role="listbox" aria-label={t('shipping.suggestions')} className="listbox" data-testid="address-suggestions">
           {options.map((a, i) => (
             <li
               key={a.id}

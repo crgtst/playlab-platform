@@ -6,6 +6,7 @@ import { Totals } from '../../components/Totals';
 import { useCart } from '../../context/CartContext';
 import { useCheckoutState } from '../../lib/checkoutState';
 import { formatDate, formatPrice } from '../../lib/format';
+import { t } from '../../lib/i18n';
 import { CartNotices } from '../Cart';
 
 export function PriceChangeWarning({ accepted, onAccept }: { accepted: boolean; onAccept: () => void }) {
@@ -53,14 +54,14 @@ export function Review() {
 
   return (
     <div className="checkout">
-      <h1>Checkout</h1>
+      <h1>{t('checkout.title')}</h1>
       <CheckoutSteps current={2} />
-      <h2>Review your order</h2>
+      <h2>{t('review.heading')}</h2>
       <CartNotices />
       <PriceChangeWarning accepted={state.acceptPriceChanges} onAccept={() => update({ acceptPriceChanges: true })} />
 
       <section aria-labelledby="review-address-heading" className="panel" data-testid="review-address">
-        <h3 id="review-address-heading">Delivering to</h3>
+        <h3 id="review-address-heading">{t('review.deliveringTo')}</h3>
         <address dir="auto">
           {s.fullName}
           <br />
@@ -76,16 +77,16 @@ export function Review() {
           {s.county ? `, ${s.county}` : ''} {s.postcode}
         </address>
         <p>
-          Delivery on <strong data-testid="review-delivery-date">{formatDate(`${state.deliveryDate}T12:00:00`)}</strong>
+          {t('review.deliveryOn')} <strong data-testid="review-delivery-date">{formatDate(`${state.deliveryDate}T12:00:00`)}</strong>
         </p>
         {state.instructions && <p dir="auto" data-testid="review-instructions">“{state.instructions}”</p>}
         <Link to="/checkout/shipping" data-testid="review-edit-shipping-link">
-          Edit shipping details
+          {t('review.editShipping')}
         </Link>
       </section>
 
       <section aria-labelledby="review-items-heading" className="panel">
-        <h3 id="review-items-heading">Items</h3>
+        <h3 id="review-items-heading">{t('review.items')}</h3>
         <ul className="review-items" data-testid="review-items">
           {cart.items.map((i) => (
             <li key={i.productId} data-testid="review-item" data-product-id={i.productId}>
@@ -97,21 +98,21 @@ export function Review() {
           ))}
         </ul>
         <Link to="/cart" data-testid="review-edit-cart-link">
-          Edit cart
+          {t('review.editCart')}
         </Link>
       </section>
 
       <div className="cart-summary">
         <DiscountForm />
         <section aria-labelledby="review-totals-heading">
-          <h3 id="review-totals-heading">Total</h3>
+          <h3 id="review-totals-heading">{t('review.total')}</h3>
           <Totals totals={cart.totals} discount={cart.discount} />
         </section>
       </div>
 
       <div className="form-actions">
         <button type="button" disabled={blocked} onClick={() => navigate('/checkout/payment')} data-testid="review-continue-button">
-          Continue to payment
+          {t('review.continue')}
         </button>
       </div>
     </div>

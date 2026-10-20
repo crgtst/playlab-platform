@@ -6,6 +6,7 @@ import { CheckoutSteps } from '../../components/CheckoutSteps';
 import { Field } from '../../components/Field';
 import { useAuth } from '../../context/AuthContext';
 import { deliveryWindow, useCheckoutState } from '../../lib/checkoutState';
+import { t } from '../../lib/i18n';
 
 const INSTRUCTIONS_MAX = 200;
 
@@ -29,13 +30,13 @@ export function Shipping() {
 
   const validate = (): Errors => {
     const e: Errors = {};
-    if (!s.fullName.trim()) e.fullName = 'Full name is required';
-    if (!s.line1.trim()) e.line1 = 'Address line 1 is required';
-    if (!s.city.trim()) e.city = 'Town or city is required';
-    if (!s.postcode.trim()) e.postcode = 'Eircode or postcode is required';
-    if (!state.deliveryDate) e.deliveryDate = 'Choose a delivery date';
-    else if (state.deliveryDate < min || state.deliveryDate > max) e.deliveryDate = `Choose a date between ${min} and ${max}`;
-    if (state.instructions.length > INSTRUCTIONS_MAX) e.instructions = `Instructions must be at most ${INSTRUCTIONS_MAX} characters`;
+    if (!s.fullName.trim()) e.fullName = t('shipping.err.fullName');
+    if (!s.line1.trim()) e.line1 = t('shipping.err.line1');
+    if (!s.city.trim()) e.city = t('shipping.err.city');
+    if (!s.postcode.trim()) e.postcode = t('shipping.err.postcode');
+    if (!state.deliveryDate) e.deliveryDate = t('shipping.err.date');
+    else if (state.deliveryDate < min || state.deliveryDate > max) e.deliveryDate = t('shipping.err.dateRange', { min, max });
+    if (state.instructions.length > INSTRUCTIONS_MAX) e.instructions = t('shipping.err.instructions', { max: INSTRUCTIONS_MAX });
     return e;
   };
 
@@ -56,11 +57,11 @@ export function Shipping() {
 
   return (
     <div className="checkout">
-      <h1>Checkout</h1>
+      <h1>{t('checkout.title')}</h1>
       <CheckoutSteps current={1} />
       <form onSubmit={onSubmit} noValidate className="checkout-form" data-testid="shipping-form" aria-labelledby="shipping-heading">
-        <h2 id="shipping-heading">Shipping details</h2>
-        <Field id="ship-name" label="Full name" autoComplete="name" dir="auto" value={s.fullName} onChange={(e) => setField('fullName', e.target.value)} error={errors.fullName} testId="shipping-full-name" />
+        <h2 id="shipping-heading">{t('shipping.heading')}</h2>
+        <Field id="ship-name" label={t('shipping.fullName')} autoComplete="name" dir="auto" value={s.fullName} onChange={(e) => setField('fullName', e.target.value)} error={errors.fullName} testId="shipping-full-name" />
         <AddressAutocomplete
           value={s.line1}
           error={errors.line1}
@@ -72,18 +73,18 @@ export function Shipping() {
             })
           }
         />
-        <Field id="ship-line2" label="Address line 2 (optional)" autoComplete="address-line2" value={s.line2} onChange={(e) => setField('line2', e.target.value)} testId="shipping-line2" />
+        <Field id="ship-line2" label={t('shipping.line2')} autoComplete="address-line2" value={s.line2} onChange={(e) => setField('line2', e.target.value)} testId="shipping-line2" />
         <div className="row">
-          <Field id="ship-city" label="Town or city" autoComplete="address-level2" value={s.city} onChange={(e) => setField('city', e.target.value)} error={errors.city} testId="shipping-city" />
-          <Field id="ship-county" label="County (optional)" autoComplete="address-level1" value={s.county} onChange={(e) => setField('county', e.target.value)} testId="shipping-county" />
+          <Field id="ship-city" label={t('shipping.city')} autoComplete="address-level2" value={s.city} onChange={(e) => setField('city', e.target.value)} error={errors.city} testId="shipping-city" />
+          <Field id="ship-county" label={t('shipping.county')} autoComplete="address-level1" value={s.county} onChange={(e) => setField('county', e.target.value)} testId="shipping-county" />
         </div>
         <div className="row">
-          <Field id="ship-postcode" label="Eircode or postcode" autoComplete="postal-code" value={s.postcode} onChange={(e) => setField('postcode', e.target.value)} error={errors.postcode} testId="shipping-postcode" />
-          <Field id="ship-phone" label="Phone (optional)" type="tel" autoComplete="tel" value={s.phone} onChange={(e) => setField('phone', e.target.value)} testId="shipping-phone" />
+          <Field id="ship-postcode" label={t('shipping.postcode')} autoComplete="postal-code" value={s.postcode} onChange={(e) => setField('postcode', e.target.value)} error={errors.postcode} testId="shipping-postcode" />
+          <Field id="ship-phone" label={t('shipping.phone')} type="tel" autoComplete="tel" value={s.phone} onChange={(e) => setField('phone', e.target.value)} testId="shipping-phone" />
         </div>
         <Field
           id="ship-date"
-          label="Delivery date"
+          label={t('shipping.date')}
           type="date"
           min={min}
           max={max}
@@ -91,10 +92,10 @@ export function Shipping() {
           onChange={(e) => update({ deliveryDate: e.target.value, shippingComplete: false })}
           error={errors.deliveryDate}
           testId="shipping-delivery-date"
-          hint={`Between ${min} and ${max}`}
+          hint={t('shipping.dateHint', { min, max })}
         />
         <div className="field">
-          <label htmlFor="ship-instructions">Delivery instructions (optional)</label>
+          <label htmlFor="ship-instructions">{t('shipping.instructions')}</label>
           <textarea
             id="ship-instructions"
             rows={3}
@@ -106,7 +107,7 @@ export function Shipping() {
             data-testid="shipping-instructions"
           />
           <p id="ship-instructions-counter" className={remaining < 20 ? 'hint warn' : 'hint'} aria-live="polite" data-testid="shipping-instructions-counter">
-            {state.instructions.length}/{INSTRUCTIONS_MAX} characters
+            {t('shipping.counter', { n: state.instructions.length, max: INSTRUCTIONS_MAX })}
           </p>
           {errors.instructions && (
             <p className="field-error" role="alert" data-testid="shipping-instructions-error">
@@ -116,7 +117,7 @@ export function Shipping() {
         </div>
         <div className="form-actions">
           <button type="submit" data-testid="shipping-continue-button">
-            Continue to review
+            {t('shipping.continue')}
           </button>
         </div>
       </form>
