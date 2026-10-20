@@ -244,6 +244,58 @@ Working tips:
 - Commit after every working feature, so a bad Claude Code session is easy to roll back.
 - Ask for a short README per phase: how to start it, test accounts, and which hooks exist.
 
+## Phases 4–6
+
+Phases 1–3 are complete. These three phases cover the rest of [playwright.dev](https://playwright.dev/docs/intro): Phase 4 adds the browser-API features the site still lacks, Phase 5 matures your test framework, and Phase 6 brings in Playwright's AI test agents.
+
+| Phase | Scope | Who builds it | Rough effort | Model |
+| --- | --- | --- | --- | --- |
+| 4. Browser APIs | Store finder (geolocation), order notifications, copy-to-clipboard buttons, battery-saver banner, service worker with offline cache, swipeable gallery, aria-snapshot-friendly regions, new bug-mode defects | Claude Code | 4–6 hours | `opusplan`, effort high |
+| 5. Framework maturity | Sharding, tags, custom fixtures and matchers, traceability reporter, flaky-test handling, component tests | You | Ongoing | You write; Claude reviews |
+| 6. Test Agents | Planner, Generator and Healer agents run against the site, compared with your own suite | You + agents | 4–8 hours | Agent setup via `npx playwright init-agents` |
+
+**Phase 4 features**
+
+| Feature | What it does on the site | Playwright skill it exercises |
+| --- | --- | --- |
+| Store finder | "Find a store near me" uses geolocation and lists the 3 nearest stores | `geolocation`, `context.grantPermissions`, denied-permission state |
+| Order notifications | Asks permission, then shows a browser notification when order status changes | `grantPermissions(['notifications'])`, mocking `Notification` |
+| Copy buttons | "Copy discount code" and "Copy order number", with a "Copied" toast | Clipboard permissions, reading the clipboard in a test |
+| Battery-saver banner | Shows "Low battery: animations paused" when battery is under 20% and not charging | `page.addInitScript`, `exposeFunction`, mock browser APIs |
+| Offline cache | A service worker caches the catalogue so it loads offline | `serviceWorkers: 'block'`, routing service-worker requests, `context.setOffline` |
+| Product gallery | Swipe and tap through product images on mobile | Touch emulation, `hasTouch`, `tap()` |
+| Stable regions | Product card, order summary and header with predictable accessible structure | `toMatchAriaSnapshot` |
+| Component harness | The React components can run in isolation | `@playwright/experimental-ct-react` |
+| Price-tracker extension (optional) | A tiny Chrome extension that reads the product price | Loading an unpacked extension in a persistent context |
+
+New bug-mode defects for Phase 4:
+
+- `geolocation-ignored`: the store finder always shows Dublin stores, whatever the location.
+- `permission-denied-crash`: denying location permission leaves a spinner forever instead of a message.
+- `clipboard-wrong-value`: "Copy discount code" copies the previous code.
+- `notification-spam`: one status change fires two notifications.
+- `battery-banner-stuck`: the banner stays after charging starts.
+- `offline-stale-prices`: the offline cache shows old prices after going back online.
+- `aria-heading-skip`: the order summary jumps from h2 to h4.
+
+**Phase 5 checklist (your suite)**
+
+- [ ] Shard across 4 CI workers and merge the reports with `merge-reports`
+- [ ] Tag tests `@smoke`, `@regression` and by story (`@PLS-5`), and run subsets with `--grep`
+- [ ] Custom fixtures per role and a custom `expect` matcher (for example `toHaveTotal('€42.00')`)
+- [ ] A custom reporter that reads AC IDs from test titles and writes an AC coverage table against `ACCEPTANCE_CRITERIA.md`
+- [ ] Use `/test/chaos` and `/test/latency` to create flakiness, then fix it properly; trace on first retry
+- [ ] Component tests for 3–4 React components
+- [ ] Video on failure and a `--last-failed` rerun habit
+
+**Phase 6: Playwright Test Agents**
+
+1. Run `npx playwright init-agents --loop=claude` in `tests/` (rerun after each Playwright upgrade).
+2. Let the Planner explore the site and write a Markdown plan. Compare it with your ACs: what did it miss, and what did it find that you didn't?
+3. Let the Generator turn part of that plan into tests in a separate folder. Review them as you would a junior's pull request.
+4. Switch on bug-mode defects and run the Healer. Record whether it flags the real bug or "heals" the test to hide it.
+5. Write up the results as a short README section or blog post: where agents helped, where they misled, and what guardrails you'd use on a real team.
+
 ## Prompt for Claude Code
 
 Put this file in the repo as `SPEC.md` (and `ACCEPTANCE_CRITERIA.md` beside it), then paste:
@@ -268,4 +320,4 @@ Do NOT write any Playwright tests. Stop after Phase 1 and summarise
 what was built and anything that differs from the spec.
 ```
 
-For phases 2 and 3, reuse the same prompt and change the phase number. Open questions to settle before phase 1: React or plain server-rendered pages for the front end, and Node or Python (FastAPI) for the API. The prompt above assumes Node and React because they match the TypeScript you'd use in Playwright.
+For phases 2, 3 and 4, reuse the same prompt and change the phase number. Open questions to settle before phase 1: React or plain server-rendered pages for the front end, and Node or Python (FastAPI) for the API. The prompt above assumes Node and React because they match the TypeScript you'd use in Playwright.

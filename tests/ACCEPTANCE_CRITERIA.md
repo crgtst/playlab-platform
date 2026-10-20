@@ -1,6 +1,6 @@
 # Acceptance criteria
 
-Twelve Jira-ready stories, each with numbered acceptance criteria. Every AC has a unique ID (`PLS-5.2`), so you can link each one to a test case and report coverage as ACs with a passing test ÷ total ACs.
+Nineteen Jira-ready stories (PLS-13 to PLS-19 cover Phase 4), each with numbered acceptance criteria. Every AC has a unique ID (`PLS-5.2`), so you can link each one to a test case and report coverage as ACs with a passing test ÷ total ACs.
 
 How to use it: create each story in Jira with its ACs in the description, put the AC ID in each Playwright test title (`test('PLS-5.2 expired code is rejected', …)`) or tag (`@PLS-5.2`), and fill the Test ID column as tests are written. The last column shows which bug-mode defect that AC should catch.
 
@@ -162,3 +162,74 @@ As a tester, I want reliable test hooks, so that every run starts from a known s
 | PLS-12.2 | Given `TEST_HOOKS=false`, when any `/test/*` endpoint is called, then it returns 404 |  |  |
 | PLS-12.3 | Given a named defect, when switched on through `/test/bugs`, then only that behaviour changes |  |  |
 | PLS-12.4 | Given the stack is starting, when `/health` reports ready, then the web app, API and database all respond |  |  |
+
+## PLS-13 Store finder (Phase 4)
+
+As a shopper, I want to find stores near me, so that I can collect an order in person.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-13.1 | Given location permission is granted and the user is in Galway, when they open the store finder, then the 3 nearest stores are listed nearest first with distances in km |  | `geolocation-ignored` |
+| PLS-13.2 | Given location permission is denied, when they open the store finder, then "Location is off. Enter a town or Eircode" is shown with a search box |  | `permission-denied-crash` |
+| PLS-13.3 | Given the user changes location, when they refresh the list, then the results update to the new location |  |  |
+
+## PLS-14 Order notifications (Phase 4)
+
+As a customer, I want a browser notification when my order changes, so that I don't have to keep checking.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-14.1 | Given the user has not decided, when they open Order history, then they are asked to allow notifications |  |  |
+| PLS-14.2 | Given notifications are allowed, when an admin changes the order status, then exactly one notification shows the order number and new status |  | `notification-spam` |
+| PLS-14.3 | Given notifications are blocked, when the status changes, then the in-page status still updates and no error is shown |  |  |
+
+## PLS-15 Copy to clipboard (Phase 4)
+
+As a shopper, I want to copy codes and order numbers, so that I can paste them elsewhere without typing.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-15.1 | Given a discount banner, when "Copy code" is clicked, then the clipboard holds that exact code and a "Copied" toast appears |  | `clipboard-wrong-value` |
+| PLS-15.2 | Given an order confirmation, when "Copy order number" is clicked, then the clipboard holds the order number |  |  |
+| PLS-15.3 | Given clipboard permission is denied, when copy is clicked, then the code is selected on screen with "Press Ctrl+C to copy" |  |  |
+
+## PLS-16 Battery-saver banner (Phase 4)
+
+As a mobile shopper, I want the site to go easy on my battery, so that browsing doesn't drain my phone.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-16.1 | Given battery is below 20% and not charging, when the page loads, then "Low battery: animations paused" shows and carousels stop auto-playing |  |  |
+| PLS-16.2 | Given the banner is showing, when charging starts, then the banner disappears within 2 seconds |  | `battery-banner-stuck` |
+| PLS-16.3 | Given a browser without the Battery API, when the page loads, then no banner shows and no console error is logged |  |  |
+
+## PLS-17 Offline catalogue (Phase 4)
+
+As a shopper on a poor connection, I want to browse products offline, so that a dropped signal doesn't stop me.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-17.1 | Given the catalogue was visited online, when the browser goes offline, then the catalogue still loads with an "Offline: prices may have changed" notice |  |  |
+| PLS-17.2 | Given the user is offline, when they try to check out, then checkout is disabled with a clear message |  |  |
+| PLS-17.3 | Given the user comes back online, when the catalogue reloads, then current prices are shown |  | `offline-stale-prices` |
+| PLS-17.4 | Given service workers are blocked, when the site loads, then it works normally without offline support |  |  |
+
+## PLS-18 Product gallery and touch (Phase 4)
+
+As a mobile shopper, I want to swipe through product images, so that browsing feels natural on my phone.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-18.1 | Given a touch device, when the user swipes left on the gallery, then the next image shows and the position dots update |  |  |
+| PLS-18.2 | Given a touch device, when the user taps an image, then it opens full screen |  |  |
+| PLS-18.3 | Given a desktop browser, when the gallery loads, then arrow buttons are shown and work with the keyboard |  |  |
+
+## PLS-19 Accessible structure (Phase 4)
+
+As a screen-reader user, I want a predictable page structure, so that I can navigate quickly.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-19.1 | Given the product card, when its accessibility tree is captured, then it matches the approved aria snapshot |  |  |
+| PLS-19.2 | Given the order summary, when its headings are read, then no heading level is skipped |  | `aria-heading-skip` |
+| PLS-19.3 | Given the site header, when its accessibility tree is captured, then it matches the approved aria snapshot on desktop and mobile |  |  |
