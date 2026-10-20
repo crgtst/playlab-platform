@@ -1,0 +1,1094 @@
+openapi: 3.0.3
+info:
+  title: PlayLab Shop API
+  version: 1.0.0
+  description: |
+    REST API for PlayLab Shop, a practice e-commerce site built to be tested with Playwright.
+
+    * All money values are integer cents in EUR.
+    * Every error uses the same shape: `{ "error": { "code", "message", "details" } }`.
+    * Authenticate with `Authorization: Bearer <accessToken>` or the `session` cookie set by `/auth/login`.
+    * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
+    * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
+    * Test hooks under `/test/*` exist only when the API runs with `TEST_HOOKS=true`.
+servers:
+  - url: /api/v1
+    description: Versioned API
+tags:
+  - name: Health
+  - name: Auth
+  - name: Products
+  - name: Cart
+  - name: Orders
+  - name: Addresses
+  - name: Test hooks
+    description: Only available when `TEST_HOOKS=true`. Paths are relative to the server root, not `/api/v1`.
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Readiness check (API, database and web app)
+      responses:
+        '200':
+          description: Everything is up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: At least one dependency is down
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /health/live:
+    get:
+      tags: [Health]
+      summary: Liveness check (API and database only)
+      responses:
+        '200':
+          description: API and database are up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+        '503':
+          description: Database is down
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a customer account
+      description: Sends a confirmation email to the test mailbox. Does not log the user in.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserEnvelope' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /auth/confirm-email:
+    post:
+      tags: [Auth]
+      summary: Confirm an email address with the token from the confirmation email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TokenRequest' }
+      responses:
+        '200':
+          description: Email confirmed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserEnvelope' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      description: |
+        Returns tokens and sets `session` and `refresh_token` cookies. Any guest cart (cookie `cart_id`)
+        is merged into the account cart. After 5 failed attempts the account is locked for 15 minutes (423).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Logged in
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: '`session` (access token) and `refresh_token` cookies, both httpOnly'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '423':
+          description: Account locked
+          headers:
+            Retry-After:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Exchange a refresh token for a new access token
+      description: Reads the refresh token from the body or the `refresh_token` cookie. Refresh tokens are single use (rotated).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Log out
+      description: Revokes the refresh token and clears the session, refresh and cart cookies.
+      responses:
+        '204':
+          description: Logged out
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: The current user
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request a password reset link
+      description: Always returns 202. If the account exists, a reset link (valid for 1 hour) is sent to the test mailbox.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Set a new password with a reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string }
+                password: { type: string, minLength: 8, maxLength: 128 }
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /products:
+    get:
+      tags: [Products]
+      summary: Search, filter, sort and page through products
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: Case-insensitive match on name or description }
+        - { name: category, in: query, schema: { type: string }, description: Category slug }
+        - { name: minPrice, in: query, schema: { type: number, minimum: 0 }, description: Minimum price in euros (inclusive) }
+        - { name: maxPrice, in: query, schema: { type: number, minimum: 0 }, description: Maximum price in euros (inclusive) }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [name_asc, name_desc, price_asc, price_desc, newest], default: name_asc }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 48, default: 12 } }
+      responses:
+        '200':
+          description: A page of products
+          headers:
+            Link:
+              schema: { type: string }
+              description: RFC 8288 links with rel first, prev, next and last
+            X-Total-Count:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductList' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    post:
+      tags: [Products]
+      summary: Create a product (admin)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /products/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Products]
+      summary: Get one product
+      parameters:
+        - { name: If-None-Match, in: header, schema: { type: string } }
+      responses:
+        '200':
+          description: The product
+          headers:
+            ETag:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductEnvelope' }
+        '304':
+          description: Not modified (ETag matched)
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Products]
+      summary: Replace a product (admin)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    patch:
+      tags: [Products]
+      summary: Update some fields of a product (admin)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductPatch' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Products]
+      summary: Delete a product (admin)
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '204':
+          description: Deleted
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /categories:
+    get:
+      tags: [Products]
+      summary: List categories
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/CategoryWithCount' }
+
+  /cart:
+    get:
+      tags: [Cart]
+      summary: The current cart
+      description: Logged-in users get their account cart; guests get the cart in the `cart_id` cookie.
+      responses:
+        '200':
+          description: Cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    delete:
+      tags: [Cart]
+      summary: Empty the cart
+      responses:
+        '200':
+          description: Empty cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+  /cart/items:
+    post:
+      tags: [Cart]
+      summary: Add a product to the cart
+      description: Adds to the existing quantity if the product is already in the cart.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId: { type: integer }
+                quantity: { type: integer, minimum: 1, maximum: 99, default: 1 }
+      responses:
+        '201':
+          description: Updated cart
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+              description: '`cart_id` cookie for guests'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /cart/items/{productId}:
+    parameters:
+      - { name: productId, in: path, required: true, schema: { type: integer } }
+    patch:
+      tags: [Cart]
+      summary: Set the quantity of a cart item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantity]
+              properties:
+                quantity: { type: integer, minimum: 1, maximum: 99 }
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Cart]
+      summary: Remove an item from the cart
+      responses:
+        '200':
+          description: Updated cart
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /cart/discount:
+    post:
+      tags: [Cart]
+      summary: Apply a discount code
+      description: |
+        Codes are case-insensitive and spaces are ignored. Only one code per order.
+        Error codes: `DISCOUNT_UNKNOWN`, `DISCOUNT_EXPIRED`, `DISCOUNT_NOT_ACTIVE`, `DISCOUNT_ALREADY_USED`,
+        `DISCOUNT_MIN_SPEND`, `DISCOUNT_CART_EMPTY` (all 422) and `DISCOUNT_ONE_PER_ORDER` (409).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, example: save10 }
+      responses:
+        '200':
+          description: Cart with the discount applied
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Cart]
+      summary: Remove the applied discount code
+      responses:
+        '200':
+          description: Cart without a discount
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Cart' }
+
+  /orders:
+    post:
+      tags: [Orders]
+      summary: Place an order from the current cart
+      description: |
+        Prices always come from the database; any price sent by the client is ignored.
+        Test cards: `4242 4242 4242 4242` succeeds, `4000 0000 0000 0002` is declined (402),
+        `4000 0000 0000 0119` times out (504 after a delay). No order is created on 402 or 504 and the cart is kept.
+        If prices changed since items were added, returns 409 `PRICE_CHANGED` unless `acceptPriceChanges` is true.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema: { type: string, maxLength: 255 }
+          description: Re-sending the same key returns the original order (200) instead of creating another.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderRequest' }
+      responses:
+        '200':
+          description: Replay of an earlier request with the same Idempotency-Key
+          headers:
+            Idempotent-Replayed:
+              schema: { type: string, enum: ['true'] }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Card declined
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '504':
+          description: Payment provider timed out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    get:
+      tags: [Orders]
+      summary: List orders, newest first
+      description: Customers see only their own orders. Admin and support users see every order.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /orders/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Orders]
+      summary: Get one order
+      description: Returns 404 (not 403) for another customer's order, so ids are not leaked.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /addresses/suggest:
+    get:
+      tags: [Addresses]
+      summary: Address autocomplete
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 10, default: 5 } }
+      responses:
+        '200':
+          description: Matching addresses
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AddressSuggestion' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---- Test hooks: served from the server root (/test/*), not /api/v1 ----
+  /test:
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test - lists the available hooks and fixtures'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Hook list
+          content:
+            application/json:
+              schema: { type: object }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /test/reset:
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/reset - truncate every table and reload the base seed'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Reset
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, durationMs]
+                properties:
+                  status: { type: string, enum: [reset] }
+                  durationMs: { type: integer }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /test/seed:
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/seed - create named fixtures'
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fixtures]
+              properties:
+                fixtures:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - customer-with-orders
+                      - out-of-stock-product
+                      - low-stock-product
+                      - expired-discount
+                      - future-discount
+                      - single-use-discount
+                      - used-discount
+                      - min-spend-discount
+      responses:
+        '201':
+          description: The created fixtures, keyed by fixture name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /test/users:
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/users - create a throwaway, already-confirmed user and return its tokens'
+      servers: [{ url: / }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [customer, admin, support], default: customer }
+                name: { type: string }
+                email: { type: string, format: email }
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, password, accessToken, refreshToken]
+                properties:
+                  user: { type: object }
+                  password: { type: string }
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /test/mailbox/{email}:
+    parameters:
+      - { name: email, in: path, required: true, schema: { type: string } }
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test/mailbox/{email} - emails the app "sent" to this address, newest first'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Emails
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Email' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Test hooks]
+      summary: 'DELETE /test/mailbox/{email} - empty this mailbox'
+      servers: [{ url: / }]
+      responses:
+        '204':
+          description: Emptied
+  /test/clock:
+    get:
+      tags: [Test hooks]
+      summary: "GET /test/clock - the server's current notion of now"
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Clock state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClockState' }
+    post:
+      tags: [Test hooks]
+      summary: "POST /test/clock - set the server's now (empty body resets it)"
+      servers: [{ url: / }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Send at most one field.
+              properties:
+                now: { type: string, format: date-time }
+                offsetMs: { type: integer }
+                advanceMs: { type: integer }
+      responses:
+        '200':
+          description: Clock state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClockState' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing, invalid or expired credentials
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but not allowed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Conflict (e.g. email in use, insufficient stock, one code per order, price changed)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Too many requests
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          additionalProperties: false
+          properties:
+            code: { type: string, example: VALIDATION_ERROR }
+            message: { type: string }
+            details:
+              nullable: true
+              description: For validation errors, an array of `{ field, message }`.
+              oneOf:
+                - type: array
+                  items:
+                    type: object
+                    properties:
+                      field: { type: string }
+                      message: { type: string }
+                - type: object
+                  additionalProperties: true
+    Message:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    Health:
+      type: object
+      required: [status, checks]
+      properties:
+        status: { type: string, enum: [ok, unavailable] }
+        checks:
+          type: object
+          properties:
+            api: { type: string, enum: [up, down] }
+            db: { type: string, enum: [up, down] }
+            web: { type: string, enum: [up, down] }
+        testHooks: { type: boolean }
+        time: { type: string, format: date-time }
+
+    Role:
+      type: string
+      enum: [customer, admin, support]
+    User:
+      type: object
+      required: [id, email, name, role, emailVerified, createdAt]
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        name: { type: string, maxLength: 500 }
+        role: { $ref: '#/components/schemas/Role' }
+        emailVerified: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    UserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 500, example: Aoife Ní Bhriain }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 128 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, example: customer@playlab.test }
+        password: { type: string, example: Password123! }
+    TokenRequest:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    Session:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, tokenType, user]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, example: 900, description: Seconds until the access token expires }
+        tokenType: { type: string, enum: [Bearer] }
+        user: { $ref: '#/components/schemas/User' }
+
+    Category:
+      type: object
+      required: [slug, name]
+      properties:
+        slug: { type: string, example: electronics }
+        name: { type: string, example: Electronics }
+    CategoryWithCount:
+      allOf:
+        - $ref: '#/components/schemas/Category'
+        - type: object
+          required: [productCount]
+          properties:
+            productCount: { type: integer }
+    Product:
+      type: object
+      required: [id, sku, name, description, category, priceCents, stock, inStock, imageUrl, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        sku: { type: string }
+        name: { type: string }
+        description: { type: string }
+        category: { $ref: '#/components/schemas/Category' }
+        priceCents: { type: integer, minimum: 0, description: 'Price excluding VAT, in cents' }
+        stock: { type: integer, minimum: 0 }
+        inStock: { type: boolean }
+        imageUrl: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ProductEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Product' }
+    ProductList:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Product' }
+        meta: { $ref: '#/components/schemas/PageMeta' }
+    PageMeta:
+      type: object
+      required: [page, limit, total, totalPages]
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+        sort: { type: string }
+    ProductInput:
+      type: object
+      required: [sku, name, category, priceCents, stock]
+      properties:
+        sku: { type: string, maxLength: 40 }
+        name: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        category: { type: string, description: Category slug }
+        priceCents: { type: integer, minimum: 0 }
+        stock: { type: integer, minimum: 0 }
+        imageUrl: { type: string }
+    ProductPatch:
+      type: object
+      minProperties: 1
+      properties:
+        sku: { type: string, maxLength: 40 }
+        name: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        category: { type: string }
+        priceCents: { type: integer, minimum: 0 }
+        stock: { type: integer, minimum: 0 }
+        imageUrl: { type: string }
+
+    Totals:
+      type: object
+      required: [subtotalCents, discountCents, vatCents, deliveryCents, totalCents]
+      description: |
+        subtotal = sum of line totals. VAT (23%) is charged on (subtotal - goods discount).
+        total = subtotal - discount + VAT + delivery, never below 0.
+      properties:
+        subtotalCents: { type: integer }
+        discountCents: { type: integer }
+        vatCents: { type: integer }
+        deliveryCents: { type: integer }
+        totalCents: { type: integer, minimum: 0 }
+    CartItem:
+      type: object
+      required: [productId, sku, name, imageUrl, quantity, stock, unitPriceCents, priceAtAddCents, priceChanged, lineTotalCents]
+      properties:
+        productId: { type: integer }
+        sku: { type: string }
+        name: { type: string }
+        imageUrl: { type: string }
+        quantity: { type: integer, minimum: 1 }
+        stock: { type: integer }
+        unitPriceCents: { type: integer, description: Current price }
+        priceAtAddCents: { type: integer, description: Price when the item was added }
+        priceChanged: { type: boolean }
+        lineTotalCents: { type: integer }
+    Cart:
+      type: object
+      required: [id, items, itemCount, discount, totals, currency, priceChanged, notices]
+      properties:
+        id: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CartItem' }
+        itemCount: { type: integer }
+        discount:
+          nullable: true
+          type: object
+          required: [code, description, type, value, amountCents]
+          properties:
+            code: { type: string }
+            description: { type: string }
+            type: { type: string, enum: [percent, fixed] }
+            value: { type: integer }
+            amountCents: { type: integer }
+        totals: { $ref: '#/components/schemas/Totals' }
+        currency: { type: string, enum: [EUR] }
+        priceChanged: { type: boolean }
+        notices:
+          type: array
+          description: One-off messages, e.g. a discount removed because the cart fell below its minimum spend.
+          items:
+            type: object
+            required: [code, message]
+            properties:
+              code: { type: string }
+              message: { type: string }
+
+    ShippingAddress:
+      type: object
+      required: [fullName, line1, city, postcode]
+      properties:
+        fullName: { type: string, maxLength: 500 }
+        line1: { type: string, maxLength: 200 }
+        line2: { type: string, maxLength: 200 }
+        city: { type: string, maxLength: 100 }
+        county: { type: string, maxLength: 100 }
+        postcode: { type: string, maxLength: 20 }
+        country: { type: string, minLength: 2, maxLength: 2, default: IE }
+        phone: { type: string, maxLength: 30 }
+    OrderRequest:
+      type: object
+      required: [shipping, deliveryDate, payment]
+      properties:
+        shipping: { $ref: '#/components/schemas/ShippingAddress' }
+        deliveryDate: { type: string, format: date, description: Between tomorrow and 30 days from today }
+        instructions: { type: string, maxLength: 200 }
+        acceptPriceChanges: { type: boolean, default: false }
+        payment:
+          type: object
+          required: [cardNumber, expiry, cvc, nameOnCard]
+          properties:
+            cardNumber: { type: string, example: '4242 4242 4242 4242' }
+            expiry: { type: string, pattern: '^(0[1-9]|1[0-2])/\d{2}$', example: '12/30' }
+            cvc: { type: string, example: '123' }
+            nameOnCard: { type: string }
+    Order:
+      type: object
+      required: [id, number, userId, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
+      properties:
+        id: { type: integer }
+        number: { type: string, example: PL-000001 }
+        userId: { type: integer }
+        status: { type: string, enum: [pending, paid, processing, shipped, delivered, cancelled] }
+        createdAt: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            required: [productId, name, unitPriceCents, quantity, lineTotalCents]
+            properties:
+              productId: { type: integer }
+              name: { type: string }
+              unitPriceCents: { type: integer }
+              quantity: { type: integer }
+              lineTotalCents: { type: integer }
+        totals: { $ref: '#/components/schemas/Totals' }
+        discount:
+          nullable: true
+          type: object
+          required: [code, amountCents]
+          properties:
+            code: { type: string }
+            amountCents: { type: integer }
+        currency: { type: string, enum: [EUR] }
+        shipping: { $ref: '#/components/schemas/ShippingAddress' }
+        deliveryDate: { type: string, format: date, nullable: true }
+        instructions: { type: string }
+        cardLast4: { type: string }
+    OrderEnvelope:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Order' }
+    OrderList:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Order' }
+        meta: { $ref: '#/components/schemas/PageMeta' }
+
+    AddressSuggestion:
+      type: object
+      required: [id, line1, city, county, postcode, country, label]
+      properties:
+        id: { type: string }
+        line1: { type: string }
+        city: { type: string }
+        county: { type: string }
+        postcode: { type: string }
+        country: { type: string }
+        label: { type: string }
+    Email:
+      type: object
+      required: [id, to, type, subject, body, link, createdAt]
+      properties:
+        id: { type: integer }
+        to: { type: string }
+        type: { type: string, enum: [confirm-email, password-reset] }
+        subject: { type: string }
+        body: { type: string }
+        link: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+    ClockState:
+      type: object
+      required: [now, offsetMs]
+      properties:
+        now: { type: string, format: date-time }
+        offsetMs: { type: integer }
