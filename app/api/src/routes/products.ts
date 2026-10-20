@@ -67,6 +67,8 @@ export function productView(r: any) {
     stock: r.stock,
     inStock: r.stock > 0,
     imageUrl: r.image_url,
+    // Gallery: the main image plus a side view and a detail view for the category.
+    images: [r.image_url, `/img/gallery/${r.category_slug}-2.svg`, `/img/gallery/${r.category_slug}-3.svg`],
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };

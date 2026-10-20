@@ -30,6 +30,7 @@ tags:
   - name: Payments
   - name: Users
   - name: Wishlist
+  - name: Stores
   - name: Admin
     description: Admin-only order management. Support users can read orders but get 403 on every change.
   - name: Test hooks
@@ -401,6 +402,87 @@ paths:
             text/event-stream:
               schema: { type: string, example: "event: stock\ndata: {\"productId\":4,\"stock\":7,\"at\":\"2026-10-20T12:00:00.000Z\"}\n\n" }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /stores:
+    get:
+      tags: [Stores]
+      summary: List stores, optionally searching by town or name
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
+      responses:
+        '200':
+          description: Stores
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Store' }
+                  meta:
+                    type: object
+                    properties:
+                      count: { type: integer }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /stores/nearest:
+    get:
+      tags: [Stores]
+      summary: The stores nearest to a position, closest first
+      parameters:
+        - { name: lat, in: query, required: true, schema: { type: number, minimum: -90, maximum: 90 } }
+        - { name: lng, in: query, required: true, schema: { type: number, minimum: -180, maximum: 180 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 12, default: 3 } }
+      responses:
+        '200':
+          description: Nearest stores
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Store'
+                        - type: object
+                          required: [distanceKm]
+                          properties:
+                            distanceKm: { type: number }
+                  meta:
+                    type: object
+                    properties:
+                      lat: { type: number }
+                      lng: { type: number }
+                      count: { type: integer }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /offers:
+    get:
+      tags: [Cart]
+      summary: Public, currently active discount codes
+      responses:
+        '200':
+          description: Offers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [code, description, type, value, minSpendCents]
+                      properties:
+                        code: { type: string }
+                        description: { type: string }
+                        type: { type: string, enum: [percent, fixed] }
+                        value: { type: integer }
+                        minSpendCents: { type: integer }
 
   /categories:
     get:
@@ -1524,7 +1606,7 @@ components:
             productCount: { type: integer }
     Product:
       type: object
-      required: [id, sku, name, description, category, priceCents, stock, inStock, imageUrl, createdAt, updatedAt]
+      required: [id, sku, name, description, category, priceCents, stock, inStock, imageUrl, images, createdAt, updatedAt]
       properties:
         id: { type: integer }
         sku: { type: string }
@@ -1535,6 +1617,10 @@ components:
         stock: { type: integer, minimum: 0 }
         inStock: { type: boolean }
         imageUrl: { type: string }
+        images:
+          type: array
+          description: Gallery images; the first is `imageUrl`
+          items: { type: string }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
     ProductEnvelope:
@@ -1817,6 +1903,17 @@ components:
           type: array
           items: { $ref: '#/components/schemas/Review' }
         meta: { $ref: '#/components/schemas/ReviewMeta' }
+    Store:
+      type: object
+      required: [id, name, address, city, lat, lng, hours]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        address: { type: string }
+        city: { type: string }
+        lat: { type: number }
+        lng: { type: number }
+        hours: { type: string }
     AddressSuggestion:
       type: object
       required: [id, line1, city, county, postcode, country, label]

@@ -63,7 +63,7 @@ export async function seedBase(client: PoolClient): Promise<void> {
 
   for (const d of seedDiscounts) {
     await client.query(
-      `INSERT INTO discount_codes (code, description, type, value, min_spend_cents) VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO discount_codes (code, description, type, value, min_spend_cents, public) VALUES ($1, $2, $3, $4, $5, TRUE)`,
       [d.code, d.description, d.type, d.value, d.minSpendCents],
     );
   }
