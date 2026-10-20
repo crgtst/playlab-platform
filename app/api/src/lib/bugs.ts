@@ -31,6 +31,14 @@ export const BUGS = {
   'missing-label': { ac: 'PLS-2.6, PLS-11.1', side: 'web', description: 'The email field loses its accessible label' },
   'stale-stock': { ac: 'PLS-8.6', side: 'api', description: 'The SSE stock counter stops updating' },
   'wrong-status-code': { ac: 'PLS-2.4, PLS-10.2', side: 'api', description: 'A validation error returns 500 instead of 422' },
+  // Phase 4 (browser APIs): no AC IDs exist for these features yet.
+  'geolocation-ignored': { ac: 'Phase 4: store finder', side: 'api', description: 'The store finder always shows Dublin stores, whatever the location' },
+  'permission-denied-crash': { ac: 'Phase 4: store finder', side: 'web', description: 'Denying location permission leaves a spinner forever instead of a message' },
+  'clipboard-wrong-value': { ac: 'Phase 4: copy buttons', side: 'web', description: '"Copy discount code" copies the previous code' },
+  'notification-spam': { ac: 'Phase 4: order notifications', side: 'web', description: 'One status change fires two notifications' },
+  'battery-banner-stuck': { ac: 'Phase 4: battery-saver banner', side: 'web', description: 'The low-battery banner stays after charging starts' },
+  'offline-stale-prices': { ac: 'Phase 4: offline cache', side: 'service worker', description: 'The offline cache keeps showing old prices after going back online' },
+  'aria-heading-skip': { ac: 'Phase 4: stable regions', side: 'web', description: 'The order summary jumps from h2 to h4' },
 } as const;
 
 export type BugName = keyof typeof BUGS;

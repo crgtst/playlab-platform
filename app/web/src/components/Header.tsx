@@ -55,7 +55,7 @@ export function Header() {
   const count = cart?.itemCount ?? 0;
 
   return (
-    <header className="site-header">
+    <header className="site-header" data-testid="site-header">
       <div className="container header-inner">
         <Link to="/" className="brand" data-testid="nav-home">
           PlayLab Shop
@@ -81,6 +81,9 @@ export function Header() {
             </NavLink>
             <NavLink to="/new-arrivals" data-testid="nav-new-arrivals">
               {t('nav.newArrivals')}
+            </NavLink>
+            <NavLink to="/stores" data-testid="nav-stores">
+              {t('nav.stores')}
             </NavLink>
             {user && (
               <NavLink to="/wishlist" data-testid="nav-wishlist">

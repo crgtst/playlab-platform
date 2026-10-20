@@ -4,6 +4,7 @@ import { api, errorMessage } from '../api/client';
 import type { Order } from '../api/types';
 import { AvatarUpload } from '../components/AvatarUpload';
 import { LiveIndicator } from '../components/LiveIndicator';
+import { NotificationsToggle } from '../components/OrderNotifications';
 import { useOrderEvents } from '../context/RealtimeContext';
 import { useAuth } from '../context/AuthContext';
 import { formatDate, formatPrice } from '../lib/format';
@@ -59,6 +60,7 @@ export function Account() {
       <section aria-labelledby="orders-heading" id="orders">
         <h2 id="orders-heading">Order history</h2>
         <LiveIndicator />
+        <NotificationsToggle />
         {error && (
           <p className="alert error" role="alert" data-testid="order-history-error">
             {error}

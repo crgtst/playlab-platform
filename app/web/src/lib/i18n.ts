@@ -7,6 +7,7 @@ export type Lang = 'en' | 'ga';
 const en = {
   'nav.shop': 'Shop',
   'nav.newArrivals': 'New arrivals',
+  'nav.stores': 'Stores',
   'nav.wishlist': 'Wishlist',
   'nav.account': 'My account',
   'nav.orders': 'Order history',
@@ -108,6 +109,7 @@ export type MessageKey = keyof typeof en;
 const ga: Record<MessageKey, string> = {
   'nav.shop': 'Siopa',
   'nav.newArrivals': 'Earraí nua',
+  'nav.stores': 'Siopaí',
   'nav.wishlist': 'Liosta mianta',
   'nav.account': 'Mo chuntas',
   'nav.orders': 'Stair orduithe',

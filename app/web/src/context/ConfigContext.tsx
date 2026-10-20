@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { api } from '../api/client';
 import type { AppConfig } from '../api/types';
+import { registerServiceWorker } from '../lib/registerSW';
 
 const ConfigContext = createContext<AppConfig | null>(null);
 
@@ -15,12 +16,24 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     api<AppConfig>('/config')
-      .then((c) => setConfig({ ...FALLBACK, ...c }))
-      .catch(() => setConfig(FALLBACK));
+      .then((c) => {
+        const merged = { ...FALLBACK, ...c };
+        setConfig(merged);
+        registerServiceWorker(merged.bugs);
+      })
+      .catch(() => {
+        setConfig(FALLBACK);
+        registerServiceWorker([]);
+      });
   }, []);
 
   if (!config) return null;
   return <ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>;
+}
+
+/** A fixed config with no fetch, for component tests (see src/testing/ComponentHarness.tsx). */
+export function StaticConfigProvider({ value, children }: { value?: Partial<AppConfig>; children: ReactNode }) {
+  return <ConfigContext.Provider value={{ ...FALLBACK, ...value }}>{children}</ConfigContext.Provider>;
 }
 
 export function useConfig(): AppConfig {

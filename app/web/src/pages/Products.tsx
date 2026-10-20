@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import type { Category, ProductList } from '../api/types';
 import { Pagination } from '../components/Pagination';
-import { useOnline } from '../components/OfflineBanner';
+import { useIsOnline, useOnline } from '../components/OfflineBanner';
 import { ProductCard } from '../components/ProductCard';
 
 const SORT_OPTIONS = [
@@ -31,6 +31,7 @@ export function Products() {
   const [formError, setFormError] = useState('');
 
   const query = params.toString();
+  const online = useIsOnline();
 
   useEffect(() => {
     document.title = 'Shop – PlayLab Shop';
@@ -182,6 +183,11 @@ export function Products() {
         )}
         {!loading && result && (
           <>
+            {!online && (
+              <p className="alert info" role="status" data-testid="offline-catalogue-notice">
+                You're offline: showing saved prices, which may be out of date.
+              </p>
+            )}
             <p className="result-count" role="status" data-testid="result-count" data-count={result.meta.total}>
               {result.meta.total} {result.meta.total === 1 ? 'result' : 'results'}
             </p>

@@ -1,0 +1,4 @@
+playwright/.cache
+playwright-ct-report
+test-results
+__snapshots__/*.tmp

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { Category, ProductList } from '../api/types';
+import { OffersStrip } from '../components/OffersStrip';
 import { ProductCard } from '../components/ProductCard';
 
 export function Home() {
@@ -23,10 +24,12 @@ export function Home() {
       <section className="hero" aria-labelledby="hero-heading">
         <h1 id="hero-heading">Welcome to PlayLab Shop</h1>
         <p>A practice shop built for end-to-end testing. Browse, fill your cart and check out with test cards.</p>
-        <Link to="/products" className="button" data-testid="hero-shop-link">
+        <Link to="/products" className="button pulse" data-testid="hero-shop-link">
           Start shopping
         </Link>
       </section>
+
+      <OffersStrip />
 
       <section aria-labelledby="categories-heading">
         <h2 id="categories-heading">Shop by category</h2>

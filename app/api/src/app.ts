@@ -17,7 +17,9 @@ import { ordersRouter } from './routes/orders';
 import { payFrameRouter, paymentsRouter } from './routes/payments';
 import { categoriesRouter, productsRouter } from './routes/products';
 import { reviewsRouter } from './routes/reviews';
+import { offersRouter } from './routes/offers';
 import { stockRouter } from './routes/stock';
+import { storesRouter } from './routes/stores';
 import { testRouter } from './routes/test';
 import { usersRouter } from './routes/users';
 import { wishlistRouter } from './routes/wishlist';
@@ -52,6 +54,8 @@ export function createApp() {
   v1.use('/users', usersRouter);
   v1.use('/wishlist', wishlistRouter);
   v1.use('/stock', stockRouter);
+  v1.use('/stores', storesRouter);
+  v1.use('/offers', offersRouter);
   app.use('/api/v1', v1);
   app.use('/pay', payFrameRouter);
 

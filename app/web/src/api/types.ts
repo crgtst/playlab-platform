@@ -26,6 +26,7 @@ export interface Product {
   stock: number;
   inStock: boolean;
   imageUrl: string;
+  images: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -173,4 +174,23 @@ export interface Review {
 export interface ReviewList {
   data: Review[];
   meta: { count: number; average: number | null };
+}
+
+export interface Store {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  lat: number;
+  lng: number;
+  hours: string;
+  distanceKm?: number;
+}
+
+export interface Offer {
+  code: string;
+  description: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  minSpendCents: number;
 }
