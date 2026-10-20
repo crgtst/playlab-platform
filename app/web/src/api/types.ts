@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: Role;
   emailVerified: boolean;
+  avatarUrl: string | null;
   createdAt: string;
 }
 
@@ -84,11 +85,15 @@ export interface ShippingAddress {
   phone: string;
 }
 
+export const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
 export interface Order {
   id: number;
   number: string;
   userId: number;
-  status: string;
+  customer: { id: number; email: string; name: string };
+  status: OrderStatus;
   createdAt: string;
   items: { productId: number; name: string; unitPriceCents: number; quantity: number; lineTotalCents: number }[];
   totals: Totals;
@@ -118,4 +123,33 @@ export interface Email {
   body: string;
   link: string | null;
   createdAt: string;
+}
+
+export interface Tracking {
+  orderId: number;
+  number: string;
+  status: OrderStatus;
+  carrier: string;
+  trackingNumber: string;
+  estimatedDelivery: string | null;
+  events: { status: string; label: string; at: string }[];
+}
+
+export interface WishlistItem {
+  position: number;
+  addedAt: string;
+  product: Product;
+}
+
+export interface PaymentIntent {
+  id: string;
+  amountCents: number;
+  status: string;
+  clientSecret: string;
+  frameUrl: string;
+}
+
+export interface AppConfig {
+  paymentFrameUrl: string;
+  testHooks: boolean;
 }

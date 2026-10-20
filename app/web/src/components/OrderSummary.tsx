@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Order } from '../api/types';
 import { formatDate, formatDateTime, formatPrice } from '../lib/format';
 import { Totals } from './Totals';
@@ -6,6 +7,20 @@ export function OrderSummary({ order }: { order: Order }) {
   const s = order.shipping;
   return (
     <div className="order-summary" data-testid="order-summary" data-order-id={order.id}>
+      <div className="order-actions" data-testid="order-actions">
+        {/* Opens in a new tab: tests catch it with context.waitForEvent('page'). */}
+        <Link to={`/track/${order.id}`} target="_blank" rel="noopener" className="button secondary" data-testid="track-parcel-link">
+          Track parcel <span className="visually-hidden">(opens in a new tab)</span>
+        </Link>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => window.open(`/orders/${order.id}/receipt`, 'receipt', 'popup,width=640,height=800')}
+          data-testid="print-receipt-button"
+        >
+          Print receipt
+        </button>
+      </div>
       <dl className="meta">
         <div>
           <dt>Order number</dt>

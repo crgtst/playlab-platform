@@ -139,6 +139,13 @@
             notify({ status: 'error', message: err.message });
           });
 
+        // The shop's "Retry payment" button asks us to resubmit the same card details.
+        window.addEventListener('message', function (e) {
+          if (SHOP_ORIGINS.indexOf(e.origin) === -1 || !e.data || e.data.type !== 'playlab-retry') return;
+          if (form.requestSubmit) form.requestSubmit();
+          else form.dispatchEvent(new Event('submit', { cancelable: true }));
+        });
+
         form.addEventListener('submit', function (e) {
           e.preventDefault();
           if (payButton.disabled) return;

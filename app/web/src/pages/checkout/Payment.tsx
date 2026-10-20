@@ -1,16 +1,26 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { api, ApiRequestError, errorMessage } from '../../api/client';
-import type { Order } from '../../api/types';
+import type { Order, PaymentIntent } from '../../api/types';
 import { CheckoutSteps } from '../../components/CheckoutSteps';
-import { Field } from '../../components/Field';
+import { PaymentFrame } from '../../components/PaymentFrame';
 import { Totals } from '../../components/Totals';
 import { useCart } from '../../context/CartContext';
+import { useConfig } from '../../context/ConfigContext';
+import { useToast } from '../../context/ToastContext';
 import { clearCheckoutState, useCheckoutState } from '../../lib/checkoutState';
-import { formatPrice } from '../../lib/format';
 import { PriceChangeWarning } from './Review';
 
-type CardErrors = Partial<Record<'nameOnCard' | 'cardNumber' | 'expiry' | 'cvc', string>>;
+type Failure =
+  | { kind: 'declined' | 'timeout' | 'frame'; message: string }
+  | { kind: 'order'; message: string; retryable: boolean };
+
+interface FrameMessage {
+  type: 'playlab-payment';
+  status: 'ready' | 'processing' | 'succeeded' | 'declined' | 'timed_out' | 'error';
+  intentId: string;
+  message?: string;
+}
 
 function newKey(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -18,90 +28,130 @@ function newKey(): string {
 
 export function Payment() {
   const navigate = useNavigate();
+  const config = useConfig();
+  const { show } = useToast();
   const { cart, refresh } = useCart();
   const [state, update] = useCheckoutState();
-  const [card, setCard] = useState({ nameOnCard: state.shipping.fullName, cardNumber: '', expiry: '', cvc: '' });
-  const [errors, setErrors] = useState<CardErrors>({});
-  const [failure, setFailure] = useState<{ kind: 'declined' | 'timeout' | 'other'; message: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  // One key per checkout attempt: a double click or a retry after a timeout can never create two orders.
+  const [intent, setIntent] = useState<PaymentIntent | null>(null);
+  const [intentError, setIntentError] = useState('');
+  const [failure, setFailure] = useState<Failure | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  // One key per checkout attempt: retries and double submits can never create two orders.
   const idempotencyKey = useRef(newKey());
-  const submitting = useRef(false);
+  const placingRef = useRef(false);
+
+  const total = cart?.totals.totalCents ?? 0;
+  const blocked = !!cart?.priceChanged && !state.acceptPriceChanges;
+  const frameOrigin = config?.paymentFrameUrl ? new URL(config.paymentFrameUrl).origin : null;
 
   useEffect(() => {
     document.title = 'Checkout: payment – PlayLab Shop';
   }, []);
 
+  // A payment intent is for an exact amount, so make a fresh one whenever the total changes.
+  const createIntent = useCallback(async () => {
+    setIntentError('');
+    setIntent(null);
+    try {
+      const r = await api<{ data: PaymentIntent }>('/payments/intents', { method: 'POST' });
+      setIntent(r.data);
+    } catch (err) {
+      setIntentError(errorMessage(err));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cart || cart.items.length === 0 || blocked || !state.shippingComplete) return;
+    createIntent();
+  }, [total, blocked, createIntent, state.shippingComplete, cart?.items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const placeOrder = useCallback(
+    async (paymentIntentId: string) => {
+      if (placingRef.current) return;
+      placingRef.current = true;
+      setPlacing(true);
+      setFailure(null);
+      try {
+        const res = await api<{ data: Order }>('/orders', {
+          method: 'POST',
+          headers: { 'Idempotency-Key': idempotencyKey.current },
+          body: {
+            shipping: state.shipping,
+            deliveryDate: state.deliveryDate,
+            instructions: state.instructions,
+            acceptPriceChanges: state.acceptPriceChanges,
+            paymentIntentId,
+          },
+        });
+        clearCheckoutState();
+        // replace: pressing Back from the confirmation must not return to a submittable payment page.
+        navigate(`/orders/${res.data.id}/confirmation`, { replace: true });
+        refresh();
+      } catch (err) {
+        const e = err instanceof ApiRequestError ? err : null;
+        if (e?.code === 'PAYMENT_AMOUNT_MISMATCH') {
+          setFailure({ kind: 'order', message: e.message, retryable: false });
+          refresh();
+          createIntent();
+        } else if (e?.code === 'PRICE_CHANGED') {
+          update({ acceptPriceChanges: false });
+          setFailure({ kind: 'order', message: e.message, retryable: false });
+          refresh();
+        } else {
+          // Server errors and network failures can be retried: the payment has already been taken.
+          const retryable = !e || e.status === 0 || e.status >= 500;
+          setFailure({ kind: 'order', message: errorMessage(err), retryable });
+          show(retryable ? 'We could not place your order. Please try again.' : errorMessage(err), 'error');
+        }
+      } finally {
+        placingRef.current = false;
+        setPlacing(false);
+      }
+    },
+    [state, navigate, refresh, update, createIntent, show],
+  );
+
+  // Results from the payment iframe arrive by postMessage. Only trust messages from the frame's origin.
+  useEffect(() => {
+    if (!intent || !frameOrigin) return;
+    const onMessage = (e: MessageEvent<FrameMessage>) => {
+      if (e.origin !== frameOrigin || e.data?.type !== 'playlab-payment' || e.data.intentId !== intent.id) return;
+      switch (e.data.status) {
+        case 'processing':
+          setFailure(null);
+          setProcessing(true);
+          break;
+        case 'succeeded':
+          setProcessing(false);
+          placeOrder(intent.id);
+          break;
+        case 'declined':
+          setProcessing(false);
+          setFailure({ kind: 'declined', message: e.data.message ?? 'Your card was declined' });
+          break;
+        case 'timed_out':
+          setProcessing(false);
+          setFailure({ kind: 'timeout', message: e.data.message ?? 'The payment provider did not respond in time.' });
+          break;
+        case 'error':
+          setProcessing(false);
+          setFailure({ kind: 'frame', message: e.data.message ?? 'Payment failed' });
+          break;
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [intent, frameOrigin, placeOrder]);
+
   if (!state.shippingComplete) return <Navigate to="/checkout/shipping" replace />;
   if (!cart) return null;
 
-  const validate = (): CardErrors => {
-    const e: CardErrors = {};
-    const digits = card.cardNumber.replace(/[\s-]/g, '');
-    if (!card.nameOnCard.trim()) e.nameOnCard = 'Name on card is required';
-    if (!/^\d{12,19}$/.test(digits)) e.cardNumber = 'Enter a valid card number';
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(card.expiry.trim())) e.expiry = 'Use the format MM/YY';
-    if (!/^\d{3,4}$/.test(card.cvc.trim())) e.cvc = 'Enter 3 or 4 digits';
-    return e;
-  };
-
-  const pay = async () => {
-    if (submitting.current) return;
+  const retryPayment = () => {
     setFailure(null);
-    const e = validate();
-    setErrors(e);
-    if (Object.keys(e).length) return;
-    submitting.current = true;
-    setBusy(true);
-    try {
-      const res = await api<{ data: Order }>('/orders', {
-        method: 'POST',
-        headers: { 'Idempotency-Key': idempotencyKey.current },
-        body: {
-          shipping: state.shipping,
-          deliveryDate: state.deliveryDate,
-          instructions: state.instructions,
-          acceptPriceChanges: state.acceptPriceChanges,
-          payment: { ...card, cardNumber: card.cardNumber.replace(/[\s-]/g, '') },
-        },
-      });
-      clearCheckoutState();
-      // replace: pressing Back from the confirmation must not return to a submittable payment page.
-      navigate(`/orders/${res.data.id}/confirmation`, { replace: true });
-      refresh();
-    } catch (err) {
-      if (err instanceof ApiRequestError) {
-        if (err.status === 402) setFailure({ kind: 'declined', message: err.message });
-        else if (err.status === 504) setFailure({ kind: 'timeout', message: err.message });
-        else if (err.status === 422 && Array.isArray(err.details)) {
-          const f = err.fieldErrors();
-          setErrors({
-            nameOnCard: f['payment.nameOnCard'],
-            cardNumber: f['payment.cardNumber'],
-            expiry: f['payment.expiry'],
-            cvc: f['payment.cvc'],
-          });
-          setFailure({ kind: 'other', message: Object.values(f)[0] ?? err.message });
-        } else {
-          if (err.code === 'PRICE_CHANGED') update({ acceptPriceChanges: false });
-          setFailure({ kind: 'other', message: err.message });
-        }
-        refresh();
-      } else {
-        setFailure({ kind: 'other', message: errorMessage(err) });
-      }
-    } finally {
-      submitting.current = false;
-      setBusy(false);
-    }
+    frame.current?.contentWindow?.postMessage({ type: 'playlab-retry' }, frameOrigin ?? '*');
   };
-
-  const onSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    pay();
-  };
-
-  const blocked = cart.priceChanged && !state.acceptPriceChanges;
 
   return (
     <div className="checkout">
@@ -110,7 +160,8 @@ export function Payment() {
       <h2>Payment</h2>
       <PriceChangeWarning accepted={state.acceptPriceChanges} onAccept={() => update({ acceptPriceChanges: true })} />
       <div className="payment-grid">
-        <form onSubmit={onSubmit} noValidate className="checkout-form" data-testid="payment-form" aria-describedby="test-cards">
+        <section aria-labelledby="card-heading" data-testid="payment-section">
+          <h3 id="card-heading">Card details</h3>
           {failure?.kind === 'declined' && (
             <div className="alert error" role="alert" data-testid="payment-declined">
               <p>{failure.message}</p>
@@ -120,36 +171,53 @@ export function Payment() {
           {failure?.kind === 'timeout' && (
             <div className="alert error" role="alert" data-testid="payment-timeout">
               <p>{failure.message}</p>
-              <button type="button" onClick={pay} disabled={busy} data-testid="payment-retry-button">
+              <button type="button" onClick={retryPayment} disabled={processing} data-testid="payment-retry-button">
                 Retry payment
               </button>
             </div>
           )}
-          {failure?.kind === 'other' && (
-            <p className="alert error" role="alert" data-testid="payment-error">
-              {failure.message}
+          {(failure?.kind === 'frame' || failure?.kind === 'order') && (
+            <div className="alert error" role="alert" data-testid="payment-error">
+              <p>{failure.message}</p>
+              {failure.kind === 'order' && failure.retryable && intent && (
+                <button type="button" onClick={() => placeOrder(intent.id)} disabled={placing} data-testid="payment-order-retry-button">
+                  Try again
+                </button>
+              )}
+            </div>
+          )}
+          {intentError && (
+            <div className="alert error" role="alert" data-testid="payment-setup-error">
+              <p>{intentError}</p>
+              <button type="button" onClick={createIntent} data-testid="payment-setup-retry-button">
+                Try again
+              </button>
+            </div>
+          )}
+          {blocked ? (
+            <p className="muted" data-testid="payment-blocked">
+              Accept the new prices above to continue to payment.
+            </p>
+          ) : intent ? (
+            <PaymentFrame ref={frame} src={intent.frameUrl} />
+          ) : (
+            !intentError && (
+              <p role="status" className="muted" data-testid="payment-loading">
+                Loading the secure payment form…
+              </p>
+            )
+          )}
+          {(processing || placing) && (
+            <p role="status" className="muted" data-testid="payment-processing">
+              {placing ? 'Placing your order…' : 'Processing your payment…'}
             </p>
           )}
-          <Field id="card-name" label="Name on card" autoComplete="cc-name" value={card.nameOnCard} onChange={(e) => setCard({ ...card, nameOnCard: e.target.value })} error={errors.nameOnCard} testId="card-name" />
-          <Field id="card-number" label="Card number" inputMode="numeric" autoComplete="cc-number" value={card.cardNumber} onChange={(e) => setCard({ ...card, cardNumber: e.target.value })} error={errors.cardNumber} testId="card-number" />
-          <div className="row">
-            <Field id="card-expiry" label="Expiry (MM/YY)" inputMode="numeric" autoComplete="cc-exp" placeholder="MM/YY" value={card.expiry} onChange={(e) => setCard({ ...card, expiry: e.target.value })} error={errors.expiry} testId="card-expiry" />
-            <Field id="card-cvc" label="Security code" inputMode="numeric" autoComplete="cc-csc" value={card.cvc} onChange={(e) => setCard({ ...card, cvc: e.target.value })} error={errors.cvc} testId="card-cvc" />
-          </div>
           <div className="form-actions">
             <Link to="/checkout/review" className="button secondary" data-testid="payment-back-link">
               Back
             </Link>
-            <button type="submit" disabled={busy || blocked} aria-busy={busy} data-testid="checkout-pay-button">
-              {busy ? 'Processing…' : `Pay ${formatPrice(cart.totals.totalCents)}`}
-            </button>
           </div>
-          {busy && (
-            <p role="status" className="muted" data-testid="payment-processing">
-              Processing your payment…
-            </p>
-          )}
-        </form>
+        </section>
         <aside aria-labelledby="payment-summary-heading">
           <h3 id="payment-summary-heading">Order total</h3>
           <Totals totals={cart.totals} discount={cart.discount} />

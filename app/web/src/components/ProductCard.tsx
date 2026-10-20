@@ -5,6 +5,7 @@ import type { Product } from '../api/types';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { formatPrice } from '../lib/format';
+import { WishlistToggle } from './WishlistToggle';
 
 export function stockLabel(stock: number): string {
   if (stock === 0) return 'Out of stock';
@@ -46,9 +47,12 @@ export function ProductCard({ product }: { product: Product }) {
       <p className={product.stock === 0 ? 'stock out' : 'stock'} data-testid="product-stock">
         {stockLabel(product.stock)}
       </p>
-      <button type="button" onClick={onAdd} disabled={busy || !product.inStock} data-testid="add-to-cart-button" aria-label={`Add ${product.name} to cart`}>
-        {busy ? 'Adding…' : 'Add to cart'}
-      </button>
+      <div className="card-actions">
+        <button type="button" onClick={onAdd} disabled={busy || !product.inStock} data-testid="add-to-cart-button" aria-label={`Add ${product.name} to cart`}>
+          {busy ? 'Adding…' : 'Add to cart'}
+        </button>
+        <WishlistToggle productId={product.id} name={product.name} />
+      </div>
     </article>
   );
 }

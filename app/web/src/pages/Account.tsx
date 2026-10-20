@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, errorMessage } from '../api/client';
 import type { Order } from '../api/types';
+import { AvatarUpload } from '../components/AvatarUpload';
 import { useAuth } from '../context/AuthContext';
 import { formatDate, formatPrice } from '../lib/format';
 
@@ -49,7 +50,9 @@ export function Account() {
         </dl>
       </section>
 
-      <section aria-labelledby="orders-heading">
+      <AvatarUpload />
+
+      <section aria-labelledby="orders-heading" id="orders">
         <h2 id="orders-heading">Order history</h2>
         {error && (
           <p className="alert error" role="alert" data-testid="order-history-error">

@@ -1,5 +1,6 @@
 import type { Cart, Totals as TotalsType } from '../api/types';
 import { formatPrice } from '../lib/format';
+import { Tooltip } from './Tooltip';
 
 interface Props {
   totals: TotalsType;
@@ -24,7 +25,14 @@ export function Totals({ totals, discount }: Props) {
         </div>
       )}
       <div>
-        <dt>VAT (23%)</dt>
+        <dt>
+          VAT (23%){' '}
+          <Tooltip content="Irish VAT at 23%, charged on the price after any discount. Delivery is not taxed." testId="vat-tooltip">
+            <button type="button" className="info-button" aria-label="About VAT" data-testid="vat-info-button">
+              i
+            </button>
+          </Tooltip>
+        </dt>
         <dd data-testid="totals-vat" data-cents={totals.vatCents}>
           {formatPrice(totals.vatCents)}
         </dd>

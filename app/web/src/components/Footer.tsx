@@ -1,15 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useConfig } from '../context/ConfigContext';
 
 export function Footer() {
-  const [hooks, setHooks] = useState(false);
-
-  useEffect(() => {
-    fetch('/test', { headers: { Accept: 'application/json' } })
-      .then((r) => setHooks(r.ok))
-      .catch(() => setHooks(false));
-  }, []);
-
+  const config = useConfig();
   return (
     <footer className="site-footer">
       <div className="container footer-inner">
@@ -18,7 +11,7 @@ export function Footer() {
           <a href="/api/docs" data-testid="footer-api-docs-link">
             API docs
           </a>
-          {hooks && (
+          {config?.testHooks && (
             <Link to="/mailbox" data-testid="footer-mailbox-link">
               Test mailbox
             </Link>

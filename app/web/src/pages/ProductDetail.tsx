@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api, ApiRequestError, errorMessage } from '../api/client';
 import type { Product } from '../api/types';
 import { stockLabel } from '../components/ProductCard';
+import { WishlistToggle } from '../components/WishlistToggle';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import { formatPrice } from '../lib/format';
@@ -100,6 +101,7 @@ export function ProductDetail() {
             <button type="submit" disabled={busy || !product.inStock} data-testid="add-to-cart-button">
               {busy ? 'Adding…' : 'Add to cart'}
             </button>
+            <WishlistToggle productId={product.id} name={product.name} />
           </form>
           {error && (
             <p id="detail-qty-error" className="field-error" role="alert" data-testid="add-to-cart-error">
