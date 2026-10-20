@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Outlet, RouteObject, useLocation } from 'react-router-dom';
+import { BatteryBanner } from './components/BatteryBanner';
 import { Footer } from './components/Footer';
+import { OrderNotifications } from './components/OrderNotifications';
 import { Header } from './components/Header';
 import { RequireAuth } from './components/RequireAuth';
 import { RequireRole } from './components/RequireRole';
@@ -13,6 +15,7 @@ import { CheckoutGuard } from './pages/checkout/CheckoutGuard';
 import { Payment } from './pages/checkout/Payment';
 import { Review } from './pages/checkout/Review';
 import { Shipping } from './pages/checkout/Shipping';
+import { Stores } from './pages/Stores';
 import { ConfirmEmail } from './pages/ConfirmEmail';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Home } from './pages/Home';
@@ -51,6 +54,8 @@ function Layout() {
         Skip to content
       </a>
       <Header />
+      <BatteryBanner />
+      <OrderNotifications />
       <main id="main" ref={main} tabIndex={-1} className="container">
         <Outlet />
       </main>
@@ -69,6 +74,7 @@ export const routes: RouteObject[] = [
       { path: '/products', element: <Products /> },
       { path: '/products/:id', element: <ProductDetail /> },
       { path: '/new-arrivals', element: <NewArrivals /> },
+      { path: '/stores', element: <Stores /> },
       { path: '/cart', element: <Cart /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },

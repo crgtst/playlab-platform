@@ -5,6 +5,7 @@ import type { Product } from '../api/types';
 import { stockLabel } from '../components/ProductCard';
 import { WishlistToggle } from '../components/WishlistToggle';
 import { useOnline } from '../components/OfflineBanner';
+import { ProductGallery } from '../components/ProductGallery';
 import { Reviews } from '../components/Reviews';
 import { useStockStream } from '../lib/useStockStream';
 import { useCart } from '../context/CartContext';
@@ -87,7 +88,7 @@ export function ProductDetail() {
         </Link>
       </nav>
       <div className="detail-grid">
-        <img src={product.imageUrl} alt="" width={480} height={320} />
+        <ProductGallery images={product.images?.length ? product.images : [product.imageUrl]} name={product.name} />
         <div>
           <h1 data-testid="product-title">{product.name}</h1>
           <p className="price large" data-testid="product-price" data-price-cents={product.priceCents}>

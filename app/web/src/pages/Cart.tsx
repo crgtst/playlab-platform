@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { errorMessage } from '../api/client';
 import { DiscountForm } from '../components/DiscountForm';
+import { OffersStrip } from '../components/OffersStrip';
 import { useOnline } from '../components/OfflineBanner';
 import { QuantityStepper } from '../components/QuantityStepper';
 import { Totals } from '../components/Totals';
@@ -78,6 +79,7 @@ export function Cart() {
     <div className="cart-page">
       <h1>{t('cart.title')}</h1>
       <CartNotices />
+      <OffersStrip />
       <table className="cart-table" data-testid="cart-table">
         <caption className="visually-hidden">{t('cart.items')}</caption>
         <thead>

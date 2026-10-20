@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api, ApiRequestError, errorMessage } from '../api/client';
 import type { Order } from '../api/types';
 import { LiveIndicator } from '../components/LiveIndicator';
+import { NotificationsToggle } from '../components/OrderNotifications';
 import { OrderSummary } from '../components/OrderSummary';
 import { useOrderEvents } from '../context/RealtimeContext';
 
@@ -40,6 +41,7 @@ export function OrderDetail() {
         <>
           <h1>Order {order.number}</h1>
           <LiveIndicator />
+          <NotificationsToggle />
           <OrderSummary order={order} />
         </>
       )}
