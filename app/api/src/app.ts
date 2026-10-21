@@ -34,8 +34,15 @@ export function createApp() {
   app.disable('x-powered-by');
   app.set('trust proxy', 'loopback, linklocal, uniquelocal');
   app.set('etag', false); // product reads set their own ETag
+  // Keep Express 4's qs parsing (Express 5 defaults to 'simple'), so nested and array query params behave as before.
+  app.set('query parser', 'extended');
   app.use(cookieParser());
   app.use(express.json({ limit: '100kb' }));
+  // Express 5 leaves req.body undefined when no body was parsed; Express 4 set {}, so validation reports each missing field.
+  app.use((req, _res, next) => {
+    req.body ??= {};
+    next();
+  });
   // Injected latency and failures (POST /test/latency, /test/chaos). Never applies to /test/* or /health.
   if (config.testHooks) app.use(testFaults);
 

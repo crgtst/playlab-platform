@@ -333,7 +333,7 @@ Phase 4 follows v1.0.0 on purpose: a second language is most valuable once the T
 **Phase 0 tasks**
 
 - [ ] Settle the decisions at the end of this doc
-- [ ] Upgrade to Node 24, the latest Playwright and Express 5; add Dependabot
+- [x] Upgrade to Node 24, the latest Playwright and Express 5; add Dependabot
 - [ ] Add ESLint, Prettier, `lint-staged` and EditorConfig; remove `.DS_Store`
 - [ ] Add the first workflow: lint, typecheck, and a Vitest + supertest skeleton for the API
 - [ ] Write the landing README draft and `SECURITY.md`

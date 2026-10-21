@@ -286,7 +286,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
     - button "Add Wireless Earbuds to wishlist"
   ```
   The order summary is a region named "Order summary": an h2, then h3 headings for Items, Totals and Delivery address.
-- **Component tests**: the harness lives in `web/` (`@playwright/experimental-ct-react` 1.49.1, `playwright-ct.config.ts`, `playwright/index.tsx`).
+- **Component tests**: the harness lives in `web/` (`@playwright/experimental-ct-react` 1.62.1, `playwright-ct.config.ts`, `playwright/index.tsx`).
   - Write `*.ct.tsx` files under `web/src` and run `cd web && npm run test-ct` (install browsers with `npx playwright install chromium` first).
   - Every mount is wrapped by `src/testing/ComponentHarness.tsx`. Pass `hooksConfig: { lang: 'ga', currency: 'GBP', theme: 'dark', bugs: ['quantity-negative'], route: '/cart' }` as needed. Add `app: true` to also mount auth, cart and wishlist, and mock `/api/v1/**` with `page.route`.
   - Good first candidates: `Totals`, `QuantityStepper`, `ReviewStars`, `Pagination`, `ProductGallery` and `CopyButton`.
@@ -447,5 +447,5 @@ Two edge-case scenarios from the spec's checklist, which aren't in any phase, ar
 28. The Battery Status API exists only in Chromium, so the battery banner never appears in Firefox or WebKit unless you mock `navigator.getBattery`.
 29. "Copy discount code" lives in a "Current offers" strip on the home and cart pages (new `GET /offers`, plus a `public` flag on discount codes). The strip changes those pages' visual baselines.
 30. The order summary is now a labelled region with an h2 "Order summary" and h3 sub-headings, for stable aria snapshots. Its test ids are unchanged.
-31. The component harness ships with no component tests; they're part of your Phase 5. The CT package is pinned to 1.49.1.
+31. The component harness ships with no component tests; they're part of your Phase 5. The CT package is pinned to 1.62.1.
 32. The price-tracker extension has a small background service worker so tests can find its ID. It runs only in Chromium.

@@ -1,0 +1,40 @@
+# Weekly dependency updates. Minor and patch bumps are grouped into one PR per directory;
+# majors arrive as separate PRs. Node and Postgres majors are chosen by hand (LTS only),
+# so Dependabot ignores them.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/app/api", "/app/web"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker
+    directories: ["/app/api", "/app/web"]
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker-compose
+    directory: /app
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: postgres
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

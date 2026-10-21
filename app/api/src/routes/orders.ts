@@ -429,7 +429,7 @@ function orderIdParam(raw: string): number {
 }
 
 /** Loads an order the current user may see. Other customers' orders are a 404, so ids are not revealed. */
-async function visibleOrder(req: Request) {
+async function visibleOrder(req: Request<{ id: string }>) {
   const order = await loadOrder(orderIdParam(req.params.id));
   const user = req.user!;
   const leak = isBugOn('order-leak');
@@ -439,7 +439,7 @@ async function visibleOrder(req: Request) {
 
 ordersRouter.get(
   '/:id',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     res.json({ data: await visibleOrder(req) });
   }),
 );
@@ -447,7 +447,7 @@ ordersRouter.get(
 ordersRouter.patch(
   '/:id/status',
   requireRole('admin'),
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const id = orderIdParam(req.params.id);
     const { status } = parse(z.object({ status: statusSchema }), req.body);
     const before = await withTransaction(async (client) => {
@@ -466,7 +466,7 @@ const STEP_ORDER = ['paid', 'processing', 'shipped', 'delivered'];
 
 ordersRouter.get(
   '/:id/tracking',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const order = await visibleOrder(req);
     const placed = new Date(order.createdAt).getTime();
     const hour = 3_600_000;
