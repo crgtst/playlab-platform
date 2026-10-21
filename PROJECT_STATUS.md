@@ -9,10 +9,16 @@ Phase 0: Foundations (branch `phase-0-foundations`)
 
 ## Next task
 
-Phase 0, last task: settle the open decisions (2 to 6 below). Then Phase 0 is complete and PR #5 can leave draft.
+Phase 1, task 0 (Phase 0 close-out): derive `PAYMENT_FRAME_URL` from `API_PORT` in `.env.example` (PLS-12.5), settle
+decisions 2 to 6, and merge PR #5. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-21: Phase 1 planned. "Phase 1 tasks" added to `docs/REVIEW_AND_PLAN.md`: 11 tasks, each with its ACs,
+  defects and platform tests. Gap analysis against the plan's API additions found 13 behaviours with no AC.
+  Added as PLS-12.5, 21.5–21.7, 22.6, 23.5, 25.5, 28.6–28.10 and 29.5 (166 ACs in total), with PLS-25.2 widened
+  to list every log field. All 42 Phase 1 ACs map to a task, checked by script. The new wording for PLS-8.2, 8.3,
+  8.4 and 10.1 is recorded there and is applied in the task that builds each behaviour.
 - 2026-10-21: Phase 0 task 6. PLS-20 to PLS-29 added to `tests/ACCEPTANCE_CRITERIA.md`: 10 stories, 56 ACs
   (153 in total). Each story says which phase builds it. All 14 planned defects map to ACs, and four existing
   defects gained new AC IDs (`stock-oversell` 21.4, `order-leak` 24.1, `token-never-expires` 24.2,
@@ -73,6 +79,7 @@ Phase 0, last task: settle the open decisions (2 to 6 below). Then Phase 0 is co
 | 6 | .NET suite | Open | |
 | 7 | v2.0 FastAPI spec marked historical; PlayLab Pay (FastAPI) added as Phase 5 stretch | Agreed | 2026-10-21 |
 | 8 | A9 reconciliation: build PLS-15.3 and 17.2; reword 13.x, 14.1, 16.1, 17.1 and 18.2 to match the build | Agreed | 2026-10-21 |
+| 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Proposed | 2026-10-21 |
 
 ## Known issues
 

@@ -162,6 +162,7 @@ As a tester, I want reliable test hooks, so that every run starts from a known s
 | PLS-12.2 | Given `TEST_HOOKS=false`, when any `/test/*` endpoint is called, then it returns 404 |  |  |
 | PLS-12.3 | Given a named defect, when switched on through `/test/bugs`, then only that behaviour changes |  |  |
 | PLS-12.4 | Given the stack is starting, when `/health` reports ready, then the web app, API and database all respond |  |  |
+| PLS-12.5 | *(Planned: Phase 0 close-out.)* Given `app/.env` copied from `.env.example` with `API_PORT=3001`, when checkout reaches the payment step, then the payment frame loads from port 3001 |  |  |
 
 ## PLS-13 Store finder (Phase 4)
 
@@ -253,7 +254,7 @@ Not built yet: these ACs fail until Phase 1 adds the transition rules ([`docs/RE
 
 As an admin, I want to be told when someone else changed a product first, so that I never overwrite their edit unknowingly.
 
-Not built yet: `If-Match` arrives in Phase 1 (API addition 5). PLS-21.4 already holds today.
+Not built yet: `If-Match` and order ETags arrive in Phase 1 (API addition 5). PLS-21.4 already holds today.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -261,6 +262,9 @@ Not built yet: `If-Match` arrives in Phase 1 (API addition 5). PLS-21.4 already 
 | PLS-21.2 | Given an ETag from before another admin's edit, when it is sent in `If-Match`, then the API returns 412 and the product is unchanged |  | `lost-update` |
 | PLS-21.3 | Given no `If-Match` header, when `PUT /products/6` is sent, then the API returns 428 |  | `lost-update` |
 | PLS-21.4 | Given product `FX-LOW` with stock 1, when 20 customers order it at the same moment, then exactly 1 order succeeds and 19 get 409 |  | `stock-oversell` |
+| PLS-21.5 | Given an order, when `PATCH /orders/{id}/status` is sent with a stale `If-Match`, then the API returns 412 and the status is unchanged; without `If-Match` it returns 428 |  | `lost-update` |
+| PLS-21.6 | Given an order, when `GET /orders/{id}` is called, then the response has an `ETag`, and the ETag changes when the order's status changes |  |  |
+| PLS-21.7 | Given the admin orders grid is open and another admin then changes an order's status, when the first admin edits that order's status, then the grid says the order was changed by someone else and shows its current status |  | `lost-update` |
 
 ## PLS-22 Account management (planned: Phase 1)
 
@@ -275,6 +279,7 @@ Not built yet: the account endpoints arrive in Phase 1 (API addition 6).
 | PLS-22.3 | Given a wrong current password, when they try to change their email, then the API returns 422 on `currentPassword` and the email is unchanged |  |  |
 | PLS-22.4 | Given a customer with sessions on two devices, when they delete their account with `DELETE /users/me`, then both refresh tokens stop working and any access token they hold returns 401 |  |  |
 | PLS-22.5 | Given a deleted account, when an admin views its orders, then the orders are kept but the customer's name and email are anonymised |  |  |
+| PLS-22.6 | Given an email that belongs to another account, when a customer changes their email to it, then the API returns 409 `EMAIL_IN_USE` and the email is unchanged |  |  |
 
 ## PLS-23 User administration (planned: Phase 1)
 
@@ -288,6 +293,7 @@ Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
 | PLS-23.2 | Given an admin, when they change a user's role with `PATCH /admin/users/{id}`, then the new role applies from that user's next login |  |  |
 | PLS-23.3 | Given an account locked after 5 failed logins, when an admin unlocks it, then the user can log in straight away |  |  |
 | PLS-23.4 | Given a support user, when they list users, then the list is returned, and when they try to change a user, then the API returns 403 |  |  |
+| PLS-23.5 | Given a customer, when they call `GET /admin/users`, then the API returns 403 |  |  |
 
 ## PLS-24 API security (planned: Phases 1 and 3)
 
@@ -321,9 +327,10 @@ Not built yet: correlation IDs, logs and metrics arrive in Phase 1 (API addition
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
 | PLS-25.1 | Given a request with a valid `X-Correlation-Id` (1 to 64 of `A-Z a-z 0-9 - _`), when it is answered, then the same ID is echoed back; without one, or with an invalid one, a new UUID is returned |  |  |
-| PLS-25.2 | Given a request's correlation ID, when `GET /test/logs?correlationId=` is called, then it returns that request's log line with method, route, status and duration |  |  |
+| PLS-25.2 | Given a request's correlation ID, when `GET /test/logs?correlationId=` is called, then it returns that request's log line with time, correlation ID, method, route, status, duration, user ID, test session and active defects |  |  |
 | PLS-25.3 | Given a login and a card payment, when their log lines are read, then passwords, the `Authorization` header, cookies and card numbers are redacted |  |  |
 | PLS-25.4 | Given traffic has been sent, when `GET /metrics` is scraped, then it returns Prometheus text with a request-duration histogram by route and status, and it is not rate limited |  |  |
+| PLS-25.5 | Given an order is placed and a card is declined, when `GET /metrics` is scraped, then the orders-created and payments-declined counters have each gone up by 1, and the active-defects and database-pool gauges are present |  |  |
 
 ## PLS-26 Contract and versioning (planned: Phase 3)
 
@@ -357,7 +364,7 @@ Not built yet: these run against the `perf` Compose profile with generated data 
 
 As a tester, I want isolated test sessions and repeatable data, so that parallel runs don't interfere and the app can't be deployed unsafely.
 
-Not built yet: test sessions arrive in Phase 1, bulk data with the perf profile, and the production guard with API addition 9.
+Not built yet: test sessions and the production guard arrive in Phase 1, and bulk data (28.3, 28.4) with the perf profile in Phase 3.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -366,6 +373,11 @@ Not built yet: test sessions arrive in Phase 1, bulk data with the perf profile,
 | PLS-28.3 | Given a reset, when `POST /test/generate` is called twice with the same body and `seed`, then the data it creates is identical both times |  |  |
 | PLS-28.4 | Given `POST /test/users/bulk` with `{ "count": 500 }`, when it returns, then the CSV has 500 rows of email, password and token, and every account can log in |  |  |
 | PLS-28.5 | Given `NODE_ENV=production` and `TEST_HOOKS=true`, when the API starts, then it refuses to start with a clear error unless `PLAYLAB_ALLOW_UNSAFE=true` |  |  |
+| PLS-28.6 | Given `POST /test/sessions`, when it returns, then the body has the session `id` and a `test_session` cookie is set |  |  |
+| PLS-28.7 | Given two test sessions, when one adds a latency rule or uses up its rate limit, then requests in the other session are not slowed down or limited |  |  |
+| PLS-28.8 | Given a session idle for longer than the idle timeout (1 hour by default), when it is next sent, then hook calls with it return 404 `TEST_SESSION_NOT_FOUND` and other requests use the global state |  |  |
+| PLS-28.9 | Given several test sessions, when `POST /test/reset` is called, then every session is removed and hook calls with their ids return 404 |  |  |
+| PLS-28.10 | Given a session with `button-moves` switched on, when that session's checkout opens the payment frame, then the frame shows the defect, and a checkout with no session does not |  |  |
 
 ## PLS-29 Delivery pipeline (planned: Phase 3)
 
@@ -379,3 +391,4 @@ Partly built: the quality workflow runs on every pull request. The other gates a
 | PLS-29.2 | Given a push to `main`, when the pipelines finish, then the latest reports are published to GitHub Pages and linked from the README |  |  |
 | PLS-29.3 | Given the nightly run, when it switches on defects at random, then each one is caught by at least one test, and the run fails if any is missed |  |  |
 | PLS-29.4 | Given a test that names an AC ID that doesn't exist, or a defect that no test catches, when the traceability check runs, then CI fails |  |  |
+| PLS-29.5 | Given a pull request, when the quality workflow runs, then the API integration tests run against a fresh Postgres database and must pass |  |  |

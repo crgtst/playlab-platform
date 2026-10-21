@@ -340,6 +340,33 @@ Phase 4 follows v1.0.0 on purpose: a second language is most valuable once the T
 - [x] Reconcile PLS-13 to PLS-19 with the build and fix the defect-to-AC map in `bugs.ts`
 - [x] Add PLS-20 to PLS-29 to `ACCEPTANCE_CRITERIA.md`
 
+**Phase 1 tasks**
+
+Every Phase 1 behaviour has an AC, and every AC has a platform test named with its AC ID. Server behaviour is tested in `app/api/test/`: unit tests where no database is needed, and `*.int.test.ts` integration tests against Postgres otherwise. Each new defect gets a test that shows its AC failing with the defect on and passing with it off. The UI parts are checked by a small platform smoke suite in `app/e2e/` (Playwright, run in CI against the Compose stack). It is separate from the training suites under `tests/`.
+
+| # | Task | ACs | Defects | Tests |
+| --- | --- | --- | --- | --- |
+| 0 | Close Phase 0: derive `PAYMENT_FRAME_URL` from `API_PORT` in `.env.example`; settle decisions 2 to 6; merge PR #5 | 12.5 | | unit: `.env.example` and Compose agree; e2e: checkout with `API_PORT=3001` |
+| 1 | Integration-test harness: Vitest against Postgres (Compose `db` locally, a service container in CI), an `api-integration` CI job, the `app/e2e/` smoke suite, and UI screenshot and API probe baselines for Gate 1 | 29.5 | | int: health and reset (12.1, 12.4); e2e: checkout smoke |
+| 2 | Correlation IDs, JSON logs with redaction, `GET /test/logs` | 25.1–25.3, 10.1 edit | | int: echo and generate, invalid IDs, log fields, redaction, `correlationId` in error bodies |
+| 3 | Test sessions: per-session defects, chaos, latency, clock and rate-limit keys; idle expiry; reset; the payment frame carries the session | 28.1, 28.2, 28.6–28.10 | | int: isolation across two sessions, global fallback, expiry (short idle timeout), reset; e2e: frame defect per session |
+| 4 | Metrics: `GET /metrics` | 25.4, 25.5 | | int: histogram and counters move, no rate limit |
+| 5 | Order lifecycle: transition map, 409 `INVALID_TRANSITION`, all-or-nothing bulk, restock, `POST /orders/{id}/cancel` | 20.1–20.6, 24.1 (cancel), 8.2 and 8.3 edits | `status-any-transition` | int: every allowed and refused transition, bulk, restock, customer cancel, defect on and off |
+| 6 | Optimistic locking: `If-Match` on product and order-status writes, order ETags, 412 and 428, admin modal and grid messages | 21.1–21.7, 8.4 edit | `lost-update` | int: 200, 412 and 428 on each write, ETag changes, 21.4 race, defect on and off; e2e: modal and grid messages |
+| 7 | Account management: `GET` and `PATCH /users/me`, email change, `DELETE /users/me` with token revocation | 22.1–22.6 | | int: each AC; e2e: new name in the header |
+| 8 | User administration: `GET /admin/users`, `PATCH /admin/users/{id}` | 23.1–23.5, 24.8 | | int: filters and paging, role change, unlock, support and customer refused |
+| 9 | Production guard; the rate limit trusts only the web proxy, with an opt-in bypass defect (finding A7) | 28.5, 24.6 | `rate-limit-bypass` | unit: start-up guard with and without the override; int: `X-Forwarded-For` rotation still gets 429, defect on and off |
+| 10 | Gate 1: every Phase 1 AC passes, existing UI unchanged | all above | | CI green on unit, integration and e2e; screenshots match the baselines apart from the new admin messages; probe diff shows only intended changes |
+
+Edits to existing ACs, applied in the task that builds them, so built ACs never describe behaviour that isn't there yet:
+
+| AC | Task | New wording |
+| --- | --- | --- |
+| PLS-8.2 | 5 | Given an order, when its status is edited inline to an allowed next status, then it saves and a WebSocket event is sent; a status that isn't allowed is refused with the reason shown |
+| PLS-8.3 | 5 | Given several selected orders, when a bulk status change is applied, then all of them update if every one can make the transition; otherwise none change and the ones that can't are listed |
+| PLS-8.4 | 6 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue; an edit made after someone else changed the product returns 412 and the modal says "This product was changed by someone else" |
+| PLS-10.1 | 2 | Given any error, when returned, then the body matches `{ error: { code, message, details, correlationId } }` |
+
 ## Phase 5 (stretch): PlayLab Pay
 
 After v1.0.0, the payment provider moves out of the Express API into its own FastAPI service, **PlayLab Pay**. It works like a real third-party gateway, in the style of Stripe or Adyen: the shop never handles card numbers, and it trusts only what Pay confirms server to server.
