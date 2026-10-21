@@ -30,9 +30,7 @@ export const apiRateLimit = rateLimit({
   skip: (req) => req.path === '/health',
   handler: (req, res, _next, options) => {
     const resetTime = (req as any).rateLimit?.resetTime as Date | undefined;
-    const retryAfter = resetTime
-      ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000))
-      : Math.ceil(options.windowMs / 1000);
+    const retryAfter = resetTime ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000)) : Math.ceil(options.windowMs / 1000);
     res.setHeader('Retry-After', String(retryAfter));
     sendError(res, new ApiError(429, 'RATE_LIMITED', 'Too many requests, please slow down', { retryAfterSeconds: retryAfter }));
   },

@@ -18,7 +18,13 @@ offersRouter.get(
       [now],
     );
     res.json({
-      data: rows.map((r: any) => ({ code: r.code, description: r.description, type: r.type, value: r.value, minSpendCents: r.min_spend_cents })),
+      data: rows.map((r: any) => ({
+        code: r.code,
+        description: r.description,
+        type: r.type,
+        value: r.value,
+        minSpendCents: r.min_spend_cents,
+      })),
     });
   }),
 );

@@ -65,7 +65,9 @@ export function AdminOrders() {
   useOnline(load);
 
   // Status changes made anywhere (another admin, a bulk action) arrive over the WebSocket.
-  useOrderEvents((e) => setOrders((list) => list?.map((o) => (o.id === e.orderId ? { ...o, status: e.status as OrderStatus } : o)) ?? null));
+  useOrderEvents((e) =>
+    setOrders((list) => list?.map((o) => (o.id === e.orderId ? { ...o, status: e.status as OrderStatus } : o)) ?? null),
+  );
 
   const setFilter = (key: 'status' | 'q', value: string) => {
     const p = new URLSearchParams(params);
@@ -140,7 +142,12 @@ export function AdminOrders() {
       <div className="admin-toolbar">
         <div className="field">
           <label htmlFor="admin-status-filter">Status</label>
-          <select id="admin-status-filter" value={status} onChange={(e) => setFilter('status', e.target.value)} data-testid="admin-status-filter">
+          <select
+            id="admin-status-filter"
+            value={status}
+            onChange={(e) => setFilter('status', e.target.value)}
+            data-testid="admin-status-filter"
+          >
             <option value="">All statuses</option>
             {ORDER_STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -180,7 +187,13 @@ export function AdminOrders() {
         <div className="bulk-bar" role="region" aria-label="Bulk actions" data-testid="bulk-bar">
           <span data-testid="bulk-selected-count">{selected.size} selected</span>
           <label htmlFor="bulk-status">Change status to</label>
-          <select id="bulk-status" value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as OrderStatus)} disabled={!canEdit} data-testid="bulk-status-select">
+          <select
+            id="bulk-status"
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value as OrderStatus)}
+            disabled={!canEdit}
+            data-testid="bulk-status-select"
+          >
             {ORDER_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -222,7 +235,13 @@ export function AdminOrders() {
               <thead>
                 <tr>
                   <th scope="col">
-                    <input type="checkbox" checked={allSelected} onChange={toggleAll} aria-label="Select all orders on this page" data-testid="select-all" />
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      aria-label="Select all orders on this page"
+                      data-testid="select-all"
+                    />
                   </th>
                   <th scope="col">Order</th>
                   <th scope="col">Customer</th>
@@ -238,7 +257,13 @@ export function AdminOrders() {
                 {orders.map((o) => {
                   const isEditing = editing?.id === o.id;
                   return (
-                    <tr key={o.id} data-testid="admin-order-row" data-order-id={o.id} data-status={o.status} data-selected={selected.has(o.id)}>
+                    <tr
+                      key={o.id}
+                      data-testid="admin-order-row"
+                      data-order-id={o.id}
+                      data-status={o.status}
+                      data-selected={selected.has(o.id)}
+                    >
                       <td>
                         <input
                           type="checkbox"

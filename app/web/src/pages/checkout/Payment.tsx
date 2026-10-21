@@ -13,9 +13,7 @@ import { useBug } from '../../context/ConfigContext';
 import { t } from '../../lib/i18n';
 import { PriceChangeWarning } from './Review';
 
-type Failure =
-  | { kind: 'declined' | 'timeout' | 'frame'; message: string }
-  | { kind: 'order'; message: string; retryable: boolean };
+type Failure = { kind: 'declined' | 'timeout' | 'frame'; message: string } | { kind: 'order'; message: string; retryable: boolean };
 
 interface FrameMessage {
   type: 'playlab-payment';

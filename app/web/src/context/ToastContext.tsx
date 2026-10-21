@@ -38,7 +38,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div key={t.id} className={`toast toast-${t.type}`} data-testid="toast" data-type={t.type}>
             <span data-testid="toast-message">{t.message}</span>
-            <button type="button" className="link-button" aria-label="Dismiss notification" data-testid="toast-dismiss" onClick={() => dismiss(t.id)}>
+            <button
+              type="button"
+              className="link-button"
+              aria-label="Dismiss notification"
+              data-testid="toast-dismiss"
+              onClick={() => dismiss(t.id)}
+            >
               ×
             </button>
           </div>

@@ -38,7 +38,9 @@ function handleUpload(req: Request, res: Response, next: NextFunction) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return next(new ApiError(413, 'FILE_TOO_LARGE', 'File too large', { maxBytes: AVATAR_MAX_BYTES }));
       }
-      return next(new ApiError(422, 'VALIDATION_ERROR', 'Upload one file in the "avatar" field', [{ field: 'avatar', message: err.message }]));
+      return next(
+        new ApiError(422, 'VALIDATION_ERROR', 'Upload one file in the "avatar" field', [{ field: 'avatar', message: err.message }]),
+      );
     }
     next(err);
   });
@@ -51,7 +53,8 @@ usersRouter.post(
   handleUpload,
   asyncHandler(async (req: Request, res: Response) => {
     const file = req.file;
-    if (!file) throw new ApiError(422, 'VALIDATION_ERROR', 'Choose an image to upload', [{ field: 'avatar', message: 'Choose an image to upload' }]);
+    if (!file)
+      throw new ApiError(422, 'VALIDATION_ERROR', 'Choose an image to upload', [{ field: 'avatar', message: 'Choose an image to upload' }]);
     // upload-extension-only: trust the file name instead of the file's contents.
     const type = isBugOn('upload-extension-only') ? typeFromExtension(file.originalname) : sniffImageType(file.buffer);
     if (!type) {

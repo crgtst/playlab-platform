@@ -60,8 +60,27 @@ export function Login() {
             {formError}
           </p>
         )}
-        <Field id="login-email" label="Email" unlabelled={missingLabel} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} testId="login-email" />
-        <Field id="login-password" label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} testId="login-password" />
+        <Field
+          id="login-email"
+          label="Email"
+          unlabelled={missingLabel}
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={errors.email}
+          testId="login-email"
+        />
+        <Field
+          id="login-password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={errors.password}
+          testId="login-password"
+        />
         <button type="submit" disabled={busy} data-testid="login-submit">
           {busy ? 'Logging in…' : 'Log in'}
         </button>

@@ -12,7 +12,10 @@ export const cardSchema = z.object({
     .trim()
     .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Use the format MM/YY')
     .refine((v) => !cardExpired(v), 'This card has expired'),
-  cvc: z.string({ required_error: 'Security code is required' }).trim().regex(/^\d{3,4}$/, 'Enter 3 or 4 digits'),
+  cvc: z
+    .string({ required_error: 'Security code is required' })
+    .trim()
+    .regex(/^\d{3,4}$/, 'Enter 3 or 4 digits'),
   nameOnCard: z.string({ required_error: 'Name on card is required' }).trim().min(1, 'Name on card is required').max(200),
 });
 

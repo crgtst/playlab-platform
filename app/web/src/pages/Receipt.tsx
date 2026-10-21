@@ -54,7 +54,9 @@ export function Receipt() {
             </tbody>
             <tfoot>
               <tr>
-                <th scope="row" colSpan={2}>Subtotal</th>
+                <th scope="row" colSpan={2}>
+                  Subtotal
+                </th>
                 <td>{formatPrice(order.totals.subtotalCents)}</td>
               </tr>
               {order.discount && (
@@ -66,15 +68,21 @@ export function Receipt() {
                 </tr>
               )}
               <tr>
-                <th scope="row" colSpan={2}>VAT (23%)</th>
+                <th scope="row" colSpan={2}>
+                  VAT (23%)
+                </th>
                 <td>{formatPrice(order.totals.vatCents)}</td>
               </tr>
               <tr>
-                <th scope="row" colSpan={2}>Delivery</th>
+                <th scope="row" colSpan={2}>
+                  Delivery
+                </th>
                 <td>{formatPrice(order.totals.deliveryCents)}</td>
               </tr>
               <tr>
-                <th scope="row" colSpan={2}>Total</th>
+                <th scope="row" colSpan={2}>
+                  Total
+                </th>
                 <td data-testid="receipt-total">{formatPrice(order.totals.totalCents)}</td>
               </tr>
             </tfoot>

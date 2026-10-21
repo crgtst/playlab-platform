@@ -11,7 +11,14 @@ const HOURS = 'Mon–Sat 09:00–18:00, Sun 12:00–17:00';
 export const STORES = [
   { id: 'dublin-grafton', name: 'PlayLab Grafton Street', address: '1 Grafton Street', city: 'Dublin', lat: 53.3421, lng: -6.2597 },
   { id: 'dublin-swords', name: 'PlayLab Swords', address: 'Pavilions Shopping Centre', city: 'Swords', lat: 53.4555, lng: -6.2197 },
-  { id: 'dublin-dunlaoghaire', name: 'PlayLab Dún Laoghaire', address: '12 George’s Street Upper', city: 'Dún Laoghaire', lat: 53.2934, lng: -6.1353 },
+  {
+    id: 'dublin-dunlaoghaire',
+    name: 'PlayLab Dún Laoghaire',
+    address: '12 George’s Street Upper',
+    city: 'Dún Laoghaire',
+    lat: 53.2934,
+    lng: -6.1353,
+  },
   { id: 'cork', name: 'PlayLab Cork', address: '22 Patrick Street', city: 'Cork', lat: 51.8985, lng: -8.4705 },
   { id: 'galway', name: 'PlayLab Galway', address: '18 Shop Street', city: 'Galway', lat: 53.2724, lng: -9.0532 },
   { id: 'limerick', name: 'PlayLab Limerick', address: "5 O'Connell Street", city: 'Limerick', lat: 52.6638, lng: -8.6267 },
@@ -44,9 +51,7 @@ const nearestSchema = z.object({
 storesRouter.get('/', (req: Request, res: Response) => {
   const { q } = parse(searchSchema, req.query);
   const needle = q?.toLowerCase();
-  const data = needle
-    ? STORES.filter((s) => `${s.name} ${s.city} ${s.address}`.toLowerCase().includes(needle))
-    : STORES;
+  const data = needle ? STORES.filter((s) => `${s.name} ${s.city} ${s.address}`.toLowerCase().includes(needle)) : STORES;
   res.json({ data, meta: { count: data.length } });
 });
 

@@ -26,18 +26,38 @@ export const BUGS = {
   'pagination-duplicate': { ac: 'PLS-3.5', side: 'api', description: 'The last item on page 1 repeats at the top of page 2' },
   'fada-rejected': { ac: 'PLS-2.3', side: 'api', description: 'Registration rejects names with accents such as Seán' },
   'timezone-off-by-one': { ac: 'PLS-7.3', side: 'web', description: 'Order dates late in the evening show as the next day' },
-  'upload-extension-only': { ac: 'PLS-9.3', side: 'api', description: 'A renamed .exe passes as a .png because only the extension is checked' },
+  'upload-extension-only': {
+    ac: 'PLS-9.3',
+    side: 'api',
+    description: 'A renamed .exe passes as a .png because only the extension is checked',
+  },
   'button-moves': { ac: 'PLS-6.8', side: 'payment frame', description: 'The Pay button shifts position after 500 ms' },
   'missing-label': { ac: 'PLS-2.6, PLS-11.1', side: 'web', description: 'The email field loses its accessible label' },
   'stale-stock': { ac: 'PLS-8.6', side: 'api', description: 'The SSE stock counter stops updating' },
   'wrong-status-code': { ac: 'PLS-2.4, PLS-10.2', side: 'api', description: 'A validation error returns 500 instead of 422' },
   // Phase 4 (browser APIs): no AC IDs exist for these features yet.
-  'geolocation-ignored': { ac: 'Phase 4: store finder', side: 'api', description: 'The store finder always shows Dublin stores, whatever the location' },
-  'permission-denied-crash': { ac: 'Phase 4: store finder', side: 'web', description: 'Denying location permission leaves a spinner forever instead of a message' },
+  'geolocation-ignored': {
+    ac: 'Phase 4: store finder',
+    side: 'api',
+    description: 'The store finder always shows Dublin stores, whatever the location',
+  },
+  'permission-denied-crash': {
+    ac: 'Phase 4: store finder',
+    side: 'web',
+    description: 'Denying location permission leaves a spinner forever instead of a message',
+  },
   'clipboard-wrong-value': { ac: 'Phase 4: copy buttons', side: 'web', description: '"Copy discount code" copies the previous code' },
   'notification-spam': { ac: 'Phase 4: order notifications', side: 'web', description: 'One status change fires two notifications' },
-  'battery-banner-stuck': { ac: 'Phase 4: battery-saver banner', side: 'web', description: 'The low-battery banner stays after charging starts' },
-  'offline-stale-prices': { ac: 'Phase 4: offline cache', side: 'service worker', description: 'The offline cache keeps showing old prices after going back online' },
+  'battery-banner-stuck': {
+    ac: 'Phase 4: battery-saver banner',
+    side: 'web',
+    description: 'The low-battery banner stays after charging starts',
+  },
+  'offline-stale-prices': {
+    ac: 'Phase 4: offline cache',
+    side: 'service worker',
+    description: 'The offline cache keeps showing old prices after going back online',
+  },
   'aria-heading-skip': { ac: 'Phase 4: stable regions', side: 'web', description: 'The order summary jumps from h2 to h4' },
 } as const;
 

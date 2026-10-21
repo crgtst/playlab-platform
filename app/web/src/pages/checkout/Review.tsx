@@ -79,7 +79,11 @@ export function Review() {
         <p>
           {t('review.deliveryOn')} <strong data-testid="review-delivery-date">{formatDate(`${state.deliveryDate}T12:00:00`)}</strong>
         </p>
-        {state.instructions && <p dir="auto" data-testid="review-instructions">“{state.instructions}”</p>}
+        {state.instructions && (
+          <p dir="auto" data-testid="review-instructions">
+            “{state.instructions}”
+          </p>
+        )}
         <Link to="/checkout/shipping" data-testid="review-edit-shipping-link">
           {t('review.editShipping')}
         </Link>

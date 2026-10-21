@@ -20,10 +20,7 @@ const SORTS = {
   newest: 'p.created_at DESC, p.id DESC',
 } as const;
 
-const euros = z.coerce
-  .number({ invalid_type_error: 'Must be a number' })
-  .min(0, 'Must be zero or more')
-  .max(1_000_000, 'Too large');
+const euros = z.coerce.number({ invalid_type_error: 'Must be a number' }).min(0, 'Must be zero or more').max(1_000_000, 'Too large');
 
 const listSchema = z
   .object({
@@ -151,7 +148,13 @@ productsRouter.get(
     res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'no-cache');
     const inm = req.headers['if-none-match'];
-    if (inm && inm.split(',').map((s) => s.trim().replace(/^W\//, '')).includes(etag)) {
+    if (
+      inm &&
+      inm
+        .split(',')
+        .map((s) => s.trim().replace(/^W\//, ''))
+        .includes(etag)
+    ) {
       return res.status(304).end();
     }
     res.type('application/json').send(body);
@@ -186,7 +189,10 @@ productsRouter.post(
       [body.sku, body.name, body.description, cat, body.priceCents, body.stock, body.imageUrl ?? `/img/${body.category}.svg`, clock.now()],
     ).catch(uniqueSku);
     await emitStock([rows[0].id]);
-    res.status(201).location(`/api/v1/products/${rows[0].id}`).json({ data: await loadProduct(rows[0].id) });
+    res
+      .status(201)
+      .location(`/api/v1/products/${rows[0].id}`)
+      .json({ data: await loadProduct(rows[0].id) });
   }),
 );
 
@@ -219,8 +225,16 @@ async function updateProduct(req: Request, res: Response, partial: boolean) {
   res.json({ data: await loadProduct(id.data) });
 }
 
-productsRouter.put('/:id', requireRole('admin'), asyncHandler((req: Request, res: Response) => updateProduct(req, res, false)));
-productsRouter.patch('/:id', requireRole('admin'), asyncHandler((req: Request, res: Response) => updateProduct(req, res, true)));
+productsRouter.put(
+  '/:id',
+  requireRole('admin'),
+  asyncHandler((req: Request, res: Response) => updateProduct(req, res, false)),
+);
+productsRouter.patch(
+  '/:id',
+  requireRole('admin'),
+  asyncHandler((req: Request, res: Response) => updateProduct(req, res, true)),
+);
 
 productsRouter.delete(
   '/:id',

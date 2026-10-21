@@ -120,7 +120,10 @@ payFrameRouter.post(
       await query('UPDATE payment_intents SET status = $1, card_last4 = $2 WHERE id = $3', [status, last4, intent.id]);
       throw err;
     }
-    const rows = await query(`UPDATE payment_intents SET status = 'succeeded', card_last4 = $1 WHERE id = $2 RETURNING *`, [last4, intent.id]);
+    const rows = await query(`UPDATE payment_intents SET status = 'succeeded', card_last4 = $1 WHERE id = $2 RETURNING *`, [
+      last4,
+      intent.id,
+    ]);
     res.json({ data: intentView(rows[0]) });
   }),
 );

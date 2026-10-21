@@ -9,10 +9,17 @@ Phase 0: Foundations (branch `phase-0-foundations`)
 
 ## Next task
 
-Phase 0, task 2: add ESLint, Prettier, `lint-staged` and EditorConfig; remove `.DS_Store`.
+Phase 0, task 3: add the first workflow: lint, typecheck, and a Vitest + supertest skeleton for the API.
 
 ## Done
 
+- 2026-10-21: Phase 0 task 2. Root `package.json` holds repo-wide tooling only (no workspaces, so the
+  app lockfiles and Dockerfiles are unchanged): ESLint 10 flat config (`eslint.config.mjs`, with
+  typescript-eslint, react-hooks and eslint-config-prettier), Prettier 3 (single quotes, width 140 to match
+  the existing style), `.editorconfig`, and husky + lint-staged running on pre-commit. Scripts: `npm run lint`,
+  `lint:fix`, `format`, `format:check`. One-off format of 56 code files: 53 minify to identical output, and
+  3 only split JSX whitespace with the same rendered text. API probes and UI checkout are unchanged. Local
+  `.DS_Store` files deleted (already untracked and ignored). Dependabot now covers the root `package.json` too.
 - 2026-10-21: Phase 0 task 1. Node 24 LTS images (`node:24-alpine`), `@types/node` 24,
   Express 5.3.0, `@playwright/experimental-ct-react` 1.62.1, and `.github/dependabot.yml`
   (npm, docker, docker-compose, github-actions; weekly; Node, `@types/node` and Postgres majors ignored).
@@ -46,6 +53,12 @@ Phase 0, task 2: add ESLint, Prettier, `lint-staged` and EditorConfig; remove `.
 - The latest CT package is 1.62.1. `@playwright/test` is at 1.64.1 (the version the plan cites) because the CT
   packages trail it. CT 1.62 bundles its own Vite 8, while the app still builds with Vite 5.4. Moving
   the app to Vite 8 is left to Dependabot or a later task.
+- Lint gives 0 errors and 23 `no-explicit-any` warnings, all from untyped pg rows in the API.
+  The rule is `warn` until row types are added.
+- Not formatted by Prettier: Markdown (tables are aligned by hand), HTML (reflowing can change text tests assert on),
+  `openapi/` and SQL migrations, and `tests/` (each suite brings its own setup).
+- After cloning, run `npm install` at the repo root once to install the pre-commit hook. Task 5 adds this to the README.
+- `README.md` has no final newline; task 5 rewrites it.
 - `multer` 1.4.5-lts.1 is deprecated with known vulnerabilities (fixed in 2.x). Expect a Dependabot major PR.
 
 ## Local environment notes

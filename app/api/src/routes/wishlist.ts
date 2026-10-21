@@ -13,7 +13,10 @@ wishlistRouter.use(noStore, requireAuth);
 
 const addSchema = z.object({ productId: z.number({ required_error: 'productId is required' }).int().positive() });
 const orderSchema = z.object({
-  productIds: z.array(z.number().int().positive()).max(500).refine((ids) => new Set(ids).size === ids.length, 'productIds must not repeat'),
+  productIds: z
+    .array(z.number().int().positive())
+    .max(500)
+    .refine((ids) => new Set(ids).size === ids.length, 'productIds must not repeat'),
 });
 
 async function wishlistView(userId: number) {

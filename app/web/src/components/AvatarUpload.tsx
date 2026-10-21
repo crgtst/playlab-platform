@@ -69,7 +69,14 @@ export function AvatarUpload() {
       </h2>
       <div className="avatar-row">
         {user.avatarUrl ? (
-          <img src={user.avatarUrl} alt={`Avatar for ${user.name}`} width={96} height={96} className="avatar-large" data-testid="avatar-image" />
+          <img
+            src={user.avatarUrl}
+            alt={`Avatar for ${user.name}`}
+            width={96}
+            height={96}
+            className="avatar-large"
+            data-testid="avatar-image"
+          />
         ) : (
           <span className="avatar-large initials" role="img" aria-label="No avatar yet" data-testid="avatar-placeholder">
             {user.name.trim().charAt(0).toUpperCase()}

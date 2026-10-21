@@ -24,7 +24,11 @@ export function Mailbox() {
       setMessages(r.data);
     } catch (err) {
       setMessages(null);
-      setError(err instanceof ApiRequestError && err.status === 404 ? 'Test hooks are switched off, so the mailbox is not available.' : errorMessage(err));
+      setError(
+        err instanceof ApiRequestError && err.status === 404
+          ? 'Test hooks are switched off, so the mailbox is not available.'
+          : errorMessage(err),
+      );
     }
   }, [email]);
 

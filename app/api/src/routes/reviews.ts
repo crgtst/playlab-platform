@@ -10,8 +10,16 @@ import { asyncHandler, parse } from '../middleware/validate';
 export const reviewsRouter = Router({ mergeParams: true });
 
 const reviewSchema = z.object({
-  rating: z.number({ required_error: 'Choose a rating' }).int('Rating must be a whole number').min(1, 'Rating must be 1 to 5').max(5, 'Rating must be 1 to 5'),
-  title: z.string({ required_error: 'Title is required' }).trim().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
+  rating: z
+    .number({ required_error: 'Choose a rating' })
+    .int('Rating must be a whole number')
+    .min(1, 'Rating must be 1 to 5')
+    .max(5, 'Rating must be 1 to 5'),
+  title: z
+    .string({ required_error: 'Title is required' })
+    .trim()
+    .min(1, 'Title is required')
+    .max(100, 'Title must be at most 100 characters'),
   body: z.string().trim().max(1000, 'Review must be at most 1000 characters').optional().default(''),
 });
 

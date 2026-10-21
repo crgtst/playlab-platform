@@ -27,8 +27,21 @@ export function getSeedPasswordHash(): string {
 }
 
 const TABLES = [
-  'reviews', 'wishlist_items', 'avatars', 'order_items', 'orders', 'payment_intents', 'cart_items', 'carts', 'discount_codes', 'products',
-  'categories', 'mailbox', 'email_tokens', 'refresh_tokens', 'users',
+  'reviews',
+  'wishlist_items',
+  'avatars',
+  'order_items',
+  'orders',
+  'payment_intents',
+  'cart_items',
+  'carts',
+  'discount_codes',
+  'products',
+  'categories',
+  'mailbox',
+  'email_tokens',
+  'refresh_tokens',
+  'users',
 ];
 
 export async function truncateAll(client: PoolClient): Promise<void> {
@@ -39,10 +52,12 @@ export async function truncateAll(client: PoolClient): Promise<void> {
 export async function seedBase(client: PoolClient): Promise<void> {
   const hash = getSeedPasswordHash();
   for (const u of seedUsers) {
-    await client.query(
-      `INSERT INTO users (email, name, password_hash, role, email_verified) VALUES ($1, $2, $3, $4, TRUE)`,
-      [u.email, u.name, hash, u.role],
-    );
+    await client.query(`INSERT INTO users (email, name, password_hash, role, email_verified) VALUES ($1, $2, $3, $4, TRUE)`, [
+      u.email,
+      u.name,
+      hash,
+      u.role,
+    ]);
   }
 
   const categoryIds = new Map<string, number>();

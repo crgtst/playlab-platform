@@ -35,7 +35,12 @@ export function OfflineBanner() {
 
   if (!offline && !backOnline) return null;
   return (
-    <div className={offline ? 'offline-banner' : 'offline-banner back'} role="status" data-testid="offline-banner" data-state={offline ? 'offline' : 'online'}>
+    <div
+      className={offline ? 'offline-banner' : 'offline-banner back'}
+      role="status"
+      data-testid="offline-banner"
+      data-state={offline ? 'offline' : 'online'}
+    >
       {offline ? t('offline.message') : t('offline.back')}
     </div>
   );

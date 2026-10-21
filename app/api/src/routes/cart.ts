@@ -93,10 +93,11 @@ cartRouter.patch(
       if (!cartId) throw notFound('Item is not in your cart');
       const product = await lockProduct(client, productId.data);
       checkStock(body.quantity, product.stock);
-      const rows = await client.query(
-        'UPDATE cart_items SET quantity = $1 WHERE cart_id = $2 AND product_id = $3 RETURNING product_id',
-        [body.quantity, cartId, productId.data],
-      );
+      const rows = await client.query('UPDATE cart_items SET quantity = $1 WHERE cart_id = $2 AND product_id = $3 RETURNING product_id', [
+        body.quantity,
+        cartId,
+        productId.data,
+      ]);
       if (!rows.rowCount) throw notFound('Item is not in your cart');
       return buildCartView(cartId, client);
     });
@@ -154,10 +155,7 @@ cartRouter.post(
       }
       const discount = await findDiscountByCode(code, client);
       if (!discount) throw new ApiError(422, 'DISCOUNT_UNKNOWN', "We don't recognise that code");
-      const subtotal = current.items.reduce(
-        (s, i) => s + lineTotal({ unitPriceCents: i.unitPriceCents, quantity: i.quantity }),
-        0,
-      );
+      const subtotal = current.items.reduce((s, i) => s + lineTotal({ unitPriceCents: i.unitPriceCents, quantity: i.quantity }), 0);
       assertDiscountUsable(discount, subtotal);
       const column = stacking ? 'extra_discount_code_id' : 'discount_code_id';
       await client.query(`UPDATE carts SET ${column} = $1, updated_at = now() WHERE id = $2`, [discount.id, cartId]);

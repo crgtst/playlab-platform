@@ -9,9 +9,7 @@ export function parse<S extends ZodTypeAny>(schema: S, data: unknown): z.output<
 }
 
 /** Wraps async route handlers so rejected promises reach the error handler. */
-export function asyncHandler<Req = any, Res = any>(
-  fn: (req: Req, res: Res, next: (err?: unknown) => void) => Promise<unknown>,
-) {
+export function asyncHandler<Req = any, Res = any>(fn: (req: Req, res: Res, next: (err?: unknown) => void) => Promise<unknown>) {
   return (req: Req, res: Res, next: (err?: unknown) => void) => {
     fn(req, res, next).catch(next);
   };

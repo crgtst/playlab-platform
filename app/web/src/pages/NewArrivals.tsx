@@ -45,9 +45,12 @@ export function NewArrivals() {
   useEffect(() => {
     const el = sentinel.current;
     if (!el || done || error) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) loadMore();
-    }, { rootMargin: '200px' });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) loadMore();
+      },
+      { rootMargin: '200px' },
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, [loadMore, done, error]);

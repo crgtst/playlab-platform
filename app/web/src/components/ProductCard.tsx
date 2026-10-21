@@ -31,7 +31,12 @@ export function ProductCard({ product }: { product: Product }) {
   };
 
   return (
-    <article className="product-card" data-testid="product-card" data-product-id={product.id} aria-labelledby={`product-${product.id}-name`}>
+    <article
+      className="product-card"
+      data-testid="product-card"
+      data-product-id={product.id}
+      aria-labelledby={`product-${product.id}-name`}
+    >
       <img src={product.imageUrl} alt="" width={240} height={160} loading="lazy" />
       <h3 id={`product-${product.id}-name`}>
         <Link to={`/products/${product.id}`} data-testid="product-link">
@@ -48,7 +53,13 @@ export function ProductCard({ product }: { product: Product }) {
         {stockLabel(product.stock)}
       </p>
       <div className="card-actions">
-        <button type="button" onClick={onAdd} disabled={busy || !product.inStock} data-testid="add-to-cart-button" aria-label={`Add ${product.name} to cart`}>
+        <button
+          type="button"
+          onClick={onAdd}
+          disabled={busy || !product.inStock}
+          data-testid="add-to-cart-button"
+          aria-label={`Add ${product.name} to cart`}
+        >
           {busy ? 'Adding…' : 'Add to cart'}
         </button>
         <WishlistToggle productId={product.id} name={product.name} />

@@ -25,13 +25,16 @@ export function useBattery({ ignoreCharging = false } = {}): BatteryState {
     let cancelled = false;
     const onLevel = () => battery && setState((s) => ({ ...s, level: battery!.level }));
     const onCharging = () => battery && setState((s) => ({ ...s, charging: battery!.charging }));
-    nav.getBattery().then((b) => {
-      if (cancelled) return;
-      battery = b;
-      setState({ supported: true, level: b.level, charging: b.charging });
-      b.addEventListener('levelchange', onLevel);
-      if (!ignoreCharging) b.addEventListener('chargingchange', onCharging);
-    }).catch(() => undefined);
+    nav
+      .getBattery()
+      .then((b) => {
+        if (cancelled) return;
+        battery = b;
+        setState({ supported: true, level: b.level, charging: b.charging });
+        b.addEventListener('levelchange', onLevel);
+        if (!ignoreCharging) b.addEventListener('chargingchange', onCharging);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
       battery?.removeEventListener('levelchange', onLevel);

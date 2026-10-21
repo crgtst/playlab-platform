@@ -127,7 +127,13 @@ export function Cart() {
                 {formatPrice(item.lineTotalCents, priceOpts)}
               </td>
               <td>
-                <button type="button" className="link-button" onClick={() => onRemove(item.productId)} aria-label={`${t('cart.remove')}: ${item.name}`} data-testid="cart-item-remove">
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => onRemove(item.productId)}
+                  aria-label={`${t('cart.remove')}: ${item.name}`}
+                  data-testid="cart-item-remove"
+                >
                   {t('cart.remove')}
                 </button>
               </td>

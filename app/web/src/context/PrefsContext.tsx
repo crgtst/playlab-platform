@@ -46,7 +46,13 @@ function defaults(): Pick<Prefs, 'lang' | 'currency' | 'theme'> {
 }
 
 /** `initial` (used by the component harness) wins over saved choices and browser defaults. */
-export function PrefsProvider({ children, initial }: { children: ReactNode; initial?: Partial<Pick<Prefs, 'lang' | 'currency' | 'theme'>> }) {
+export function PrefsProvider({
+  children,
+  initial,
+}: {
+  children: ReactNode;
+  initial?: Partial<Pick<Prefs, 'lang' | 'currency' | 'theme'>>;
+}) {
   const config = useConfig();
   const [prefs, setPrefs] = useState(() => {
     const s = { ...stored(), ...initial };

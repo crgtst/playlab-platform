@@ -98,7 +98,15 @@ export function AccountMenu({ onLogout }: { onLogout: () => void }) {
         </span>
         <span aria-hidden="true">▾</span>
       </button>
-      <ul id="account-menu" role="menu" aria-label="Account" className="menu" hidden={!open} onKeyDown={onMenuKey} data-testid="account-menu">
+      <ul
+        id="account-menu"
+        role="menu"
+        aria-label="Account"
+        className="menu"
+        hidden={!open}
+        onKeyDown={onMenuKey}
+        data-testid="account-menu"
+      >
         <li role="none">
           <Link role="menuitem" to="/account" onClick={() => setOpen(false)} data-testid="account-menu-item-account">
             {t('nav.account')}
