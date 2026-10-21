@@ -338,7 +338,7 @@ Phase 4 follows v1.0.0 on purpose: a second language is most valuable once the T
 - [x] Add the first workflow: lint, typecheck, and a Vitest + supertest skeleton for the API
 - [x] Write the landing README draft and `SECURITY.md`
 - [x] Reconcile PLS-13 to PLS-19 with the build and fix the defect-to-AC map in `bugs.ts`
-- [ ] Add PLS-20 to PLS-29 to `ACCEPTANCE_CRITERIA.md`
+- [x] Add PLS-20 to PLS-29 to `ACCEPTANCE_CRITERIA.md`
 
 ## Phase 5 (stretch): PlayLab Pay
 

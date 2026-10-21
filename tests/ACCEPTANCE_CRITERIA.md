@@ -1,8 +1,8 @@
 # Acceptance criteria
 
-Nineteen Jira-ready stories (PLS-13 to PLS-19 cover Phase 4), each with numbered acceptance criteria. Every AC has a unique ID (`PLS-5.2`), so you can link each one to a test case and report coverage as ACs with a passing test ÷ total ACs.
+Twenty-nine Jira-ready stories, each with numbered acceptance criteria. PLS-1 to PLS-19 describe the app as built (PLS-13 to PLS-19 cover its Phase 4 browser features). PLS-20 to PLS-29 come from the upgrade plan in [`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md): each says which phase builds it, and most of their ACs fail until then. Every AC has a unique ID (`PLS-5.2`), so you can link each one to a test case and report coverage as ACs with a passing test ÷ total ACs.
 
-How to use it: create each story in Jira with its ACs in the description, put the AC ID in each Playwright test title (`test('PLS-5.2 expired code is rejected', …)`) or tag (`@PLS-5.2`), and fill the Test ID column as tests are written. The last column shows which bug-mode defect that AC should catch.
+How to use it: create each story in Jira with its ACs in the description, put the AC ID in each Playwright test title (`test('PLS-5.2 expired code is rejected', …)`) or tag (`@PLS-5.2`), and fill the Test ID column as tests are written. The last column shows which bug-mode defect that AC should catch. In the planned stories it can name defects that don't exist yet; they arrive with the same phase.
 
 ## PLS-1 Login and session
 
@@ -233,3 +233,149 @@ As a screen-reader user, I want a predictable page structure, so that I can navi
 | PLS-19.1 | Given the product card, when its accessibility tree is captured, then it matches the approved aria snapshot |  |  |
 | PLS-19.2 | Given the order summary, when its headings are read, then no heading level is skipped |  | `aria-heading-skip` |
 | PLS-19.3 | Given the site header, when its accessibility tree is captured, then it matches the approved aria snapshot on desktop and mobile |  |  |
+
+## PLS-20 Order lifecycle (planned: Phase 1)
+
+As an admin, I want orders to move only through valid statuses, so that an order's history always makes sense.
+
+Not built yet: these ACs fail until Phase 1 adds the transition rules ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API addition 4).
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-20.1 | Given an order, when an admin moves it one step along `pending → paid → processing → shipped → delivered`, then the API returns 200 with the new status |  |  |
+| PLS-20.2 | Given a `delivered` order, when an admin sets it back to `pending`, then the API returns 409 `INVALID_TRANSITION` with `details: { from, to, allowed }` and the order is unchanged |  | `status-any-transition` |
+| PLS-20.3 | Given a `shipped` order, when an admin cancels it, then the API returns 409 `INVALID_TRANSITION` |  | `status-any-transition` |
+| PLS-20.4 | Given a bulk status change where some selected orders can't make the transition, when it is applied, then no order changes and the 409 lists every order that can't |  | `status-any-transition` |
+| PLS-20.5 | Given a `processing` order, when an admin cancels it, then it becomes `cancelled` and each item's stock goes back up by its quantity |  |  |
+| PLS-20.6 | Given a customer's own order, when they call `POST /orders/{id}/cancel`, then it is cancelled if it was `pending` or `paid`, and returns 409 `INVALID_TRANSITION` if it was `processing` or later |  |  |
+
+## PLS-21 Concurrency and lost updates (planned: Phase 1)
+
+As an admin, I want to be told when someone else changed a product first, so that I never overwrite their edit unknowingly.
+
+Not built yet: `If-Match` arrives in Phase 1 (API addition 5). PLS-21.4 already holds today.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-21.1 | Given product 6's current ETag, when it is updated with `If-Match` set to that ETag, then the API returns 200 and a new ETag |  |  |
+| PLS-21.2 | Given an ETag from before another admin's edit, when it is sent in `If-Match`, then the API returns 412 and the product is unchanged |  | `lost-update` |
+| PLS-21.3 | Given no `If-Match` header, when `PUT /products/6` is sent, then the API returns 428 |  | `lost-update` |
+| PLS-21.4 | Given product `FX-LOW` with stock 1, when 20 customers order it at the same moment, then exactly 1 order succeeds and 19 get 409 |  | `stock-oversell` |
+
+## PLS-22 Account management (planned: Phase 1)
+
+As a customer, I want to manage and delete my account, so that I stay in control of my data.
+
+Not built yet: the account endpoints arrive in Phase 1 (API addition 6).
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-22.1 | Given a logged-in customer, when they change their name with `PATCH /users/me`, then the new name is returned by `GET /users/me` and shown in the header |  |  |
+| PLS-22.2 | Given a logged-in customer, when they change their email and give their current password, then they can log in with the new email and not the old one |  |  |
+| PLS-22.3 | Given a wrong current password, when they try to change their email, then the API returns 422 on `currentPassword` and the email is unchanged |  |  |
+| PLS-22.4 | Given a customer with sessions on two devices, when they delete their account with `DELETE /users/me`, then both refresh tokens stop working and any access token they hold returns 401 |  |  |
+| PLS-22.5 | Given a deleted account, when an admin views its orders, then the orders are kept but the customer's name and email are anonymised |  |  |
+
+## PLS-23 User administration (planned: Phase 1)
+
+As an admin, I want to find and manage user accounts, so that I can fix access problems.
+
+Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-23.1 | Given an admin, when they call `GET /admin/users` with `role` and `q` filters, then only matching users are returned, paginated |  |  |
+| PLS-23.2 | Given an admin, when they change a user's role with `PATCH /admin/users/{id}`, then the new role applies from that user's next login |  |  |
+| PLS-23.3 | Given an account locked after 5 failed logins, when an admin unlocks it, then the user can log in straight away |  |  |
+| PLS-23.4 | Given a support user, when they list users, then the list is returned, and when they try to change a user, then the API returns 403 |  |  |
+
+## PLS-24 API security (planned: Phases 1 and 3)
+
+As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
+
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-24.1 | (API1) Given customer A, when they read, track or cancel customer B's order by id, then the API returns 404 |  | `order-leak` |
+| PLS-24.2 | (API2) Given an access token that is unsigned (`alg: none`), signed with another key, or expired, when it is used, then the API returns 401 |  | `jwt-alg-none`, `token-never-expires` |
+| PLS-24.3 | (API2) Given a registered email and an unknown one, when each is used for a failed login and for a password-reset request, then the status codes and messages are identical |  | `user-enumeration` |
+| PLS-24.4 | (API3) Given a registration body that includes `"role": "admin"`, when the account is created, then it is a customer account |  | `mass-assignment-role` |
+| PLS-24.5 | (API3) Given a customer, when they read any of their orders, then the response contains no other customer's data, such as email addresses |  | `excessive-data-exposure` |
+| PLS-24.6 | (API4) Given a guest who has used up the rate limit, when they keep sending requests with a different `X-Forwarded-For` header each time, then they still get 429 |  | `rate-limit-bypass` |
+| PLS-24.7 | (API4) Given `limit=100000`, when `GET /products` or `GET /orders` is called, then the API returns 422 because the limit is above the documented maximum |  | `no-page-limit` |
+| PLS-24.8 | (API5) Given a customer's token, when they call `PATCH /admin/users/{id}`, then the API returns 403 and the user is unchanged |  | `bfla-admin-users` |
+| PLS-24.9 | (API6) Given a single-use discount code, when two orders try to use it at the same moment, then only one order gets the discount |  | `single-use-reused` |
+| PLS-24.10 | (API7) Given the "import avatar from URL" feature, when the URL points to `localhost`, the `db` container, a private address or `169.254.169.254`, then the API returns 422 and makes no request to it |  | `ssrf-avatar-url` |
+| PLS-24.11 | (API8) Given any API or web response, when its headers are read, then it has `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Content-Security-Policy` and `Permissions-Policy` |  | `missing-security-headers` |
+| PLS-24.12 | (API8) Given an unexpected server error, when the 500 is returned, then its body has only the standard error fields: no stack trace, SQL or file paths |  | `verbose-errors` |
+| PLS-24.13 | (API9) Given the retired API version, when `/api/v0/orders` is called, then the API returns 404 |  | `shadow-api-v0` |
+| PLS-24.14 | (API10) Given an address suggestion that breaks the shipping-address rules, such as a 300-character line, when it is selected and the order is placed, then the API validates it like a typed address and returns 422 |  | `trust-address-provider` |
+
+## PLS-25 Observability (planned: Phase 1)
+
+As a tester, I want to trace any request through the logs, so that I can find why it failed without guessing.
+
+Not built yet: correlation IDs, logs and metrics arrive in Phase 1 (API additions 2 and 3).
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-25.1 | Given a request with a valid `X-Correlation-Id` (1 to 64 of `A-Z a-z 0-9 - _`), when it is answered, then the same ID is echoed back; without one, or with an invalid one, a new UUID is returned |  |  |
+| PLS-25.2 | Given a request's correlation ID, when `GET /test/logs?correlationId=` is called, then it returns that request's log line with method, route, status and duration |  |  |
+| PLS-25.3 | Given a login and a card payment, when their log lines are read, then passwords, the `Authorization` header, cookies and card numbers are redacted |  |  |
+| PLS-25.4 | Given traffic has been sent, when `GET /metrics` is scraped, then it returns Prometheus text with a request-duration histogram by route and status, and it is not rate limited |  |  |
+
+## PLS-26 Contract and versioning (planned: Phase 3)
+
+As an API consumer, I want the API to keep its published contract, so that my integration doesn't break without warning.
+
+Not built yet: the contract jobs and `POST /test/provider-states` arrive in Phase 3 (API addition 9).
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-26.1 | Given the OpenAPI file, when it is linted with Spectral using the repo's ruleset, then there are no errors |  |  |
+| PLS-26.2 | Given the running API, when Schemathesis runs against the OpenAPI file, then every response matches its schema and no request causes a 500 |  |  |
+| PLS-26.3 | Given a pull request that changes the OpenAPI file, when `oasdiff` compares it with `main`, then any breaking change to `/api/v1` fails the check |  |  |
+| PLS-26.4 | Given the web app's Pact consumer contracts, when they are verified against the API, then every interaction passes |  |  |
+| PLS-26.5 | Given a provider-state name such as "product 6 has stock 3", when `POST /test/provider-states` is called with it, then the matching data is set up |  |  |
+
+## PLS-27 Performance and capacity (planned: Phase 3)
+
+As the shop's owner, I want the shop to stay fast under expected load and fail gracefully beyond it, so that busy days don't lose sales.
+
+Not built yet: these run against the `perf` Compose profile with generated data (API addition 8). The figures are starting points; calibrate them on your machine in Phase 3.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-27.1 | Given the perf profile with generated data, when `GET /products` is called at 50 requests per second for 5 minutes, then p95 latency is under 200 ms and errors are under 1% |  |  |
+| PLS-27.2 | Given the perf profile with generated data, when `POST /orders` is called at 10 requests per second for 5 minutes, then p95 latency is under 800 ms and errors are under 1% |  |  |
+| PLS-27.3 | Given steady load at half the PLS-27.1 rate for 1 hour, when the soak ends, then p95 latency is within 20% of the first 5 minutes and the API stays within its memory limit |  |  |
+| PLS-27.4 | Given load well beyond capacity, when the API is overloaded, then it answers with 429 or 503 and `Retry-After` rather than timing out, and recovers within 1 minute of the load dropping |  |  |
+| PLS-27.5 | Given `docker compose --profile perf up`, when the stack is ready, then the rate limit is off, the API and database run with their CPU and memory limits, and Grafana shows request rate, p95 latency and error rate |  |  |
+
+## PLS-28 Test environment v2 (planned: Phase 1)
+
+As a tester, I want isolated test sessions and repeatable data, so that parallel runs don't interfere and the app can't be deployed unsafely.
+
+Not built yet: test sessions arrive in Phase 1, bulk data with the perf profile, and the production guard with API addition 9.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-28.1 | Given two test sessions, when one switches on a defect, adds a chaos rule or moves the clock, then requests in the other session, and requests with no session, are unaffected |  |  |
+| PLS-28.2 | Given no `X-Test-Session` header or cookie, when the test hooks are used, then the global state applies, exactly as before sessions existed |  |  |
+| PLS-28.3 | Given a reset, when `POST /test/generate` is called twice with the same body and `seed`, then the data it creates is identical both times |  |  |
+| PLS-28.4 | Given `POST /test/users/bulk` with `{ "count": 500 }`, when it returns, then the CSV has 500 rows of email, password and token, and every account can log in |  |  |
+| PLS-28.5 | Given `NODE_ENV=production` and `TEST_HOOKS=true`, when the API starts, then it refuses to start with a clear error unless `PLAYLAB_ALLOW_UNSAFE=true` |  |  |
+
+## PLS-29 Delivery pipeline (planned: Phase 3)
+
+As a maintainer, I want every change checked by the same gates, so that a broken build or an uncaught defect never reaches `main`.
+
+Partly built: the quality workflow runs on every pull request. The other gates arrive with their suites.
+
+| AC ID | Given / When / Then | Test ID | Defect it catches |
+| --- | --- | --- | --- |
+| PLS-29.1 | Given a pull request, when any required gate (quality, functional, API, contract or security) fails, then the pull request can't be merged |  |  |
+| PLS-29.2 | Given a push to `main`, when the pipelines finish, then the latest reports are published to GitHub Pages and linked from the README |  |  |
+| PLS-29.3 | Given the nightly run, when it switches on defects at random, then each one is caught by at least one test, and the run fails if any is missed |  |  |
+| PLS-29.4 | Given a test that names an AC ID that doesn't exist, or a defect that no test catches, when the traceability check runs, then CI fails |  |  |

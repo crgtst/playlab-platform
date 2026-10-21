@@ -9,10 +9,17 @@ Phase 0: Foundations (branch `phase-0-foundations`)
 
 ## Next task
 
-Phase 0, task 6: add PLS-20 to PLS-29 to `ACCEPTANCE_CRITERIA.md`.
+Phase 0, last task: settle the open decisions (2 to 6 below). Then Phase 0 is complete and PR #5 can leave draft.
 
 ## Done
 
+- 2026-10-21: Phase 0 task 6. PLS-20 to PLS-29 added to `tests/ACCEPTANCE_CRITERIA.md`: 10 stories, 56 ACs
+  (153 in total). Each story says which phase builds it. All 14 planned defects map to ACs, and four existing
+  defects gained new AC IDs (`stock-oversell` 21.4, `order-leak` 24.1, `token-never-expires` 24.2,
+  `single-use-reused` 24.9) in `bugs.ts` and `app/README.md`. The AC-map unit test now accepts the 14 planned
+  defect names from an explicit list, and checks that 33 built + 14 planned = 47. Checked against the running
+  API: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold. PLS-24.6 fails: the `X-Forwarded-For` rate-limit
+  bypass in finding A7 is confirmed.
 - 2026-10-21: Phase 0 task 5 (finding A9). PLS-13 to PLS-19 audited against the web code.
   - Code changed to meet the AC: PLS-15.3 (copy fallback: `<id>-fallback` input with the text selected and
     `<id>-fallback-hint` "Press Ctrl+C to copy") and PLS-17.2 (offline cart: `checkout-button` disabled with
@@ -89,6 +96,12 @@ Phase 0, task 6: add PLS-20 to PLS-29 to `ACCEPTANCE_CRITERIA.md`.
 - `SECURITY.md` promises an acknowledgement within a week. Craig to confirm or change.
 - Proposed plan change: Compose publishes ports 5173, 3000 and 5432 on all interfaces. Binding them to `127.0.0.1`
   would keep the stack off the local network. That changes how people reach the stack, so it needs agreeing first.
+
+- The plan's edits to existing ACs (PLS-8.2, 8.3, 8.4 and 10.1 in "Changes to existing stories") are not
+  applied yet. They describe Phase 1 behaviour, so they land with it; applying them now would make built
+  ACs fail.
+- Finding A7 confirmed on 2026-10-21: after a guest's 429, a request with a new `X-Forwarded-For` gets 200.
+  The fix is in Phase 1 (trust only the web proxy; keep the bypass as the `rate-limit-bypass` defect).
 
 ## Local environment notes
 

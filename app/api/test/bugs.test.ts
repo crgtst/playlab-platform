@@ -6,6 +6,24 @@ import { BUG_NAMES, BUGS, bugs, isBugOn } from '../src/lib/bugs';
 
 const testHooks = config.testHooks;
 
+// Defects that planned stories (PLS-20 to PLS-29) already name. Move each one into bugs.ts when it is built.
+const PLANNED_DEFECTS = [
+  'status-any-transition',
+  'lost-update',
+  'jwt-alg-none',
+  'user-enumeration',
+  'mass-assignment-role',
+  'excessive-data-exposure',
+  'rate-limit-bypass',
+  'no-page-limit',
+  'bfla-admin-users',
+  'ssrf-avatar-url',
+  'missing-security-headers',
+  'verbose-errors',
+  'shadow-api-v0',
+  'trust-address-provider',
+];
+
 afterEach(() => {
   bugs.clear();
   config.testHooks = testHooks;
@@ -20,10 +38,20 @@ describe('bug registry', () => {
     const md = fs.readFileSync(path.join(__dirname, '../../../tests/ACCEPTANCE_CRITERIA.md'), 'utf8');
     const fromAcs = new Map<string, string[]>();
     for (const [, id, defects] of md.matchAll(/^\| (PLS-\d+\.\d+) \|.*\| *([^|]*?) *\|$/gm)) {
-      for (const [, name] of defects.matchAll(/`([a-z-]+)`/g)) fromAcs.set(name, [...(fromAcs.get(name) ?? []), id]);
+      for (const [, name] of defects.matchAll(/`([a-z0-9-]+)`/g)) fromAcs.set(name, [...(fromAcs.get(name) ?? []), id]);
     }
+    const planned = PLANNED_DEFECTS.filter((n) => fromAcs.delete(n));
+    expect(planned, 'every planned defect is named by an AC').toEqual(PLANNED_DEFECTS);
+    expect(
+      PLANNED_DEFECTS.filter((n) => n in BUGS),
+      'planned defects not yet in bugs.ts',
+    ).toEqual([]);
     const fromBugs = new Map(BUG_NAMES.map((n) => [n as string, BUGS[n].ac.split(', ')]));
     expect(Object.fromEntries(fromBugs)).toEqual(Object.fromEntries(fromAcs));
+  });
+
+  it('adds up to the 47 defects in the plan once the planned ones are built', () => {
+    expect(BUG_NAMES.length + PLANNED_DEFECTS.length).toBe(47);
   });
 
   it('starts with every defect off', () => {

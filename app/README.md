@@ -313,18 +313,18 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `discount-stacking` | PLS-5.4 | API | A second code is accepted and both apply (the cart's `discounts` lists both) |
 | `discount-survives-cart-change` | PLS-5.5 | API | The minimum spend is not re-checked when the cart changes |
 | `discount-negative-total` | PLS-5.6 | API | Fixed codes are not capped, so the total goes negative |
-| `single-use-reused` | PLS-5.3 | API | A used single-use code still works |
+| `single-use-reused` | PLS-5.3, 24.9 | API | A used single-use code still works |
 | `discount-case-sensitive` | PLS-5.7 | API | `save10` is rejected; only `SAVE10` works |
 | `vat-before-discount` | PLS-5.8 | API | VAT is charged on the pre-discount subtotal |
 | `cart-total-rounding` | PLS-4.4 | API | The subtotal is 1 cent more than the sum of lines with 3 or more items |
 | `currency-switch-stale` | PLS-4.6 | Web | The cart page keeps € prices after switching to GBP |
 | `price-tamper` | PLS-6.7 | API | `POST /orders` uses `items[].unitPriceCents` sent by the client |
 | `quantity-negative` | PLS-4.2 | API + web | A quantity of 0 or below is accepted and saved |
-| `stock-oversell` | PLS-4.3 | API | No stock checks in the cart or orders (stock bottoms out at 0) |
+| `stock-oversell` | PLS-4.3, 21.4 | API | No stock checks in the cart or orders (stock bottoms out at 0) |
 | `double-submit` | PLS-6.4 | API + web | No locking or payment-reuse check; the payment page places the order twice |
-| `order-leak` | PLS-7.2 | API | Any customer can read any order (and its tracking) by id |
+| `order-leak` | PLS-7.2, 24.1 | API | Any customer can read any order (and its tracking) by id |
 | `logout-incomplete` | PLS-1.4 | API + web | Logout leaves the session alive, so Back shows the account page |
-| `token-never-expires` | PLS-1.5 | API | Expired access tokens are accepted |
+| `token-never-expires` | PLS-1.5, 24.2 | API | Expired access tokens are accepted |
 | `search-apostrophe` | PLS-3.2 | API | A search containing `'` returns 500 |
 | `pagination-duplicate` | PLS-3.5 | API | Page 2 onwards starts with the previous page's last item |
 | `fada-rejected` | PLS-2.3 | API | Names with accents (Seán, Ní Bhriain) get 422 |
@@ -410,7 +410,7 @@ Build phases 1–4 in the spec are done. Phases 5 (framework maturity) and 6 (Pl
 - **Phase 3:** WebSocket and SSE, shadow DOM, infinite scroll, i18n, currency and timezone, planted a11y faults, bug mode, theme toggle and offline.
 - **Phase 4:** store finder (geolocation), order notifications, copy buttons, the battery-saver banner, the service-worker offline cache, the swipeable gallery, stable regions for aria snapshots, the component-test harness, the price-tracker extension and 7 more defects.
 
-Every AC in `tests/ACCEPTANCE_CRITERIA.md` now has an implementation to test against.
+Every AC in PLS-1 to PLS-19 of `tests/ACCEPTANCE_CRITERIA.md` has an implementation to test against. PLS-20 to PLS-29 specify the upgrade plan's platform work and are mostly not built yet; each story says which phase builds it.
 
 Two edge-case scenarios from the spec's checklist, which aren't in any phase, are **not built**:
 - account deletion that logs out other sessions
