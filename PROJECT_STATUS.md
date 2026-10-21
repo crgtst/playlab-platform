@@ -9,10 +9,16 @@ Phase 0: Foundations (branch `phase-0-foundations`)
 
 ## Next task
 
-Phase 0, task 4: write the landing README draft and `SECURITY.md`.
+Phase 0, task 5: reconcile PLS-13 to PLS-19 with the build and fix the defect-to-AC map in `bugs.ts`.
 
 ## Done
 
+- 2026-10-21: Phase 0 task 4. Landing `README.md` draft: pitch, quality and licence badges, local-only warning,
+  why it exists, quickstart (commands checked against the running stack), "what you can practise" table with
+  honest suite status, Mermaid diagram of the current stack, layout, roadmap, and contributor commands.
+  No defect catalogue (finding R4); the GIF is a TODO for Gate 3. `SECURITY.md`: local-only use,
+  what is insecure on purpose, the `TEST_HOOKS=false` guard as it exists today, the planned production
+  guard (R3), what to report, and reporting via GitHub private vulnerability reporting.
 - 2026-10-21: Phase 0 task 3. `.github/workflows/quality.yml` (push to main, PRs, manual): lint + format check,
   typecheck for api and web (matrix), and API unit tests, all on Node 24 with `npm ci`. Vitest 5 + supertest
   in `app/api` (`npm test`, `npm run test:watch`; tests in `app/api/test/`, typechecked via `test/tsconfig.json`).
@@ -41,7 +47,7 @@ Phase 0, task 4: write the landing README draft and `SECURITY.md`.
 
 | # | Decision | Outcome | Date |
 |---|----------|---------|------|
-| 1 | Rename repo to `playlab-platform` | Agreed (compose project renamed; GitHub repo rename pending) | 2026-10-21 |
+| 1 | Rename repo to `playlab-platform` | Agreed (compose project and GitHub repo renamed) | 2026-10-21 |
 | 2 | Tests in the same repo, one folder per suite | Open | |
 | 3 | Second Playwright language: Java or Python | Open | |
 | 4 | Go public at v1.0.0 | Open | |
@@ -54,7 +60,7 @@ Phase 0, task 4: write the landing README draft and `SECURITY.md`.
 - `app/.env.example` hard-codes `PAYMENT_FRAME_URL=http://localhost:3000/pay/frame`.
   Changing `API_PORT` alone leaves the payment frame on the wrong port (404).
   Fix in Phase 0: remove the line and let `docker-compose.yml` derive it from `API_PORT`.
-- README examples assume port 3000.
+- `app/README.md` examples assume port 3000. The landing README uses the defaults and shows how to override them.
 - Express 5's automatic `OPTIONS` reply is now `text/plain` with `Allow: GET, HEAD, POST`
   (it was `text/html` with `GET,HEAD,POST`). No AC or spec covers it.
 - The latest CT package is 1.62.1. `@playwright/test` is at 1.64.1 (the version the plan cites) because the CT
@@ -64,9 +70,13 @@ Phase 0, task 4: write the landing README draft and `SECURITY.md`.
   The rule is `warn` until row types are added.
 - Not formatted by Prettier: Markdown (tables are aligned by hand), HTML (reflowing can change text tests assert on),
   `openapi/` and SQL migrations, and `tests/` (each suite brings its own setup).
-- After cloning, run `npm install` at the repo root once to install the pre-commit hook. Add this to the README in task 4.
-- `README.md` has no final newline; task 4 rewrites it.
 - `multer` 1.4.5-lts.1 is deprecated with known vulnerabilities (fixed in 2.x). Expect a Dependabot major PR.
+
+- GitHub private vulnerability reporting, which `SECURITY.md` points to, can't be enabled on a private repo.
+  Turn it on when the repo goes public (Gate 3).
+- `SECURITY.md` promises an acknowledgement within a week. Craig to confirm or change.
+- Proposed plan change: Compose publishes ports 5173, 3000 and 5432 on all interfaces. Binding them to `127.0.0.1`
+  would keep the stack off the local network. That changes how people reach the stack, so it needs agreeing first.
 
 ## Local environment notes
 
