@@ -9,10 +9,21 @@ Phase 0: Foundations (branch `phase-0-foundations`)
 
 ## Next task
 
-Phase 0, task 5: reconcile PLS-13 to PLS-19 with the build and fix the defect-to-AC map in `bugs.ts`.
+Phase 0, task 6: add PLS-20 to PLS-29 to `ACCEPTANCE_CRITERIA.md`.
 
 ## Done
 
+- 2026-10-21: Phase 0 task 5 (finding A9). PLS-13 to PLS-19 audited against the web code.
+  - Code changed to meet the AC: PLS-15.3 (copy fallback: `<id>-fallback` input with the text selected and
+    `<id>-fallback-hint` "Press Ctrl+C to copy") and PLS-17.2 (offline cart: `checkout-button` disabled with
+    `checkout-offline-message`, en and ga strings).
+  - ACs reworded to match the build: 13.1 to 13.3 (results after "Find stores near me"), 13.2 and 17.1 (the
+    build's messages; no Eircode), 14.1 (opt-in button, prompt on click), 16.1 (CSS animations, not carousels),
+    18.2 (a tap advances, no full screen).
+  - `bugs.ts`: the 7 Phase 4 defects now map to PLS-13.1, 13.2, 14.2, 15.1, 16.2, 17.3 and 19.2. The other 26
+    already matched. A new unit test checks `bugs.ts` against the ACs' "Defect it catches" column (19 tests).
+  - `app/README.md` defect table, Phase 4 notes and note 26 updated. Checked in the browser: 15.1, 15.3, 17.2
+    and 18.2; API probes unchanged; checkout passes.
 - 2026-10-21: Phase 0 task 4. Landing `README.md` draft: pitch, quality and licence badges, local-only warning,
   why it exists, quickstart (commands checked against the running stack), "what you can practise" table with
   honest suite status, Mermaid diagram of the current stack, layout, roadmap, and contributor commands.
@@ -54,6 +65,7 @@ Phase 0, task 5: reconcile PLS-13 to PLS-19 with the build and fix the defect-to
 | 5 | Pact files in repo before a broker | Open | |
 | 6 | .NET suite | Open | |
 | 7 | v2.0 FastAPI spec marked historical; PlayLab Pay (FastAPI) added as Phase 5 stretch | Agreed | 2026-10-21 |
+| 8 | A9 reconciliation: build PLS-15.3 and 17.2; reword 13.x, 14.1, 16.1, 17.1 and 18.2 to match the build | Agreed | 2026-10-21 |
 
 ## Known issues
 

@@ -169,9 +169,9 @@ As a shopper, I want to find stores near me, so that I can collect an order in p
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
-| PLS-13.1 | Given location permission is granted and the user is in Galway, when they open the store finder, then the 3 nearest stores are listed nearest first with distances in km |  | `geolocation-ignored` |
-| PLS-13.2 | Given location permission is denied, when they open the store finder, then "Location is off. Enter a town or Eircode" is shown with a search box |  | `permission-denied-crash` |
-| PLS-13.3 | Given the user changes location, when they refresh the list, then the results update to the new location |  |  |
+| PLS-13.1 | Given location permission is granted and the user is in Galway, when they select "Find stores near me" on the store finder, then the 3 nearest stores are listed nearest first with distances in km |  | `geolocation-ignored` |
+| PLS-13.2 | Given location permission is denied, when they select "Find stores near me", then "Location access was denied. Search by town instead." is shown and the town search still works |  | `permission-denied-crash` |
+| PLS-13.3 | Given the user changes location, when they select "Find stores near me" again, then the results update to the new location |  |  |
 
 ## PLS-14 Order notifications (Phase 4)
 
@@ -179,7 +179,7 @@ As a customer, I want a browser notification when my order changes, so that I do
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
-| PLS-14.1 | Given the user has not decided, when they open Order history, then they are asked to allow notifications |  |  |
+| PLS-14.1 | Given the user has not decided, when they open Order history, then they are offered "Notify me about my orders", and selecting it asks the browser for permission |  |  |
 | PLS-14.2 | Given notifications are allowed, when an admin changes the order status, then exactly one notification shows the order number and new status |  | `notification-spam` |
 | PLS-14.3 | Given notifications are blocked, when the status changes, then the in-page status still updates and no error is shown |  |  |
 
@@ -191,7 +191,7 @@ As a shopper, I want to copy codes and order numbers, so that I can paste them e
 | --- | --- | --- | --- |
 | PLS-15.1 | Given a discount banner, when "Copy code" is clicked, then the clipboard holds that exact code and a "Copied" toast appears |  | `clipboard-wrong-value` |
 | PLS-15.2 | Given an order confirmation, when "Copy order number" is clicked, then the clipboard holds the order number |  |  |
-| PLS-15.3 | Given clipboard permission is denied, when copy is clicked, then the code is selected on screen with "Press Ctrl+C to copy" |  |  |
+| PLS-15.3 | Given clipboard permission is denied, when copy is clicked, then the code is shown selected on screen with "Press Ctrl+C to copy" |  |  |
 
 ## PLS-16 Battery-saver banner (Phase 4)
 
@@ -199,7 +199,7 @@ As a mobile shopper, I want the site to go easy on my battery, so that browsing 
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
-| PLS-16.1 | Given battery is below 20% and not charging, when the page loads, then "Low battery: animations paused" shows and carousels stop auto-playing |  |  |
+| PLS-16.1 | Given battery is below 20% and not charging, when the page loads, then "Low battery: animations paused" shows and CSS animations stop |  |  |
 | PLS-16.2 | Given the banner is showing, when charging starts, then the banner disappears within 2 seconds |  | `battery-banner-stuck` |
 | PLS-16.3 | Given a browser without the Battery API, when the page loads, then no banner shows and no console error is logged |  |  |
 
@@ -209,8 +209,8 @@ As a shopper on a poor connection, I want to browse products offline, so that a 
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
-| PLS-17.1 | Given the catalogue was visited online, when the browser goes offline, then the catalogue still loads with an "Offline: prices may have changed" notice |  |  |
-| PLS-17.2 | Given the user is offline, when they try to check out, then checkout is disabled with a clear message |  |  |
+| PLS-17.1 | Given the catalogue was visited online, when the browser goes offline, then the catalogue still loads with "You're offline: showing saved prices, which may be out of date." |  |  |
+| PLS-17.2 | Given the user is offline, when they view the cart, then the checkout button is disabled with "You're offline. You can check out when you're back online.", and it works again once back online |  |  |
 | PLS-17.3 | Given the user comes back online, when the catalogue reloads, then current prices are shown |  | `offline-stale-prices` |
 | PLS-17.4 | Given service workers are blocked, when the site loads, then it works normally without offline support |  |  |
 
@@ -221,7 +221,7 @@ As a mobile shopper, I want to swipe through product images, so that browsing fe
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
 | PLS-18.1 | Given a touch device, when the user swipes left on the gallery, then the next image shows and the position dots update |  |  |
-| PLS-18.2 | Given a touch device, when the user taps an image, then it opens full screen |  |  |
+| PLS-18.2 | Given a touch device, when the user taps an image, then the next image shows and the image status moves on by one (for example from "Image 1 of 3" to "Image 2 of 3") |  |  |
 | PLS-18.3 | Given a desktop browser, when the gallery loads, then arrow buttons are shown and work with the keyboard |  |  |
 
 ## PLS-19 Accessible structure (Phase 4)

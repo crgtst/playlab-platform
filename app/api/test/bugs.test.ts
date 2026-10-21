@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config } from '../src/config';
 import { BUG_NAMES, BUGS, bugs, isBugOn } from '../src/lib/bugs';
@@ -10,8 +12,18 @@ afterEach(() => {
 });
 
 describe('bug registry', () => {
-  it('maps every defect to an AC or a named feature', () => {
-    for (const name of BUG_NAMES) expect(BUGS[name].ac, name).toMatch(/\S/);
+  it('maps every defect to at least one AC ID', () => {
+    for (const name of BUG_NAMES) expect(BUGS[name].ac, name).toMatch(/^PLS-\d+\.\d+(, PLS-\d+\.\d+)*$/);
+  });
+
+  it("agrees with the 'Defect it catches' column in ACCEPTANCE_CRITERIA.md", () => {
+    const md = fs.readFileSync(path.join(__dirname, '../../../tests/ACCEPTANCE_CRITERIA.md'), 'utf8');
+    const fromAcs = new Map<string, string[]>();
+    for (const [, id, defects] of md.matchAll(/^\| (PLS-\d+\.\d+) \|.*\| *([^|]*?) *\|$/gm)) {
+      for (const [, name] of defects.matchAll(/`([a-z-]+)`/g)) fromAcs.set(name, [...(fromAcs.get(name) ?? []), id]);
+    }
+    const fromBugs = new Map(BUG_NAMES.map((n) => [n as string, BUGS[n].ac.split(', ')]));
+    expect(Object.fromEntries(fromBugs)).toEqual(Object.fromEntries(fromAcs));
   });
 
   it('starts with every defect off', () => {
