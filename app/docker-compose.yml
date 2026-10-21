@@ -1,4 +1,4 @@
-name: playlab-shop
+name: playlab-platform
 
 services:
   db:
