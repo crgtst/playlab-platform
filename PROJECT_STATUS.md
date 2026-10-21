@@ -19,7 +19,7 @@ Phase 0, task 4: write the landing README draft and `SECURITY.md`.
   18 tests, no database needed: pricing maths and its bug switches, the bug registry (isolation, TEST_HOOKS guard),
   and HTTP basics through `createApp()` (404 envelope, bad JSON, per-field validation, extended query parser,
   OpenAPI, hooks off/on). Removing the Express 4 compatibility settings fails 2 tests. Jobs run green in a clean
-  copy locally; actionlint clean. Not yet run on GitHub (branch not pushed).
+  copy locally; actionlint clean. Green on GitHub on draft PR #5 (run 39673500765): Gate 0 met.
 - 2026-10-21: Phase 0 task 2. Root `package.json` holds repo-wide tooling only (no workspaces, so the
   app lockfiles and Dockerfiles are unchanged): ESLint 10 flat config (`eslint.config.mjs`, with
   typescript-eslint, react-hooks and eslint-config-prettier), Prettier 3 (single quotes, width 140 to match
