@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product",
+  "type": "object",
+  "required": [
+    "id",
+    "sku",
+    "name",
+    "description",
+    "category",
+    "priceCents",
+    "stock",
+    "inStock",
+    "imageUrl",
+    "images",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "sku": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "category": {
+      "$ref": "Category.json"
+    },
+    "priceCents": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Price excluding VAT, in cents"
+    },
+    "stock": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "inStock": {
+      "type": "boolean"
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "images": {
+      "type": "array",
+      "description": "Gallery images; the first is `imageUrl`",
+      "items": {
+        "type": "string"
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

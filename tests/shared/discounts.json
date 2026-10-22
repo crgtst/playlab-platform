@@ -1,0 +1,20 @@
+{
+  "seeded": [
+    { "code": "SAVE10", "type": "percent", "value": 10, "minSpendCents": 0, "description": "10% off your order" },
+    { "code": "FIXED20", "type": "fixed", "value": 2000, "minSpendCents": 0, "description": "€20 off your order" }
+  ],
+  "fromFixtures": [
+    { "code": "EXPIRED10", "fixture": "expired-discount", "type": "percent", "value": 10, "description": "Expired yesterday" },
+    { "code": "FUTURE10", "fixture": "future-discount", "type": "percent", "value": 10, "description": "Starts in 7 days" },
+    { "code": "ONCE15", "fixture": "single-use-discount", "type": "percent", "value": 15, "description": "Single use, not used yet" },
+    { "code": "USED10", "fixture": "used-discount", "type": "percent", "value": 10, "description": "Single use, already used" },
+    {
+      "code": "MIN50",
+      "fixture": "min-spend-discount",
+      "type": "percent",
+      "value": 10,
+      "minSpendCents": 5000,
+      "description": "10% off with a €50 minimum spend"
+    }
+  ]
+}

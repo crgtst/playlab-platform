@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Health",
+  "type": "object",
+  "required": [
+    "status",
+    "checks"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "unavailable"
+      ]
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down"
+          ]
+        },
+        "db": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down"
+          ]
+        },
+        "web": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down"
+          ]
+        }
+      }
+    },
+    "testHooks": {
+      "type": "boolean"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

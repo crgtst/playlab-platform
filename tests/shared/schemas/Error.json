@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Error",
+  "type": "object",
+  "required": [
+    "error"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "details",
+        "correlationId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "examples": [
+            "VALIDATION_ERROR"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "correlationId": {
+          "type": "string",
+          "description": "The request's `X-Correlation-Id`, for finding its log line.",
+          "examples": [
+            "3f2b8c1e-6a0d-4c4e-9a52-1b7e2f0c9d11"
+          ]
+        },
+        "details": {
+          "description": "For validation errors, an array of `{ field, message }`.",
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "field": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

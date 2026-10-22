@@ -1,0 +1,346 @@
+{
+  "categories": [
+    {
+      "slug": "electronics",
+      "name": "Electronics"
+    },
+    {
+      "slug": "books",
+      "name": "Books"
+    },
+    {
+      "slug": "home-kitchen",
+      "name": "Home & Kitchen"
+    },
+    {
+      "slug": "clothing",
+      "name": "Clothing"
+    },
+    {
+      "slug": "sports",
+      "name": "Sports"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "sku": "EL-001",
+      "name": "Wireless Earbuds",
+      "category": "electronics",
+      "priceCents": 4999,
+      "stock": 25
+    },
+    {
+      "id": 2,
+      "sku": "EL-002",
+      "name": "Noise-Cancelling Headphones",
+      "category": "electronics",
+      "priceCents": 18999,
+      "stock": 12
+    },
+    {
+      "id": 3,
+      "sku": "EL-003",
+      "name": "USB-C Charger 65W",
+      "category": "electronics",
+      "priceCents": 3499,
+      "stock": 40
+    },
+    {
+      "id": 4,
+      "sku": "EL-004",
+      "name": "Smart Speaker",
+      "category": "electronics",
+      "priceCents": 7999,
+      "stock": 18
+    },
+    {
+      "id": 5,
+      "sku": "EL-005",
+      "name": "Mechanical Keyboard",
+      "category": "electronics",
+      "priceCents": 11950,
+      "stock": 9
+    },
+    {
+      "id": 6,
+      "sku": "EL-006",
+      "name": "Retro Vinyl Turntable",
+      "category": "electronics",
+      "priceCents": 14900,
+      "stock": 3
+    },
+    {
+      "id": 7,
+      "sku": "EL-007",
+      "name": "Portable Power Bank",
+      "category": "electronics",
+      "priceCents": 2999,
+      "stock": 50
+    },
+    {
+      "id": 8,
+      "sku": "EL-008",
+      "name": "4K Webcam",
+      "category": "electronics",
+      "priceCents": 8999,
+      "stock": 14
+    },
+    {
+      "id": 9,
+      "sku": "BK-001",
+      "name": "The Testing Mindset",
+      "category": "books",
+      "priceCents": 2499,
+      "stock": 30
+    },
+    {
+      "id": 10,
+      "sku": "BK-002",
+      "name": "Playwright in Practice",
+      "category": "books",
+      "priceCents": 3999,
+      "stock": 22
+    },
+    {
+      "id": 11,
+      "sku": "BK-003",
+      "name": "O'Neill's Irish Folk Tales",
+      "category": "books",
+      "priceCents": 1599,
+      "stock": 15
+    },
+    {
+      "id": 12,
+      "sku": "BK-004",
+      "name": "Clean Code Habits",
+      "category": "books",
+      "priceCents": 2999,
+      "stock": 19
+    },
+    {
+      "id": 13,
+      "sku": "BK-005",
+      "name": "Cooking for One",
+      "category": "books",
+      "priceCents": 1899,
+      "stock": 11
+    },
+    {
+      "id": 14,
+      "sku": "BK-006",
+      "name": "The Atlantic Way",
+      "category": "books",
+      "priceCents": 2250,
+      "stock": 8
+    },
+    {
+      "id": 15,
+      "sku": "BK-007",
+      "name": "Data Structures Illustrated",
+      "category": "books",
+      "priceCents": 4450,
+      "stock": 6
+    },
+    {
+      "id": 16,
+      "sku": "BK-008",
+      "name": "Sleep Better",
+      "category": "books",
+      "priceCents": 1299,
+      "stock": 27
+    },
+    {
+      "id": 17,
+      "sku": "HK-001",
+      "name": "Cast Iron Skillet",
+      "category": "home-kitchen",
+      "priceCents": 3995,
+      "stock": 16
+    },
+    {
+      "id": 18,
+      "sku": "HK-002",
+      "name": "Pour-Over Coffee Set",
+      "category": "home-kitchen",
+      "priceCents": 4500,
+      "stock": 13
+    },
+    {
+      "id": 19,
+      "sku": "HK-003",
+      "name": "Chef Knife 20 cm",
+      "category": "home-kitchen",
+      "priceCents": 6900,
+      "stock": 10
+    },
+    {
+      "id": 20,
+      "sku": "HK-004",
+      "name": "Linen Tea Towels (3 pack)",
+      "category": "home-kitchen",
+      "priceCents": 1800,
+      "stock": 35
+    },
+    {
+      "id": 21,
+      "sku": "HK-005",
+      "name": "Ceramic Mug",
+      "category": "home-kitchen",
+      "priceCents": 1250,
+      "stock": 60
+    },
+    {
+      "id": 22,
+      "sku": "HK-006",
+      "name": "Bamboo Cutting Board",
+      "category": "home-kitchen",
+      "priceCents": 2200,
+      "stock": 21
+    },
+    {
+      "id": 23,
+      "sku": "HK-007",
+      "name": "Electric Kettle",
+      "category": "home-kitchen",
+      "priceCents": 4999,
+      "stock": 17
+    },
+    {
+      "id": 24,
+      "sku": "HK-008",
+      "name": "Scented Candle",
+      "category": "home-kitchen",
+      "priceCents": 1495,
+      "stock": 44
+    },
+    {
+      "id": 25,
+      "sku": "CL-001",
+      "name": "O'Neill Surf Jacket",
+      "category": "clothing",
+      "priceCents": 8999,
+      "stock": 7
+    },
+    {
+      "id": 26,
+      "sku": "CL-002",
+      "name": "Merino Wool Jumper",
+      "category": "clothing",
+      "priceCents": 7500,
+      "stock": 14
+    },
+    {
+      "id": 27,
+      "sku": "CL-003",
+      "name": "Classic Denim Jeans",
+      "category": "clothing",
+      "priceCents": 5900,
+      "stock": 26
+    },
+    {
+      "id": 28,
+      "sku": "CL-004",
+      "name": "Rain Jacket",
+      "category": "clothing",
+      "priceCents": 9950,
+      "stock": 9
+    },
+    {
+      "id": 29,
+      "sku": "CL-005",
+      "name": "Cotton T-Shirt",
+      "category": "clothing",
+      "priceCents": 1999,
+      "stock": 80
+    },
+    {
+      "id": 30,
+      "sku": "CL-006",
+      "name": "Wool Beanie",
+      "category": "clothing",
+      "priceCents": 2400,
+      "stock": 33
+    },
+    {
+      "id": 31,
+      "sku": "CL-007",
+      "name": "Trail Socks (2 pack)",
+      "category": "clothing",
+      "priceCents": 1600,
+      "stock": 48
+    },
+    {
+      "id": 32,
+      "sku": "CL-008",
+      "name": "Leather Belt",
+      "category": "clothing",
+      "priceCents": 3500,
+      "stock": 12
+    },
+    {
+      "id": 33,
+      "sku": "SP-001",
+      "name": "Yoga Mat",
+      "category": "sports",
+      "priceCents": 3200,
+      "stock": 24
+    },
+    {
+      "id": 34,
+      "sku": "SP-002",
+      "name": "Hurley (Size 32)",
+      "category": "sports",
+      "priceCents": 4500,
+      "stock": 15
+    },
+    {
+      "id": 35,
+      "sku": "SP-003",
+      "name": "Sliotar",
+      "category": "sports",
+      "priceCents": 900,
+      "stock": 70
+    },
+    {
+      "id": 36,
+      "sku": "SP-004",
+      "name": "Running Shoes",
+      "category": "sports",
+      "priceCents": 11000,
+      "stock": 10
+    },
+    {
+      "id": 37,
+      "sku": "SP-005",
+      "name": "Adjustable Dumbbells",
+      "category": "sports",
+      "priceCents": 15900,
+      "stock": 5
+    },
+    {
+      "id": 38,
+      "sku": "SP-006",
+      "name": "Water Bottle 750 ml",
+      "category": "sports",
+      "priceCents": 1999,
+      "stock": 55
+    },
+    {
+      "id": 39,
+      "sku": "SP-007",
+      "name": "Resistance Bands Set",
+      "category": "sports",
+      "priceCents": 2499,
+      "stock": 29
+    },
+    {
+      "id": 40,
+      "sku": "SP-008",
+      "name": "Gaelic Football",
+      "category": "sports",
+      "priceCents": 2999,
+      "stock": 20
+    }
+  ]
+}

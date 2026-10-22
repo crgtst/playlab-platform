@@ -100,7 +100,7 @@ provider.
 ```
 playlab-platform/
 ├── app/                # web (React + Vite), api (Express + TypeScript), docker-compose.yml, price-tracker extension
-├── tests/              # one folder per test suite as they are added
+├── tests/              # one folder per test suite; shared/ holds the data contract and JSON schemas
 ├── docs/               # SPEC.md and ACCEPTANCE_CRITERIA.md (the behaviour), REVIEW_AND_PLAN.md (the roadmap)
 └── .github/            # workflows and Dependabot
 ```

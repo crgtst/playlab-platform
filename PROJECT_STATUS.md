@@ -10,9 +10,24 @@ Between Phase 1 and Phase 2: dependency upgrades and housekeeping. Phase 1 merge
 
 ## Next task
 
-Scaffold `tests/` (folders, shared data contract, JSON schemas). Then Phase 2 (your functional suites).
+Phase 2: your functional suites (Playwright TS, Postman/Newman, Karate, REST Assured, traceability). The platform
+work before it is done once PRs #20 and the `tests/` scaffold are merged.
 
 ## Done
+
+- 2026-10-22: `tests/` scaffolded on `chore/tests-scaffold` (plan layout and parity rule 2).
+  - `tests/README.md` (folders, phases, the rules every suite follows, how to start and reset the stack) and a
+    README per suite folder with the techniques and showcase from the plan. No suite code: that's Phase 2 onwards.
+  - `tests/shared/`: `accounts.json`, `products.json` (with post-reset IDs), `cards.json`, `discounts.json` and
+    `fixtures.json`. `discounts.json` was added to the plan (layout and parity rule 2) because the PLS-5 tests need
+    the codes.
+  - `tests/shared/schemas/`: 38 draft-07 JSON Schemas generated from the OpenAPI components by
+    `npm run export:schemas` (`app/api/scripts/export-schemas.ts`): `nullable` becomes a `null` type, `example`
+    becomes `examples`, and references point at sibling files.
+  - Guards: `shared-contract.test.ts` (6 unit tests: each data file against the seed source, schemas up to date),
+    `shared-data.int.test.ts` (fixture discount codes) and `schemas.int.test.ts`, which walks about 90 requests
+    through the API and checks every status is documented and every JSON body matches its schema (ajv). The OpenAPI
+    file matched the API throughout; a deliberately broken schema made it fail. 58 unit and 132 integration tests.
 
 - 2026-10-22: `SPEC.md` and `ACCEPTANCE_CRITERIA.md` moved from `tests/` to `docs/` (plan layout), on
   `chore/docs-move`. References updated in `CLAUDE.md`, the Copilot instructions, both READMEs and the AC-map unit

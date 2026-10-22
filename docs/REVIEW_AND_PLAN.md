@@ -95,7 +95,7 @@ Playwright has four official bindings: Node (TypeScript or JavaScript), Python, 
 **Parity rules every suite follows**
 
 1. Test names start with the AC ID (`PLS-5.2 expired code is rejected`), so one report can merge all languages.
-2. One shared data contract in `tests/shared/`: accounts, product IDs, test cards and fixture names as JSON. No suite hard-codes them.
+2. One shared data contract in `tests/shared/`: accounts, product IDs, test cards, discount codes and fixture names as JSON. No suite hard-codes them.
 3. The same page-object names and methods in every language (`CartPage.applyCode`), so suites can be compared side by side.
 4. Every suite writes JUnit XML, the input to the traceability report.
 5. A parity table in the README shows which ACs each language covers, generated from those reports.
@@ -160,7 +160,7 @@ playlab-platform/
 ├── SECURITY.md  CONTRIBUTING.md  CHANGELOG.md  LICENSE
 ├── app/                       # web, api, docker-compose.yml (+ perf profile)
 ├── tests/
-│   ├── shared/                # accounts.json, products.json, cards.json, schemas/
+│   ├── shared/                # accounts, products, cards, discounts, fixtures (.json), schemas/
 │   ├── playwright-ts/
 │   ├── playwright-java/       # Maven, shares parent POM with rest-assured, karate
 │   ├── playwright-python/

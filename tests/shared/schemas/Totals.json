@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Totals",
+  "type": "object",
+  "required": [
+    "subtotalCents",
+    "discountCents",
+    "vatCents",
+    "deliveryCents",
+    "totalCents"
+  ],
+  "description": "subtotal = sum of line totals. VAT (23%) is charged on (subtotal - goods discount).\ntotal = subtotal - discount + VAT + delivery, never below 0.\n",
+  "properties": {
+    "subtotalCents": {
+      "type": "integer"
+    },
+    "discountCents": {
+      "type": "integer"
+    },
+    "vatCents": {
+      "type": "integer"
+    },
+    "deliveryCents": {
+      "type": "integer"
+    },
+    "totalCents": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

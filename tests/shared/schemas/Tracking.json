@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Tracking",
+  "type": "object",
+  "required": [
+    "orderId",
+    "number",
+    "status",
+    "carrier",
+    "trackingNumber",
+    "estimatedDelivery",
+    "events"
+  ],
+  "properties": {
+    "orderId": {
+      "type": "integer"
+    },
+    "number": {
+      "type": "string"
+    },
+    "status": {
+      "$ref": "OrderStatus.json"
+    },
+    "carrier": {
+      "type": "string"
+    },
+    "trackingNumber": {
+      "type": "string",
+      "examples": [
+        "PLP000001IE"
+      ]
+    },
+    "estimatedDelivery": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "status",
+          "label",
+          "at"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

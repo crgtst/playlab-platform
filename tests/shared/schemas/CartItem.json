@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CartItem",
+  "type": "object",
+  "required": [
+    "productId",
+    "sku",
+    "name",
+    "imageUrl",
+    "quantity",
+    "stock",
+    "unitPriceCents",
+    "priceAtAddCents",
+    "priceChanged",
+    "lineTotalCents"
+  ],
+  "properties": {
+    "productId": {
+      "type": "integer"
+    },
+    "sku": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "imageUrl": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "stock": {
+      "type": "integer"
+    },
+    "unitPriceCents": {
+      "type": "integer",
+      "description": "Current price"
+    },
+    "priceAtAddCents": {
+      "type": "integer",
+      "description": "Price when the item was added"
+    },
+    "priceChanged": {
+      "type": "boolean"
+    },
+    "lineTotalCents": {
+      "type": "integer"
+    }
+  }
+}

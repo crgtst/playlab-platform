@@ -1,0 +1,5 @@
+{
+  "customer": { "email": "customer@playlab.test", "password": "Password123!", "name": "Casey Customer", "role": "customer" },
+  "admin": { "email": "admin@playlab.test", "password": "Password123!", "name": "Alex Admin", "role": "admin" },
+  "support": { "email": "support@playlab.test", "password": "Password123!", "name": "Sam Support", "role": "support" }
+}

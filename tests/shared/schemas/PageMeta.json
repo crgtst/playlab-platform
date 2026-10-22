@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PageMeta",
+  "type": "object",
+  "required": [
+    "page",
+    "limit",
+    "total",
+    "totalPages"
+  ],
+  "properties": {
+    "page": {
+      "type": "integer"
+    },
+    "limit": {
+      "type": "integer"
+    },
+    "total": {
+      "type": "integer"
+    },
+    "totalPages": {
+      "type": "integer"
+    },
+    "sort": {
+      "type": "string"
+    }
+  }
+}

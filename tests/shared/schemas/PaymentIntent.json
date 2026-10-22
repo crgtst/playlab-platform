@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PaymentIntent",
+  "type": "object",
+  "required": [
+    "id",
+    "amountCents",
+    "currency",
+    "status",
+    "cardLast4",
+    "used",
+    "createdAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "amountCents": {
+      "type": "integer"
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "EUR"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "requires_payment",
+        "processing",
+        "succeeded",
+        "declined",
+        "timed_out"
+      ]
+    },
+    "cardLast4": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "used": {
+      "type": "boolean"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

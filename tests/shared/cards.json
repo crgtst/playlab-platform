@@ -1,0 +1,10 @@
+{
+  "defaults": { "expiry": "12/30", "cvc": "123", "nameOnCard": "Casey Customer" },
+  "success": { "number": "4242 4242 4242 4242", "result": "Payment succeeds: the order is created (201)" },
+  "decline": { "number": "4000 0000 0000 0002", "result": "402 PAYMENT_DECLINED \"Your card was declined\"; no order, cart kept" },
+  "timeout": {
+    "number": "4000 0000 0000 0119",
+    "result": "Waits PAYMENT_TIMEOUT_MS (default 5 s), then 504; no order"
+  },
+  "invalid": { "number": "4242 4242 4242 4241", "result": "422 \"Enter a valid card number\": fails the Luhn check" }
+}
