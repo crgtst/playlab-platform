@@ -17,6 +17,7 @@ As a customer, I want to log in and out securely, so that my account and orders 
 | PLS-1.5 | Given an access token older than 15 minutes, when it is used on the API, then the API returns 401 |  | `token-never-expires` |
 | PLS-1.6 | Given a valid refresh token, when `/auth/refresh` is called, then a new access token is returned |  |  |
 | PLS-1.7 | Given the session expires mid-checkout, when the user logs in again, then they return to the same checkout step with the cart intact |  |  |
+| PLS-1.8 | Given a session whose access token has expired and whose refresh token no longer works, when the user adds an item to the cart, then it is added to a guest cart, no error is shown, and the expired session cookies are cleared |  |  |
 
 ## PLS-2 Registration and password reset
 

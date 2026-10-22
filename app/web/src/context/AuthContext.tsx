@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api, ApiRequestError, AUTH_EXPIRED_EVENT } from '../api/client';
+import { api, ApiRequestError, AUTH_EXPIRED_EVENT, authChanged, currentAuthEpoch } from '../api/client';
 import type { User } from '../api/types';
 import { clearCheckoutState } from '../lib/checkoutState';
 
@@ -18,12 +18,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
+    // A login or logout while this check is in flight is newer than its answer (a quick login on a page that is still
+    // loading would otherwise be undone), so the answer is then dropped.
+    const epoch = currentAuthEpoch();
     try {
       const res = await api<{ user: User }>('/auth/me');
-      setUser(res.user);
+      if (currentAuthEpoch() === epoch) setUser(res.user);
       return res.user;
     } catch (err) {
-      if (err instanceof ApiRequestError && err.status === 401) setUser(null);
+      if (err instanceof ApiRequestError && err.status === 401 && currentAuthEpoch() === epoch) setUser(null);
       return null;
     } finally {
       setLoading(false);
@@ -47,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await api<{ user: User }>('/auth/login', { method: 'POST', body: { email, password } });
+    authChanged();
     setUser(res.user);
     return res.user;
   }, []);
@@ -56,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await api('/auth/logout', { method: 'POST' });
     } finally {
       clearCheckoutState();
+      authChanged();
       setUser(null);
     }
   }, []);
