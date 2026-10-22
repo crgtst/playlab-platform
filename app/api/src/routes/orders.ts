@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound } from '../lib/errors';
+import { ordersCreated } from '../lib/metrics';
+import { checkIfMatch } from '../lib/preconditions';
 import { cardSchema } from '../lib/cardSchema';
 import { chargeCard } from '../lib/payments';
 import { lineTotal } from '../lib/pricing';
@@ -59,6 +61,58 @@ export const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'deli
 const statusSchema = z.enum(ORDER_STATUSES, {
   errorMap: () => ({ message: `Status must be one of: ${ORDER_STATUSES.join(', ')}` }),
 });
+type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+/** Allowed status changes (PLS-20). Setting an order to the status it already has is a no-op, not a change. */
+export const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ['paid', 'cancelled'],
+  paid: ['processing', 'cancelled'],
+  processing: ['shipped', 'cancelled'],
+  shipped: ['delivered'],
+  delivered: [],
+  cancelled: [],
+};
+/** Customers may cancel their own order only before it is being packed. */
+const CUSTOMER_CANCELLABLE: OrderStatus[] = ['pending', 'paid'];
+
+interface StatusRow {
+  id: number;
+  number: string;
+  user_id: number;
+  status: OrderStatus;
+}
+
+function canMove(from: OrderStatus, to: OrderStatus): boolean {
+  // status-any-transition: the transition rules are not checked.
+  return from === to || TRANSITIONS[from].includes(to) || isBugOn('status-any-transition');
+}
+
+function invalidTransition(o: StatusRow, to: OrderStatus, allowed = TRANSITIONS[o.status]) {
+  return new ApiError(409, 'INVALID_TRANSITION', `Order ${o.number} is ${o.status}, so it can't be changed to ${to}`, {
+    from: o.status,
+    to,
+    allowed,
+  });
+}
+
+/**
+ * Moves orders to a status inside the caller's transaction. Cancelling puts each item's quantity back in stock
+ * (PLS-20.5); the returned product ids need emitStock once the transaction commits.
+ */
+async function applyStatus(client: PoolClient, orders: StatusRow[], to: OrderStatus): Promise<number[]> {
+  const moving = orders.filter((o) => o.status !== to).map((o) => o.id);
+  if (!moving.length) return [];
+  await client.query('UPDATE orders SET status = $1, version = version + 1 WHERE id = ANY($2)', [to, moving]);
+  if (to !== 'cancelled') return [];
+  const restocked = await client.query(
+    `UPDATE products p SET stock = p.stock + s.qty
+       FROM (SELECT product_id, SUM(quantity)::int AS qty FROM order_items WHERE order_id = ANY($1) GROUP BY product_id) s
+      WHERE p.id = s.product_id
+      RETURNING p.id`,
+    [moving],
+  );
+  return restocked.rows.map((r: { id: number }) => r.id);
+}
 
 const ORDER_SORTS = {
   newest: 'o.created_at DESC, o.id DESC',
@@ -130,10 +184,16 @@ export async function loadOrder(id: number, db: PoolClient | typeof pool = pool)
   return orderView(o, items.rows);
 }
 
+/** Changes with every status change, so it works for If-Match (PLS-21.5, 21.6). */
+export function orderEtag(o: { id: number; version: number }): string {
+  return `"order-${o.id}-v${o.version}"`;
+}
+
 function orderView(o: any, items: any[]) {
   return {
     id: o.id,
     number: o.number,
+    etag: orderEtag(o),
     userId: o.user_id,
     customer: { id: o.user_id, email: o.customer_email, name: o.customer_name },
     status: o.status,
@@ -317,6 +377,7 @@ ordersRouter.post(
       }
       throw err;
     }
+    ordersCreated.inc();
     await emitStock(order!.items.map((i) => i.productId));
     res.status(201).location(`/api/v1/orders/${order!.id}`).json({ data: order });
   }),
@@ -430,10 +491,21 @@ ordersRouter.post(
           ids.filter((i) => !found.has(i)).map((i) => ({ field: 'ids', message: `Order ${i} not found` })),
         );
       }
-      await client.query('UPDATE orders SET status = $1 WHERE id = ANY($2)', [body.status, ids]);
-      return rows.rows;
+      // All or nothing: one order that can't make the change stops the whole batch (PLS-20.4).
+      const refused = (rows.rows as StatusRow[]).filter((o) => !canMove(o.status, body.status));
+      if (refused.length) {
+        throw new ApiError(
+          409,
+          'INVALID_TRANSITION',
+          `${refused.length} of the selected orders can't be changed to ${body.status}; none were changed`,
+          { to: body.status, orders: refused.map((o) => ({ id: o.id, number: o.number, from: o.status, allowed: TRANSITIONS[o.status] })) },
+        );
+      }
+      const restocked = await applyStatus(client, rows.rows, body.status);
+      return { orders: rows.rows as StatusRow[], restocked };
     });
-    for (const o of changed) emitStatusChange(o, body.status, req.user!.id);
+    await emitStock(changed.restocked);
+    for (const o of changed.orders) emitStatusChange(o, body.status, req.user!.id);
     const data = [];
     for (const id of ids) data.push(await loadOrder(id));
     res.json({ data, meta: { updated: data.length } });
@@ -471,7 +543,9 @@ async function visibleOrder(req: Request<{ id: string }>) {
 ordersRouter.get(
   '/:id',
   asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    res.json({ data: await visibleOrder(req) });
+    const order = await visibleOrder(req);
+    res.setHeader('ETag', order.etag);
+    res.json({ data: order });
   }),
 );
 
@@ -482,12 +556,38 @@ ordersRouter.patch(
     const id = orderIdParam(req.params.id);
     const { status } = parse(z.object({ status: statusSchema }), req.body);
     const before = await withTransaction(async (client) => {
-      const rows = await client.query('SELECT id, number, user_id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
-      if (!rows.rows[0]) throw notFound('Order not found');
-      await client.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
-      return rows.rows[0];
+      const rows = await client.query('SELECT id, number, user_id, status, version FROM orders WHERE id = $1 FOR UPDATE', [id]);
+      const order = rows.rows[0] as (StatusRow & { version: number }) | undefined;
+      if (!order) throw notFound('Order not found');
+      checkIfMatch(req, orderEtag(order), 'order');
+      if (!canMove(order.status, status)) throw invalidTransition(order, status);
+      return { order, restocked: await applyStatus(client, [order], status) };
     });
-    emitStatusChange(before, status, req.user!.id);
+    await emitStock(before.restocked);
+    emitStatusChange(before.order, status, req.user!.id);
+    const updated = (await loadOrder(id))!;
+    res.setHeader('ETag', updated.etag);
+    res.json({ data: updated });
+  }),
+);
+
+/** A customer cancels their own order while it is pending or paid (PLS-20.6); its items go back in stock. */
+ordersRouter.post(
+  '/:id/cancel',
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const id = orderIdParam(req.params.id);
+    const user = req.user!;
+    const result = await withTransaction(async (client) => {
+      const rows = await client.query('SELECT id, number, user_id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
+      const order = rows.rows[0] as StatusRow | undefined;
+      // Another customer's order is a 404, as for reads (PLS-24.1), unless order-leak is on.
+      if (!order || (order.user_id !== user.id && !isBugOn('order-leak'))) throw notFound('Order not found');
+      // A customer has no other moves, so nothing is allowed once the order is being packed.
+      if (!CUSTOMER_CANCELLABLE.includes(order.status)) throw invalidTransition(order, 'cancelled', []);
+      return { order, restocked: await applyStatus(client, [order], 'cancelled') };
+    });
+    await emitStock(result.restocked);
+    emitStatusChange(result.order, 'cancelled', user.id);
     res.json({ data: await loadOrder(id) });
   }),
 );

@@ -2,6 +2,8 @@ import { ErrorRequestHandler, RequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { isBugOn } from '../lib/bugs';
 import { ApiError } from '../lib/errors';
+import { logger } from '../lib/logger';
+import { CORRELATION_HEADER } from '../lib/requestContext';
 
 export function sendError(res: Parameters<RequestHandler>[1], err: ApiError) {
   // wrong-status-code: validation failures surface as a 500.
@@ -9,7 +11,9 @@ export function sendError(res: Parameters<RequestHandler>[1], err: ApiError) {
     err = new ApiError(500, 'INTERNAL_ERROR', 'Something went wrong');
   }
   for (const [k, v] of Object.entries(err.headers)) res.setHeader(k, v);
-  res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details ?? null } });
+  res.locals.error = { code: err.code, message: err.message };
+  const correlationId = res.getHeader(CORRELATION_HEADER) ?? null;
+  res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details ?? null, correlationId } });
 }
 
 export const notFoundHandler: RequestHandler = (req, res) => {
@@ -28,7 +32,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err?.type === 'entity.too.large') {
     return sendError(res, new ApiError(413, 'PAYLOAD_TOO_LARGE', 'Request body is too large'));
   }
-  console.error(err);
+  logger.error({ correlationId: res.getHeader(CORRELATION_HEADER), err }, 'Unhandled error');
   sendError(res, new ApiError(500, 'INTERNAL_ERROR', 'Something went wrong'));
 };
 

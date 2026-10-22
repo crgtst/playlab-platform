@@ -93,6 +93,8 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export interface Order {
   id: number;
   number: string;
+  /** Send as If-Match when changing the status (PLS-21.5). */
+  etag: string;
   userId: number;
   customer: { id: number; email: string; name: string };
   status: OrderStatus;

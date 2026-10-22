@@ -17,7 +17,7 @@ import { isBugOn } from '../lib/bugs';
 export const authRouter = Router();
 authRouter.use(noStore);
 
-interface UserRow {
+export interface UserRow {
   id: number;
   email: string;
   name: string;
@@ -30,7 +30,7 @@ interface UserRow {
   avatar_updated_at?: Date | null;
 }
 
-const SELECT_USER = 'SELECT u.*, a.updated_at AS avatar_updated_at FROM users u LEFT JOIN avatars a ON a.user_id = u.id';
+export const SELECT_USER = 'SELECT u.*, a.updated_at AS avatar_updated_at FROM users u LEFT JOIN avatars a ON a.user_id = u.id';
 
 export function publicUser(u: UserRow) {
   return {
@@ -44,7 +44,7 @@ export function publicUser(u: UserRow) {
   };
 }
 
-const email = z.string({ required_error: 'Email is required' }).trim().toLowerCase().email('Enter a valid email address').max(254);
+export const email = z.string({ required_error: 'Email is required' }).trim().toLowerCase().email('Enter a valid email address').max(254);
 const password = z
   .string({ required_error: 'Password is required' })
   .min(8, 'Password must be at least 8 characters')
@@ -55,6 +55,8 @@ const name = z
   .min(1, 'Name is required')
   .max(500, 'Name must be at most 500 characters');
 
+/** The name rule without any defect, for profile changes (fada-rejected affects registration only, PLS-2.3). */
+export const nameField = name;
 // fada-rejected: an "ASCII letters only" rule that wrongly rejects names like Seán or Aoife Ní Bhriain.
 const registerSchema = () =>
   z.object({
@@ -89,7 +91,7 @@ async function issueSession(res: Response, user: UserRow, db: { query: typeof po
   return { accessToken, refreshToken, expiresIn: config.accessTokenTtlSec, tokenType: 'Bearer' as const };
 }
 
-function clearSessionCookies(res: Response) {
+export function clearSessionCookies(res: Response) {
   res.clearCookie(SESSION_COOKIE, { path: '/' });
   res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
   res.clearCookie(CART_COOKIE, { path: '/' });

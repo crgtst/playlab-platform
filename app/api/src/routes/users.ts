@@ -1,12 +1,16 @@
+import bcrypt from 'bcryptjs';
 import { Request, Response, Router, NextFunction } from 'express';
 import multer from 'multer';
-import { query } from '../db/pool';
+import { z } from 'zod';
+import { query, withTransaction } from '../db/pool';
 import { isBugOn } from '../lib/bugs';
 import { clock } from '../lib/clock';
-import { ApiError, notFound } from '../lib/errors';
+import { ApiError, conflict, notFound, validationError } from '../lib/errors';
+import { randomToken } from '../lib/tokens';
 import { requireAuth } from '../middleware/auth';
 import { noStore } from '../middleware/noStore';
-import { asyncHandler } from '../middleware/validate';
+import { asyncHandler, parse } from '../middleware/validate';
+import { clearSessionCookies, email, nameField, publicUser, SELECT_USER, UserRow } from './auth';
 
 export const usersRouter = Router();
 
@@ -92,5 +96,86 @@ usersRouter.get(
     res.setHeader('Cache-Control', 'no-cache');
     if (req.headers['if-none-match'] === etag) return res.status(304).end();
     res.type(rows[0].content_type).send(rows[0].data);
+  }),
+);
+
+// ---------- account management (PLS-22) ----------
+
+// Built per request: auth.ts imports this module, so its exports aren't ready while this one first loads.
+const profileSchema = () =>
+  z
+    .object({ name: nameField.optional(), email: email.optional(), currentPassword: z.string().optional() })
+    .refine((b) => b.name !== undefined || b.email !== undefined, { message: 'Send a new name or email', path: ['name'] });
+
+async function loadUser(id: number): Promise<UserRow> {
+  const rows = await query<UserRow>(`${SELECT_USER} WHERE u.id = $1`, [id]);
+  return rows[0];
+}
+
+usersRouter.get(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    res.json({ data: publicUser(await loadUser(req.user!.id)) });
+  }),
+);
+
+/** Change your name, or your email with your current password (PLS-22.1 to 22.3, 22.6). Other fields are ignored. */
+usersRouter.patch(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    const body = parse(profileSchema(), req.body);
+    const id = req.user!.id;
+    await withTransaction(async (client) => {
+      const current = (await client.query<UserRow>('SELECT * FROM users WHERE id = $1 FOR UPDATE', [id])).rows[0];
+      const newEmail = body.email !== undefined && body.email !== current.email ? body.email : undefined;
+      if (newEmail) {
+        if (!body.currentPassword) {
+          throw validationError([{ field: 'currentPassword', message: 'Enter your current password to change your email' }]);
+        }
+        if (!(await bcrypt.compare(body.currentPassword, current.password_hash))) {
+          throw validationError([{ field: 'currentPassword', message: 'Current password is incorrect' }]);
+        }
+        const taken = await client.query('SELECT 1 FROM users WHERE email = $1 AND id <> $2', [newEmail, id]);
+        if (taken.rowCount) throw conflict('EMAIL_IN_USE', 'An account with this email already exists');
+      }
+      await client.query('UPDATE users SET name = COALESCE($1, name), email = COALESCE($2, email) WHERE id = $3', [
+        body.name ?? null,
+        newEmail ?? null,
+        id,
+      ]);
+    });
+    res.json({ data: publicUser(await loadUser(id)) });
+  }),
+);
+
+/**
+ * Deletes your account (PLS-22.4, 22.5): the user is anonymised rather than removed, so orders stay for the shop's
+ * records; personal data (avatar, cart, wishlist, email links, mailbox) is removed; every refresh token is revoked; and
+ * bumping token_version makes every access token already issued return 401.
+ */
+usersRouter.delete(
+  '/me',
+  requireAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    const id = req.user!.id;
+    const unusable = await bcrypt.hash(randomToken(), 4);
+    await withTransaction(async (client) => {
+      const { rows } = await client.query<{ email: string }>('SELECT email FROM users WHERE id = $1 FOR UPDATE', [id]);
+      await client.query(
+        `UPDATE users SET name = 'Deleted user', email = $1, password_hash = $2, email_verified = FALSE, failed_logins = 0,
+                locked_until = NULL, deleted_at = $3, token_version = token_version + 1
+          WHERE id = $4`,
+        [`deleted-${id}@playlab.invalid`, unusable, clock.now(), id],
+      );
+      await client.query('UPDATE refresh_tokens SET revoked_at = $1 WHERE user_id = $2 AND revoked_at IS NULL', [clock.now(), id]);
+      for (const table of ['avatars', 'wishlist_items', 'carts', 'email_tokens']) {
+        await client.query(`DELETE FROM ${table} WHERE user_id = $1`, [id]);
+      }
+      await client.query('DELETE FROM mailbox WHERE to_email = $1', [rows[0].email]);
+    });
+    clearSessionCookies(res);
+    res.status(204).end();
   }),
 );

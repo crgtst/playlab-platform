@@ -24,7 +24,9 @@ describe('HTTP basics', () => {
   it('returns the JSON error envelope for an unknown route', async () => {
     const res = await request(app).get('/api/v1/nope');
     expect(res.status).toBe(404);
-    expect(res.body).toEqual({ error: { code: 'NOT_FOUND', message: 'No route for GET /api/v1/nope', details: null } });
+    expect(res.body).toEqual({
+      error: { code: 'NOT_FOUND', message: 'No route for GET /api/v1/nope', details: null, correlationId: res.headers['x-correlation-id'] },
+    });
   });
 
   it('rejects malformed JSON with 400', async () => {

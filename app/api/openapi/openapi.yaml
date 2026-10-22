@@ -6,11 +6,19 @@ info:
     REST API for PlayLab Shop, a practice e-commerce site built to be tested with Playwright.
 
     * All money values are integer cents in EUR.
-    * Every error uses the same shape: `{ "error": { "code", "message", "details" } }`.
+    * Every error uses the same shape: `{ "error": { "code", "message", "details", "correlationId" } }`.
+    * Every response has an `X-Correlation-Id` header. Send your own (1 to 64 of `A-Z a-z 0-9 - _`) to have it echoed;
+      otherwise, or if it is invalid, the API generates a UUID. Errors repeat it as `error.correlationId`.
+      With test hooks on, `GET /test/logs?correlationId=` returns that request's redacted log line.
     * Authenticate with `Authorization: Bearer <accessToken>` or the `session` cookie set by `/auth/login`.
     * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
+    * Deleting an account (`DELETE /users/me`) ends all its sessions: its access tokens then return 401 `TOKEN_REVOKED`.
     * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
+      A guest's IP comes from `X-Forwarded-For` only when the web proxy sends it.
     * Test hooks under `/test/*` exist only when the API runs with `TEST_HOOKS=true`.
+    * Test sessions: `POST /test/sessions` returns an id. Requests that send it as `X-Test-Session` (or the
+      `test_session` cookie) get that session's own defects, clock, latency and chaos rules and rate-limit counters;
+      hook calls with it change only that session. Requests with no session use the global state.
     * Live order status: WebSocket at `ws://<host>/ws/orders` (not describable in OpenAPI).
       Authenticate with the `session` cookie or `?token=<accessToken>`; without either the upgrade gets 401.
       Messages: `{"type":"hello","userId","role"}` on connect, then
@@ -289,7 +297,10 @@ paths:
     put:
       tags: [Products]
       summary: Replace a product (admin)
+      description: Needs `If-Match` with the `ETag` from `GET /products/{id}` (PLS-21). Any change, stock included, gives a new ETag.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -298,6 +309,8 @@ paths:
       responses:
         '200':
           description: Updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ProductEnvelope' }
@@ -305,11 +318,16 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
     patch:
       tags: [Products]
       summary: Update some fields of a product (admin)
+      description: Needs `If-Match` with the `ETag` from `GET /products/{id}` (PLS-21). Any change, stock included, gives a new ETag.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -318,6 +336,8 @@ paths:
       responses:
         '200':
           description: Updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ProductEnvelope' }
@@ -325,7 +345,9 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
     delete:
       tags: [Products]
       summary: Delete a product (admin)
@@ -698,7 +720,9 @@ paths:
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       responses:
         '200':
-          description: The order
+          description: The order. Its `ETag` (also `data.etag`) changes with every status change.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/OrderEnvelope' }
@@ -778,6 +802,10 @@ paths:
     post:
       tags: [Admin]
       summary: Change the status of several orders at once (admin)
+      description: |
+        All or nothing: if any selected order can't make the change, none change and the 409 lists every one that can't
+        (`details: { to, orders: [{ id, number, from, allowed }] }`). Allowed changes: `pending → paid → processing → shipped → delivered`, and cancellation from `pending`, `paid` or
+        `processing`, which puts the items back in stock. Setting the status an order already has is a no-op.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       requestBody:
         required: true
@@ -811,6 +839,7 @@ paths:
                       updated: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/InvalidTransition' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /orders/{id}/status:
     parameters:
@@ -818,8 +847,13 @@ paths:
     patch:
       tags: [Admin]
       summary: Change an order's status (admin)
-      description: Emits an `orderStatusChanged` event (delivered over WebSocket from Phase 3).
+      description: |
+        Emits an `orderStatusChanged` event (delivered over WebSocket). Allowed changes: `pending → paid → processing → shipped → delivered`, and cancellation from `pending`, `paid` or
+        `processing`, which puts the items back in stock. Setting the status an order already has is a no-op.
+        Anything else returns 409 `INVALID_TRANSITION` with `details: { from, to, allowed }`.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -832,13 +866,37 @@ paths:
       responses:
         '200':
           description: Updated order
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/OrderEnvelope' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/InvalidTransition' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
+  /orders/{id}/cancel:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Cancel your own order
+      description: |
+        Allowed while the order is `pending` or `paid`; the items go back in stock and an `orderStatusChanged` event is
+        sent. Once it is `processing` or later this returns 409 `INVALID_TRANSITION`. Another customer's order is a 404.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Cancelled order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/InvalidTransition' }
   /orders/{id}/tracking:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
@@ -907,6 +965,125 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List users (admin and support)
+      description: Ordered by id. `q` matches the name or email. Customers get 403.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: role, in: query, schema: { type: string, enum: [customer, admin, support] } }
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: One page of users
+          headers:
+            X-Total-Count: { schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminUser' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    patch:
+      tags: [Admin]
+      summary: Change a user's role or unlock their account (admin)
+      description: |
+        A new role applies from the user's next login; access tokens already issued keep the old role until they
+        expire. `unlock: true` clears the failed-login count and the lock. Support users get 403.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [customer, admin, support] }
+                unlock: { type: boolean, enum: [true] }
+      responses:
+        '200':
+          description: The user after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/AdminUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Your profile
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Your account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Users]
+      summary: Change your name or email
+      description: |
+        Changing the email needs `currentPassword` (422 on `currentPassword` if it is missing or wrong) and returns 409
+        `EMAIL_IN_USE` if another account has it. Any other field, such as `role`, is ignored.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 500 }
+                email: { type: string, format: email, maxLength: 254 }
+                currentPassword: { type: string, description: Needed to change the email }
+      responses:
+        '200':
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Users]
+      summary: Delete your account
+      description: |
+        The account is anonymised ("Deleted user", `deleted-<id>@playlab.invalid`) so its orders stay for the shop's
+        records; the avatar, cart, wishlist and emails are removed. Every refresh token is revoked and every access
+        token already issued returns 401 `TOKEN_REVOKED`, on every device. Clears the session cookies.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /users/me/avatar:
     post:
       tags: [Users]
@@ -1135,6 +1312,22 @@ paths:
               schema: { $ref: '#/components/schemas/Error' }
 
   # ---- Test hooks: served from the server root (/test/*), not /api/v1 ----
+  /metrics:
+    get:
+      tags: [Health]
+      summary: 'GET /metrics - Prometheus metrics'
+      description: |
+        Prometheus text format. Not under `/api/v1`, so never rate limited, and never affected by latency or chaos
+        rules. Includes `http_request_duration_seconds` (by `method`, matched `route` and `status`; `route="unmatched"`
+        when no route matched), `playlab_orders_created_total`, `playlab_payments_declined_total`,
+        `playlab_defects_active`, `playlab_db_pool_connections{state}` and the standard Node.js process metrics.
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Metrics
+          content:
+            text/plain:
+              schema: { type: string }
   /test:
     get:
       tags: [Test hooks]
@@ -1163,6 +1356,32 @@ paths:
                 properties:
                   status: { type: string, enum: [reset] }
                   durationMs: { type: integer }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /test/sessions:
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/sessions - start an isolated test session'
+      description: |
+        Send the id as `X-Test-Session` (or rely on the `test_session` cookie this sets). That request then uses the
+        session's own defects, clock offset, latency and chaos rules and rate-limit counters, and hook calls change
+        only the session. Database rows stay shared. A session unused for `idleTimeoutMs` (1 hour by default) is
+        forgotten: hook calls naming it return 404 `TEST_SESSION_NOT_FOUND`, and other requests use the global state.
+        `POST /test/reset` ends every session. The payment frame gets the session from its URL (`testSession`).
+      servers: [{ url: / }]
+      responses:
+        '201':
+          description: Session started
+          headers:
+            Set-Cookie:
+              schema: { type: string, example: 'test_session=3f2b8c1e-6a0d-4c4e-9a52-1b7e2f0c9d11; Path=/; HttpOnly; SameSite=Lax' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, idleTimeoutMs]
+                properties:
+                  id: { type: string, format: uuid }
+                  idleTimeoutMs: { type: integer }
         '404': { $ref: '#/components/responses/NotFound' }
   /test/seed:
     post:
@@ -1434,6 +1653,37 @@ paths:
         '204':
           description: All off
 
+  /test/logs:
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test/logs - the redacted log lines for one request'
+      description: |
+        One JSON line per request: time, correlationId, method, route, path, status, durationMs, userId,
+        testSession, the active defects, the request (query, headers, body) and, for failures, the error code
+        and message. Passwords, tokens, the `Authorization` header, cookies and card details are redacted.
+        Keeps the most recent 5,000 lines; `POST /test/reset` clears them. The container healthcheck
+        (`GET /api/v1/health/live`) is not logged.
+      servers: [{ url: / }]
+      parameters:
+        - name: correlationId
+          in: query
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+      responses:
+        '200':
+          description: Log lines for that correlation ID (empty if none)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1446,6 +1696,12 @@ components:
       name: session
 
   parameters:
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: The `ETag` from the last `GET`. A stale one is 412; leaving it out is 428. `*` matches any version.
+      schema: { type: string, example: '"order-12-v3"' }
     OrderStatusFilter:
       name: status
       in: query
@@ -1460,7 +1716,22 @@ components:
       in: query
       schema: { type: string, enum: [newest, oldest, total_desc, total_asc], default: newest }
 
+  headers:
+    ETag:
+      description: Version of the resource, for `If-Match` (and `If-None-Match` on product reads)
+      schema: { type: string }
+
   responses:
+    PreconditionFailed:
+      description: '`If-Match` is stale: someone else changed it first (`PRECONDITION_FAILED`)'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PreconditionRequired:
+      description: '`If-Match` is missing (`PRECONDITION_REQUIRED`)'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     BadRequest:
       description: Bad request
       content:
@@ -1486,6 +1757,11 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+    InvalidTransition:
+      description: The order can't move to that status (`INVALID_TRANSITION`)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     ValidationError:
       description: Validation failed
       content:
@@ -1508,11 +1784,15 @@ components:
       properties:
         error:
           type: object
-          required: [code, message, details]
+          required: [code, message, details, correlationId]
           additionalProperties: false
           properties:
             code: { type: string, example: VALIDATION_ERROR }
             message: { type: string }
+            correlationId:
+              type: string
+              description: The request's `X-Correlation-Id`, for finding its log line.
+              example: 3f2b8c1e-6a0d-4c4e-9a52-1b7e2f0c9d11
             details:
               nullable: true
               description: For validation errors, an array of `{ field, message }`.
@@ -1547,6 +1827,17 @@ components:
     Role:
       type: string
       enum: [customer, admin, support]
+    AdminUser:
+      description: A user as admins and support see them
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          required: [failedLogins, locked, lockedUntil, deletedAt]
+          properties:
+            failedLogins: { type: integer }
+            locked: { type: boolean }
+            lockedUntil: { type: string, format: date-time, nullable: true }
+            deletedAt: { type: string, format: date-time, nullable: true }
     User:
       type: object
       required: [id, email, name, role, emailVerified, avatarUrl, createdAt]
@@ -1770,10 +2061,14 @@ components:
             nameOnCard: { type: string }
     Order:
       type: object
-      required: [id, number, userId, customer, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
+      required: [id, number, etag, userId, customer, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
       properties:
         id: { type: integer }
         number: { type: string, example: PL-000001 }
+        etag:
+          type: string
+          description: The order's ETag, as on `GET /orders/{id}`. Send it as `If-Match` to change the status.
+          example: '"order-12-v3"'
         userId: { type: integer }
         customer:
           type: object

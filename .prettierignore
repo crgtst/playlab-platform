@@ -6,6 +6,8 @@ app/web/playwright/.cache
 app/web/playwright-ct-report
 app/web/test-results
 app/web/__snapshots__
+app/e2e/test-results
+app/e2e/playwright-report
 
 # Prose: Markdown is hand-wrapped and its tables are hand-aligned
 *.md

@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { sessionScoped } from './testSessions';
 
 /**
  * Bug mode: named defects that tests can switch on with POST /test/bugs to prove the suite catches them.
@@ -34,6 +35,21 @@ export const BUGS = {
   'button-moves': { ac: 'PLS-6.8', side: 'payment frame', description: 'The Pay button shifts position after 500 ms' },
   'missing-label': { ac: 'PLS-2.6, PLS-11.1', side: 'web', description: 'The email field loses its accessible label' },
   'stale-stock': { ac: 'PLS-8.6', side: 'api', description: 'The SSE stock counter stops updating' },
+  'rate-limit-bypass': {
+    ac: 'PLS-24.6',
+    side: 'api',
+    description: 'X-Forwarded-For is trusted from anyone, so a client can rotate it to dodge the rate limit',
+  },
+  'lost-update': {
+    ac: 'PLS-21.2, PLS-21.3, PLS-21.5, PLS-21.7',
+    side: 'api',
+    description: 'If-Match is ignored, so a stale edit silently overwrites a newer one',
+  },
+  'status-any-transition': {
+    ac: 'PLS-20.2, PLS-20.3, PLS-20.4',
+    side: 'api',
+    description: 'An admin can move an order to any status, such as delivered back to pending',
+  },
   'wrong-status-code': { ac: 'PLS-2.4, PLS-10.2', side: 'api', description: 'A validation error returns 500 instead of 422' },
   // Phase 4: browser APIs
   'geolocation-ignored': {
@@ -64,16 +80,17 @@ export const BUGS = {
 export type BugName = keyof typeof BUGS;
 export const BUG_NAMES = Object.keys(BUGS) as BugName[];
 
-const enabled = new Set<BugName>();
+// Each test session switches its own defects on and off; requests with no session use the global set.
+const enabled = sessionScoped(() => new Set<BugName>());
 
 export function isBugOn(name: BugName): boolean {
-  return config.testHooks && enabled.has(name);
+  return config.testHooks && enabled().has(name);
 }
 
 export const bugs = {
-  enable: (names: BugName[]) => names.forEach((n) => enabled.add(n)),
-  disable: (names: BugName[]) => names.forEach((n) => enabled.delete(n)),
-  clear: () => enabled.clear(),
-  active: (): BugName[] => (config.testHooks ? BUG_NAMES.filter((n) => enabled.has(n)) : []),
-  list: () => BUG_NAMES.map((name) => ({ name, enabled: enabled.has(name), ...BUGS[name] })),
+  enable: (names: BugName[]) => names.forEach((n) => enabled().add(n)),
+  disable: (names: BugName[]) => names.forEach((n) => enabled().delete(n)),
+  clear: () => enabled().clear(),
+  active: (): BugName[] => (config.testHooks ? BUG_NAMES.filter((n) => enabled().has(n)) : []),
+  list: () => BUG_NAMES.map((name) => ({ name, enabled: enabled().has(name), ...BUGS[name] })),
 };

@@ -2,12 +2,19 @@ import rateLimit, { MemoryStore } from 'express-rate-limit';
 import { config } from '../config';
 import { ApiError } from '../lib/errors';
 import { sendError } from './errorHandler';
+import { testSessions } from '../lib/testSessions';
 import { verifyAccessToken } from '../lib/tokens';
 import { SESSION_COOKIE } from './auth';
 
 const store = new MemoryStore();
 
+/** Per user (or IP for guests), and per test session so sessions never use up each other's limit (PLS-28.7). */
 function userKey(req: import('express').Request): string {
+  const session = testSessions.currentId();
+  return session ? `session:${session}:${clientKey(req)}` : clientKey(req);
+}
+
+function clientKey(req: import('express').Request): string {
   const header = req.headers.authorization;
   const token = header?.startsWith('Bearer ') ? header.slice(7) : req.cookies?.[SESSION_COOKIE];
   if (token) {

@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response, Router } from 'express';
 import { query } from '../db/pool';
 import { isBugOn } from '../lib/bugs';
@@ -42,14 +43,16 @@ stockRouter.get(
       send('snapshot', { products: rows.map((r) => ({ productId: r.id, stock: r.stock })), at: new Date().toISOString() });
     };
 
-    const onChange = (e: StockChanged) => {
+    // Events arrive in the context of whichever request changed the stock, so the listeners are bound to this
+    // stream's own context: stale-stock then follows the watcher's test session.
+    const onChange = AsyncLocalStorage.bind((e: StockChanged) => {
       // stale-stock: the stream stays open but stops reporting changes.
       if (isBugOn('stale-stock')) return;
       if (!watched || watched.has(e.productId)) send('stock', { ...e, at: new Date().toISOString() });
-    };
-    const onReset = () => {
+    });
+    const onReset = AsyncLocalStorage.bind(() => {
       if (!isBugOn('stale-stock')) snapshot().catch(() => undefined);
-    };
+    });
 
     events.onEvent('stockChanged', onChange);
     events.onEvent('stockReset', onReset);

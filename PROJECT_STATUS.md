@@ -5,14 +5,118 @@ Last updated: 2026-10-21
 
 ## Current phase
 
-Phase 0: Foundations (branch `phase-0-foundations`)
+Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main` in PR #5 on 2026-10-22.
 
 ## Next task
 
-Phase 1, task 0 (Phase 0 close-out): merge PR #5 once CI is green, then branch `phase-1-platform-core`. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your functional suites). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: **Gate 1 passed** (Phase 1 task 10). Checked on a stack built from scratch from `.env.example` (ports 3002,
+  5174, 5433; empty database, so migrations 001 to 006 ran from zero), plus CI on `73d27ba`.
+  - Every Phase 1 AC (42, plus the 4 reworded ones) has at least one test named with its ID; all pass.
+  - Original ACs PLS-1 to 19: only the 4 planned edits changed (8.2, 8.3, 8.4, 10.1); none added or removed.
+  - API unit 31, integration 121 (fresh database), e2e smoke 11 and Gate 1 screenshots (14 pages) all pass.
+  - API probe against the Phase 0 baseline: all 46 status codes and content types identical. The 27 changed
+    bodies are all explained: `correlationId` in 21 error bodies, the `X-Correlation-Id` header, `etag` on orders,
+    the OpenAPI text, and the frame URL following `API_PORT`.
+  - All 36 defects switch on together, reach the web app's `/config`, and switch off. Platform tests exercise
+    9 of them; proving all 33 original defects are caught is Gate 2, for your suites.
+- 2026-10-22: Phase 1 task 9 (PLS-28.5, 24.6; fixes findings R3 and A7).
+  - Production guard: the API refuses to start with `TEST_HOOKS=true` and `NODE_ENV=production` unless
+    `PLAYLAB_ALLOW_UNSAFE=true` (then it warns). The image stays `production`; Compose now sets `NODE_ENV=development`
+    for the API, since it's a development stack. Checked on the container: refused (exit 1), hooks off starts,
+    override starts with the warning.
+  - Rate limit: `X-Forwarded-For` is believed only from `TRUSTED_PROXIES` (default the `WEB_URL` host, re-resolved every
+    5 s). From the host, rotating it after the limit now still gets 429; through the web proxy each browser keeps
+    its own limit. New defect `rate-limit-bypass` brings the bypass back: 36 built, 11 planned.
+  - Tests: 5 unit (31 in total) and 3 integration (121 in total); putting back the old trust rule fails PLS-24.6.
+    API probe unchanged; Gate 1 screenshots unchanged.
+- 2026-10-22: Phase 1 task 8, user administration (PLS-23.1 to 23.5, 24.8; completes finding A6).
+  - `GET /api/v1/admin/users` for admin and support: filters `role` and `q` (name or email), `page` and `limit`,
+    `X-Total-Count`; each user shows `failedLogins`, `locked`, `lockedUntil` and `deletedAt`, never the hash.
+  - `PATCH /api/v1/admin/users/{id}` for admin only: `role` and/or `unlock: true`. A new role applies from the next
+    login; tokens already issued keep the old one until they expire. Customers and support get 403; guests 401.
+  - API only, no admin page. 9 integration tests (118 in total). API probe unchanged; Gate 1 screenshots unchanged.
+- 2026-10-22: Phase 1 task 7, account management (PLS-22.1 to 22.6; fixes finding A6 for customers).
+  - `GET /users/me`; `PATCH /users/me` changes the name, or the email with `currentPassword` (422 when missing or
+    wrong, 409 `EMAIL_IN_USE`); other fields such as `role` are ignored.
+  - `DELETE /users/me` anonymises the user ("Deleted user", `deleted-<id>@playlab.invalid`) so orders stay, removes
+    avatar, cart, wishlist, email links and mailbox, revokes refresh tokens and bumps `token_version` (migration 006).
+  - Access tokens now carry `ver`; the auth middleware checks it against the user row (one lookup by id), so a
+    deleted account's tokens return 401 `TOKEN_REVOKED` on every device at once. Logout doesn't change the version,
+    so `logout-incomplete` (PLS-1.4) behaves as before.
+  - The profile name uses the plain name rule, so `fada-rejected` still affects registration only.
+  - API only: no account-page UI. 10 integration tests (109 in total), 1 e2e test for the header name (11 in total).
+    API probe unchanged; Gate 1 screenshots unchanged.
+- 2026-10-22: Phase 1 task 6, optimistic locking (PLS-21.1 to 21.7, PLS-8.4 edit; fixes finding A5).
+  - `PUT`/`PATCH /products/{id}` and `PATCH /orders/{id}/status` need `If-Match`: 428 when missing, 412 when stale,
+    `*` matches any version. The check and the write share a locked transaction, so two writes with the same ETag
+    can't both pass. Product ETags are the existing body hash; order ETags come from a new `version` column
+    (migration 005) bumped on every status change. `GET /orders/{id}` sends `ETag`; orders carry `etag`, in lists too.
+  - Web: the product modal now loads the product (and its ETag) when opened, and says "This product was changed by
+    someone else" on 412. The orders grid sends the row's ETag; on 412 it says so and reloads that order.
+  - New defect `lost-update` (PLS-21.2, 21.3, 21.5, 21.7): 35 built, 12 planned.
+  - This changes behaviour for API clients: product edits and order-status changes without `If-Match` now get 428,
+    as the plan says. Existing tests were updated to read the ETag first, as a real client must.
+  - Tests: 13 integration tests (including the PLS-21.4 race of 20 orders for 1 item, and with `stock-oversell` on),
+    99 in total, stable over 2 runs; 2 two-admin e2e tests (10 in total). Probe diff: only the new `etag` on orders.
+- 2026-10-22: Phase 1 task 5, order lifecycle (PLS-20.1 to 20.6, 24.1 for cancelling; fixes finding A2).
+  - One transition map for admin changes, bulk changes and customer cancellation: `pending → paid → processing →
+    shipped → delivered`, plus cancel from `pending`, `paid` or `processing`. Setting the current status is a
+    no-op, so saving the grid without a change still works. Anything else: 409 `INVALID_TRANSITION` with
+    `{ from, to, allowed }`; bulk is all or nothing and lists every refused order.
+  - Cancelling restocks each item (once) and publishes the stock change. New `POST /orders/{id}/cancel` for
+    customers while `pending` or `paid`; another customer's order is a 404 (`order-leak` lets it through).
+  - New defect `status-any-transition` (PLS-20.2 to 20.4): 34 built, 13 planned.
+  - PLS-8.2 and 8.3 reworded as planned. The grid already shows API errors in a toast, so the UI didn't change.
+  - Tests: 48 integration tests (every from/to pair, bulk, restock, customer cancel, defect on and off; 86 in total)
+    and 2 e2e tests for the grid's messages (8 in total). Gate 1 screenshots unchanged.
+- 2026-10-22: Phase 1 task 4, metrics (PLS-25.4, 25.5). `GET /metrics` (prom-client 15.1.3, own registry):
+  `http_request_duration_seconds` by method, matched route and status (`route="unmatched"` for 404s with no
+  route), `playlab_orders_created_total` (replays not counted), `playlab_payments_declined_total` (counted at the
+  provider, so card orders and the frame both count), `playlab_defects_active`, `playlab_db_pool_connections{state}`
+  and the Node.js process metrics. Outside `/api/v1`, so never rate limited; exempt from latency and chaos rules.
+  4 new integration tests (38 in total). On the stack, the counter showed the e2e smoke's 2 UI orders.
+  API probe unchanged.
+- 2026-10-22: Phase 1 task 3, test sessions (PLS-28.1, 28.2, 28.6 to 28.10; fixes finding A1).
+  - `POST /test/sessions`; the session comes from `X-Test-Session`, the `test_session` cookie or (payment frame
+    only) a `testSession` URL parameter. Defects, clock offset, latency and chaos rules are kept per session
+    through one `sessionScoped` store, so `isBugOn()`, `clock` and the fault rules kept their signatures.
+    Rate-limit keys include the session. No session means the global state, unchanged.
+  - Idle expiry (`TEST_SESSION_IDLE_MS`, 1 hour, real time); hook calls naming an unknown or expired session
+    get 404 `TEST_SESSION_NOT_FOUND`; reset ends every session; a session ended mid-stream falls back to global.
+  - The shop's intent adds the session to the frame URL, and the frame sends it on its own calls.
+  - The live stock stream and the request log are bound to their own request's context, since events arrive in
+    another request's context; removing that binding fails the stream test.
+  - Tests: 15 new integration tests (34 in total, stable over 3 runs) and an e2e test for the frame (6 in total).
+    API probe identical to task 2; Gate 1 screenshots unchanged.
+- 2026-10-22: Phase 1 task 2 (PLS-25.1 to 25.3, PLS-10.1 edit applied).
+  - Per-request context (AsyncLocalStorage), ready for test sessions. `X-Correlation-Id` is echoed when valid,
+    otherwise a UUID is generated; every error body carries `correlationId`.
+  - pino writes one JSON line per request (route pattern, status, duration, user, active defects, request, and
+    error code and message on failures) to stdout and to a 5,000-line buffer behind `GET /test/logs`. Passwords,
+    tokens, the `Authorization` header, cookies and card details are redacted. The container healthcheck isn't
+    logged. `LOG_LEVEL` controls stdout.
+  - Tests: 16 new integration tests. Removing `cardNumber` from the redaction list fails PLS-25.3. Container logs
+    after the e2e smoke (UI login, card payment) contain no password, card number or token.
+  - Probe diff against the Phase 0 baseline: only `correlationId` in error bodies, the new header and OpenAPI
+    text; status codes unchanged. Gate 1 screenshots and the e2e smoke still pass.
+- 2026-10-22: Phase 1 task 1 complete.
+  - Integration harness: Vitest projects `unit` (`npm test`) and `integration` (`npm run test:int`). Integration
+    tests create a fresh `playlab_test` database each run, migrated and seeded by the app's own code, so the
+    stack's data is never touched. First tests: PLS-29.5, 12.1, 12.4. New `api-integration` job in `quality`
+    uses a Postgres 16 service container.
+  - Gate 1 baselines: 14 screenshots in `app/e2e` (`npm run test:gate1`, macOS only, not in CI), with both clocks
+    pinned and the fixture's random emails replaced so they're stable; 3 runs in a row matched. API probe
+    committed as `tools/api-probe/probe.sh` with `baseline-phase0.txt` (46 probes, identical across runs).
+- 2026-10-22: Phase 1 task 1, smoke suite. `app/e2e/` (Playwright 1.64.1, Chromium, one worker, reset before each
+  test). It reads the ports from `app/.env` or the environment. Tests: PLS-6.1 checkout, PLS-12.5 frame and reset-link
+  ports, PLS-15.1 and 15.3 clipboard, PLS-17.2 offline checkout. New `smoke` workflow builds the stack from
+  `.env.example` on ports 3002 and 5174 and runs the suite; the `e2e` package is also typechecked in `quality`
+  and watched by Dependabot. Passes on the local stack (3001) and on a CI-style second stack.
+- 2026-10-22: Phase 1 task 0 done: PR #5 merged to `main` (`b5cb677`); branch `phase-1-platform-core` created.
 - 2026-10-22: Phase 1 task 0, close-out (PLS-12.5). `.env.example` no longer sets `PAYMENT_FRAME_URL`, `SHOP_ORIGINS`
   or `PUBLIC_WEB_URL`, and Compose derives all three from `API_PORT` and `WEB_PORT` (`PUBLIC_WEB_URL` used to
   stay on 5173). Unit test `test/env-example.test.ts` fails on the old files. Checked on a second stack built
@@ -108,8 +212,11 @@ Phase 1, task 0 (Phase 0 close-out): merge PR #5 once CI is green, then branch `
 - The plan's edits to existing ACs (PLS-8.2, 8.3, 8.4 and 10.1 in "Changes to existing stories") are not
   applied yet. They describe Phase 1 behaviour, so they land with it; applying them now would make built
   ACs fail.
-- Finding A7 confirmed on 2026-10-21: after a guest's 429, a request with a new `X-Forwarded-For` gets 200.
-  The fix is in Phase 1 (trust only the web proxy; keep the bypass as the `rate-limit-bypass` defect).
+- Every authenticated request now does one user lookup (token version check). Cheap, but it shows up in perf tests.
+- The WebSocket (`/ws/orders`) checks the token's signature only, so a deleted account's open socket stays
+  connected until it closes.
+- WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
+  checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
 
 ## Local environment notes
 

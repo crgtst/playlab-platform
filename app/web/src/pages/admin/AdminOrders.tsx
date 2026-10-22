@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { api, errorMessage } from '../../api/client';
+import { api, ApiRequestError, errorMessage } from '../../api/client';
 import { Order, ORDER_STATUSES, OrderStatus, PageMeta } from '../../api/types';
 import { LiveIndicator } from '../../components/LiveIndicator';
 import { Modal } from '../../components/Modal';
@@ -104,11 +104,28 @@ export function AdminOrders() {
     if (!editing) return;
     setSaving(true);
     try {
-      const r = await api<{ data: Order }>(`/orders/${editing.id}/status`, { method: 'PATCH', body: { status: editing.status } });
+      // If-Match with the ETag the grid loaded, so a change someone else made since is never overwritten (PLS-21.7).
+      const etag = orders?.find((o) => o.id === editing.id)?.etag;
+      const r = await api<{ data: Order }>(`/orders/${editing.id}/status`, {
+        method: 'PATCH',
+        body: { status: editing.status },
+        headers: etag ? { 'If-Match': etag } : {},
+      });
       setOrders((list) => list?.map((o) => (o.id === r.data.id ? r.data : o)) ?? null);
       show(`Order ${r.data.number} is now ${r.data.status}`, 'success');
       setEditing(null);
     } catch (err) {
+      if (err instanceof ApiRequestError && err.status === 412) {
+        const fresh = await api<{ data: Order }>(`/orders/${editing.id}`).catch(() => null);
+        if (fresh) {
+          setOrders((list) => list?.map((o) => (o.id === fresh.data.id ? fresh.data : o)) ?? null);
+          show(`Order ${fresh.data.number} was changed by someone else. It now shows its current status.`, 'error');
+        } else {
+          show('This order was changed by someone else. Reload the page to see its current status.', 'error');
+        }
+        setEditing(null);
+        return;
+      }
       show(errorMessage(err), 'error');
     } finally {
       setSaving(false);

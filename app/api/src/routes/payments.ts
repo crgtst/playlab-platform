@@ -8,6 +8,7 @@ import { cardSchema } from '../lib/cardSchema';
 import { clock } from '../lib/clock';
 import { ApiError, notFound } from '../lib/errors';
 import { chargeCard } from '../lib/payments';
+import { TEST_SESSION_PARAM, testSessions } from '../lib/testSessions';
 import { hashToken, randomToken } from '../lib/tokens';
 import { requireAuth } from '../middleware/auth';
 import { noStore } from '../middleware/noStore';
@@ -50,6 +51,9 @@ paymentsRouter.post(
     const frame = new URL(config.paymentFrameUrl);
     frame.searchParams.set('intent', intent.id);
     frame.searchParams.set('secret', secret);
+    // The frame is on the API origin, so it gets the shop's test session from its URL (PLS-28.10).
+    const testSession = testSessions.currentId();
+    if (testSession) frame.searchParams.set(TEST_SESSION_PARAM, testSession);
     res.status(201).json({ data: { ...intentView(intent), clientSecret: secret, frameUrl: frame.toString() } });
   }),
 );

@@ -21,6 +21,10 @@ services:
     build: ./api
     environment:
       PORT: 3000
+      # A local development stack. The image defaults to production, where the API refuses to start with test hooks
+      # on unless PLAYLAB_ALLOW_UNSAFE=true (PLS-28.5).
+      NODE_ENV: ${NODE_ENV:-development}
+      PLAYLAB_ALLOW_UNSAFE: ${PLAYLAB_ALLOW_UNSAFE:-false}
       DATABASE_URL: postgres://playlab:playlab@db:5432/playlab
       WEB_URL: http://web:5173
       PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:${WEB_PORT:-5173}}

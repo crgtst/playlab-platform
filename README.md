@@ -17,7 +17,7 @@ known bugs and watching them go red.
 
 Most practice sites let you write tests but can't tell you whether those tests would catch anything. PlayLab can.
 
-- **Bug mode.** 33 named defects across the API, web app, payment frame and service worker. Switch any of them on with
+- **Bug mode.** 36 named defects across the API, web app, payment frame and service worker. Switch any of them on with
   one HTTP call; each changes only its own behaviour and maps to the acceptance criterion it breaks.
 - **A real specification.** 29 Jira-ready stories with 153 numbered acceptance criteria
   ([`tests/ACCEPTANCE_CRITERIA.md`](tests/ACCEPTANCE_CRITERIA.md)), so every test can trace back to a requirement.
@@ -127,6 +127,8 @@ npm install                      # once, at the repo root: lint and format tools
 npm run lint                     # ESLint
 npm run format:check             # Prettier
 cd app/api && npm ci && npm test # API unit tests (no database needed)
+cd app/api && npm run test:int   # API integration tests (needs the db container)
+cd app/e2e && npm ci && npm test # platform smoke tests in a browser (needs the stack running)
 ```
 
 ## Licence

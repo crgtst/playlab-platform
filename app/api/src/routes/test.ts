@@ -8,18 +8,22 @@ import { clock } from '../lib/clock';
 import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
 import { resetRateLimits } from '../middleware/rateLimit';
 import { faults } from '../middleware/testFaults';
+import { logs } from '../lib/logger';
+import { requireKnownTestSession, TEST_SESSION_COOKIE, testSessions } from '../lib/testSessions';
 import { BUG_NAMES, bugs } from '../lib/bugs';
 import { events } from '../lib/events';
 import { asyncHandler, parse } from '../middleware/validate';
 
 /** Only mounted when TEST_HOOKS=true. Otherwise every /test/* path is a 404. */
 export const testRouter = Router();
+testRouter.use(requireKnownTestSession);
 
 testRouter.get('/', (_req, res) => {
   res.json({
     testHooks: true,
     hooks: [
       'POST /test/reset',
+      'POST /test/sessions',
       'POST /test/seed',
       'POST /test/users',
       'GET /test/mailbox/{email}',
@@ -27,6 +31,7 @@ testRouter.get('/', (_req, res) => {
       'GET|POST|DELETE /test/latency',
       'GET|POST|DELETE /test/chaos',
       'GET|POST|DELETE /test/bugs',
+      'GET /test/logs?correlationId=',
     ],
     bugs: BUG_NAMES,
     fixtures: Object.keys(FIXTURES),
@@ -37,9 +42,9 @@ testRouter.post(
   '/reset',
   asyncHandler(async (_req: Request, res: Response) => {
     const started = Date.now();
-    clock.reset();
-    faults.clearAll();
-    bugs.clear();
+    // Ends every test session and resets the global defects, clock, latency and chaos rules.
+    testSessions.resetAll();
+    logs.clear();
     await resetDatabase();
     resetRateLimits();
     events.emitEvent('stockReset');
@@ -214,4 +219,26 @@ testRouter.post('/bugs', (req: Request, res: Response) => {
 testRouter.delete('/bugs', (_req, res) => {
   bugs.clear();
   res.status(204).end();
+});
+
+const logsSchema = z.object({
+  correlationId: z
+    .string({ required_error: 'correlationId is required' })
+    .regex(/^[A-Za-z0-9_-]{1,64}$/, 'correlationId must be 1 to 64 letters, digits, hyphens or underscores'),
+});
+
+/** The log lines for one request, already redacted (PLS-25.2). Cleared by POST /test/reset. */
+testRouter.get('/logs', (req: Request, res: Response) => {
+  const { correlationId } = parse(logsSchema, req.query);
+  res.json({ data: logs.forCorrelationId(correlationId) });
+});
+
+/**
+ * Starts a test session (PLS-28.6). Send its id as X-Test-Session (or rely on the test_session cookie) and that
+ * request uses the session's own defects, clock, latency and chaos rules and rate-limit counters.
+ */
+testRouter.post('/sessions', (_req: Request, res: Response) => {
+  const session = testSessions.create();
+  res.cookie(TEST_SESSION_COOKIE, session.id, { httpOnly: true, sameSite: 'lax', path: '/' });
+  res.status(201).json({ id: session.id, idleTimeoutMs: config.testSessionIdleMs });
 });

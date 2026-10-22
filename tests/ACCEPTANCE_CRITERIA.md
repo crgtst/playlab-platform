@@ -109,9 +109,9 @@ As an admin, I want to manage orders and products, so that I can run the shop.
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
 | PLS-8.1 | Given the admin orders grid, when filtered by status, then only orders with that status show |  |  |
-| PLS-8.2 | Given an order, when its status is edited inline, then it saves and a WebSocket event is sent |  |  |
-| PLS-8.3 | Given several selected orders, when a bulk status change is applied, then all selected orders update |  |  |
-| PLS-8.4 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue |  |  |
+| PLS-8.2 | Given an order, when its status is edited inline to an allowed next status, then it saves and a WebSocket event is sent; a status that isn't allowed is refused with the reason shown |  |  |
+| PLS-8.3 | Given several selected orders, when a bulk status change is applied, then all of them update if every one can make the transition; otherwise none change and the ones that can't are listed |  |  |
+| PLS-8.4 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue; an edit made after someone else changed the product returns 412 and the modal says "This product was changed by someone else" |  |  |
 | PLS-8.5 | Given a support user, when they try to edit an order, then the controls are disabled and the API returns 403 |  |  |
 | PLS-8.6 | Given a product page is open, when stock changes, then the stock counter updates within 5 seconds |  | `stale-stock` |
 
@@ -132,7 +132,7 @@ As an API consumer, I want consistent, well-behaved endpoints, so that integrati
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
-| PLS-10.1 | Given any error, when returned, then the body matches `{ error: { code, message, details } }` |  |  |
+| PLS-10.1 | Given any error, when returned, then the body matches `{ error: { code, message, details, correlationId } }` |  |  |
 | PLS-10.2 | Given invalid input, when sent, then the API returns 422, never 500 |  | `wrong-status-code` |
 | PLS-10.3 | Given 100 requests in a minute, when the 101st is sent, then the API returns 429 with a `Retry-After` header |  |  |
 | PLS-10.4 | Given every endpoint, when called, then the response matches the OpenAPI schema |  |  |
@@ -235,11 +235,11 @@ As a screen-reader user, I want a predictable page structure, so that I can navi
 | PLS-19.2 | Given the order summary, when its headings are read, then no heading level is skipped |  | `aria-heading-skip` |
 | PLS-19.3 | Given the site header, when its accessibility tree is captured, then it matches the approved aria snapshot on desktop and mobile |  |  |
 
-## PLS-20 Order lifecycle (planned: Phase 1)
+## PLS-20 Order lifecycle (Phase 1)
 
 As an admin, I want orders to move only through valid statuses, so that an order's history always makes sense.
 
-Not built yet: these ACs fail until Phase 1 adds the transition rules ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API addition 4).
+Built in Phase 1 ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API addition 4).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -250,11 +250,11 @@ Not built yet: these ACs fail until Phase 1 adds the transition rules ([`docs/RE
 | PLS-20.5 | Given a `processing` order, when an admin cancels it, then it becomes `cancelled` and each item's stock goes back up by its quantity |  |  |
 | PLS-20.6 | Given a customer's own order, when they call `POST /orders/{id}/cancel`, then it is cancelled if it was `pending` or `paid`, and returns 409 `INVALID_TRANSITION` if it was `processing` or later |  |  |
 
-## PLS-21 Concurrency and lost updates (planned: Phase 1)
+## PLS-21 Concurrency and lost updates (Phase 1)
 
 As an admin, I want to be told when someone else changed a product first, so that I never overwrite their edit unknowingly.
 
-Not built yet: `If-Match` and order ETags arrive in Phase 1 (API addition 5). PLS-21.4 already holds today.
+Built in Phase 1 (API addition 5).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -266,11 +266,11 @@ Not built yet: `If-Match` and order ETags arrive in Phase 1 (API addition 5). PL
 | PLS-21.6 | Given an order, when `GET /orders/{id}` is called, then the response has an `ETag`, and the ETag changes when the order's status changes |  |  |
 | PLS-21.7 | Given the admin orders grid is open and another admin then changes an order's status, when the first admin edits that order's status, then the grid says the order was changed by someone else and shows its current status |  | `lost-update` |
 
-## PLS-22 Account management (planned: Phase 1)
+## PLS-22 Account management (Phase 1)
 
 As a customer, I want to manage and delete my account, so that I stay in control of my data.
 
-Not built yet: the account endpoints arrive in Phase 1 (API addition 6).
+Built in Phase 1 (API addition 6).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -281,11 +281,11 @@ Not built yet: the account endpoints arrive in Phase 1 (API addition 6).
 | PLS-22.5 | Given a deleted account, when an admin views its orders, then the orders are kept but the customer's name and email are anonymised |  |  |
 | PLS-22.6 | Given an email that belongs to another account, when a customer changes their email to it, then the API returns 409 `EMAIL_IN_USE` and the email is unchanged |  |  |
 
-## PLS-23 User administration (planned: Phase 1)
+## PLS-23 User administration (Phase 1)
 
 As an admin, I want to find and manage user accounts, so that I can fix access problems.
 
-Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
+Built in Phase 1 (API addition 6).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -299,7 +299,7 @@ Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 fails until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -318,11 +318,11 @@ Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13
 | PLS-24.13 | (API9) Given the retired API version, when `/api/v0/orders` is called, then the API returns 404 |  | `shadow-api-v0` |
 | PLS-24.14 | (API10) Given an address suggestion that breaks the shipping-address rules, such as a 300-character line, when it is selected and the order is placed, then the API validates it like a typed address and returns 422 |  | `trust-address-provider` |
 
-## PLS-25 Observability (planned: Phase 1)
+## PLS-25 Observability (Phase 1)
 
 As a tester, I want to trace any request through the logs, so that I can find why it failed without guessing.
 
-Not built yet: correlation IDs, logs and metrics arrive in Phase 1 (API additions 2 and 3).
+Built in Phase 1 (API additions 2 and 3): correlation IDs, logs and metrics.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -364,7 +364,7 @@ Not built yet: these run against the `perf` Compose profile with generated data 
 
 As a tester, I want isolated test sessions and repeatable data, so that parallel runs don't interfere and the app can't be deployed unsafely.
 
-Not built yet: test sessions and the production guard arrive in Phase 1, and bulk data (28.3, 28.4) with the perf profile in Phase 3.
+Partly built: test sessions (28.1, 28.2, 28.6 to 28.10) and the production guard (28.5) are built in Phase 1. Bulk data (28.3, 28.4) arrives with the perf profile in Phase 3.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

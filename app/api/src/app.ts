@@ -5,10 +5,16 @@ import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 import { config } from './config';
+import { registry } from './lib/metrics';
+import { correlation } from './lib/requestContext';
+import { resolveTestSession } from './lib/testSessions';
+import { trustedProxies, trustProxy } from './lib/trustedProxy';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimit } from './middleware/rateLimit';
+import { requestLog } from './middleware/requestLog';
 import { testFaults } from './middleware/testFaults';
 import { addressesRouter } from './routes/addresses';
+import { adminRouter } from './routes/admin';
 import { authRouter } from './routes/auth';
 import { cartRouter } from './routes/cart';
 import { configRouter } from './routes/config';
@@ -32,11 +38,18 @@ export function loadOpenApi(): Record<string, unknown> {
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+  // Only the web proxy's X-Forwarded-For is believed, so clients can't pick their own IP for the rate limit (A7).
+  trustedProxies.start();
+  app.set('trust proxy', trustProxy);
   app.set('etag', false); // product reads set their own ETag
   // Keep Express 4's qs parsing (Express 5 defaults to 'simple'), so nested and array query params behave as before.
   app.set('query parser', 'extended');
+  // First, so every response (errors included) carries a correlation ID and gets a log line.
+  app.use(correlation);
+  app.use(requestLog);
   app.use(cookieParser());
+  // Test sessions (header, cookie or payment-frame URL) exist only with test hooks on.
+  if (config.testHooks) app.use(resolveTestSession);
   app.use(express.json({ limit: '100kb' }));
   // Express 5 leaves req.body undefined when no body was parsed; Express 4 set {}, so validation reports each missing field.
   app.use((req, _res, next) => {
@@ -63,10 +76,15 @@ export function createApp() {
   v1.use('/stock', stockRouter);
   v1.use('/stores', storesRouter);
   v1.use('/offers', offersRouter);
+  v1.use('/admin', adminRouter);
   app.use('/api/v1', v1);
   app.use('/pay', payFrameRouter);
 
   const spec = loadOpenApi();
+  // Prometheus metrics (PLS-25.4): outside /api/v1, so the rate limit never applies.
+  app.get('/metrics', async (_req, res) => {
+    res.type(registry.contentType).send(await registry.metrics());
+  });
   app.get('/api/openapi.json', (_req, res) => res.json(spec));
   app.get('/api/openapi.yaml', (_req, res) => res.type('text/yaml').send(YAML.stringify(spec)));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec, { customSiteTitle: 'PlayLab Shop API' }));

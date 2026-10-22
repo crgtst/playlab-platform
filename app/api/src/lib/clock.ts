@@ -1,26 +1,28 @@
-// The server's notion of "now". Tests can move it with POST /test/clock.
-let offsetMs = 0;
+import { sessionScoped } from './testSessions';
+
+// The server's notion of "now". Tests can move it with POST /test/clock; each test session has its own offset.
+const offset = sessionScoped(() => ({ ms: 0 }));
 
 export const clock = {
   now(): Date {
-    return new Date(Date.now() + offsetMs);
+    return new Date(Date.now() + offset().ms);
   },
   nowMs(): number {
-    return Date.now() + offsetMs;
+    return Date.now() + offset().ms;
   },
   nowSec(): number {
-    return Math.floor((Date.now() + offsetMs) / 1000);
+    return Math.floor((Date.now() + offset().ms) / 1000);
   },
   set(at: Date) {
-    offsetMs = at.getTime() - Date.now();
+    offset().ms = at.getTime() - Date.now();
   },
   setOffset(ms: number) {
-    offsetMs = ms;
+    offset().ms = ms;
   },
   reset() {
-    offsetMs = 0;
+    offset().ms = 0;
   },
   state() {
-    return { now: this.now().toISOString(), offsetMs };
+    return { now: this.now().toISOString(), offsetMs: offset().ms };
   },
 };

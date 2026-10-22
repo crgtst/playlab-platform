@@ -24,6 +24,7 @@ If one of the ports is already in use, override it, for example `API_PORT=3001 d
 | OpenAPI file | http://localhost:3000/api/openapi.json and `/api/openapi.yaml` (source: [`api/openapi/openapi.yaml`](api/openapi/openapi.yaml)) |
 | Readiness (API, DB and web) | http://localhost:3000/api/v1/health |
 | Liveness (API and DB only) | http://localhost:3000/api/v1/health/live |
+| Metrics (Prometheus) | http://localhost:3000/metrics |
 | Test hooks | http://localhost:3000/test/* (also proxied at http://localhost:5173/test/*) |
 | Test mailbox page | http://localhost:5173/mailbox?email=you@example.com |
 | Admin area | http://localhost:5173/admin/orders and `/admin/products` (admin and support users) |
@@ -52,7 +53,7 @@ All seeded accounts use the password **`Password123!`** and are already email-co
 - **admin:** everything, including order status changes, bulk actions, CSV export and product CRUD.
 - **support:** can open the admin area and read every order, but every edit control is disabled (with a "Read-only access" tooltip), and the API returns 403 for any change.
 
-For parallel tests, create a throwaway user per test with `POST /test/users` (any role).
+For parallel tests, create a throwaway user per test with `POST /test/users` (any role), and give each worker its own [test session](#test-sessions) for defects, the clock and injected faults.
 
 ## Seed data
 
@@ -103,10 +104,12 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | --- | --- |
 | `GET /test` | Lists the hooks and fixture names. |
 | `POST /test/reset` | Truncates every table, reloads the base seed, resets the clock and the rate-limit counters. Takes about 50 ms. |
+| `POST /test/sessions` | Starts an isolated test session and returns `{ id, idleTimeoutMs }`. See [Test sessions](#test-sessions). |
 | `POST /test/seed` | Creates named fixtures; body `{ "fixtures": ["…"] }`. Returns the created ids and codes. |
 | `POST /test/users` | Body `{ "role"?: "customer"\|"admin"\|"support", "name"?, "email"? }`. Returns `{ user, password, accessToken, refreshToken }`. |
 | `GET /test/mailbox/{email}` | Emails the app "sent" (registration confirmation, password reset), newest first, each with a `link`. |
 | `DELETE /test/mailbox/{email}` | Empties that mailbox. |
+| `GET /test/logs?correlationId=` | The redacted log lines for one request. Keeps the last 5,000 lines; `POST /test/reset` clears them. |
 | `GET /test/clock` | Returns `{ now, offsetMs }`. |
 | `POST /test/clock` | Moves the server's "now". Body `{ "now": "<ISO date>" }`, `{ "offsetMs": n }` or `{ "advanceMs": n }`; an empty body resets it. Drives JWT expiry, lockout, reset-link expiry, discount windows and order dates. |
 | `POST /test/latency` | Delays matching requests. Body `{ "path": "/api/v1/products*", "method"?: "GET", "delayMs": 3000 }`. `GET` lists the rules, `DELETE` clears them. |
@@ -115,6 +118,17 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | `POST /test/chaos` | Makes matching requests fail. Body `{ "path", "method"?, "status"?: 500, ... }` plus exactly one of `failureRate` (0 to 1, random) or `failNext` (fail the next N, deterministic). Failures use code `CHAOS_INJECTED` and an `X-Chaos-Rule` header. `GET` lists the rules, `DELETE` clears them. |
 
 Latency and chaos rules match the path without its query string, and `*` is the only wildcard. They apply to `/api/v1/*` and `/pay/*`, never to `/test/*` or `/health`. `POST /test/reset` clears them.
+
+### Test sessions
+
+Defects, the clock, latency and chaos rules, and rate-limit counters are global unless you use a test session, so one parallel worker switching on `order-leak` changes every other worker's run. A session gives each worker its own copy.
+
+- `POST /test/sessions` returns `{ id }` and sets a `test_session` cookie.
+- Send the id as the `X-Test-Session` header, or let the browser send the cookie (`context.addCookies` with `domain: 'localhost'`). That request then uses the session's state, and hook calls (`/test/bugs`, `/test/clock`, `/test/latency`, `/test/chaos`) change only the session.
+- Requests with no session use the global state, exactly as before.
+- Database rows are still shared: keep using `POST /test/users` for per-test data.
+- The payment frame is on the API origin, so the shop adds `testSession=<id>` to the frame URL, and the frame sends it on its own calls.
+- A session unused for an hour (`TEST_SESSION_IDLE_MS`) is forgotten. Hook calls naming it then return 404 `TEST_SESSION_NOT_FOUND`, and other requests fall back to the global state. `POST /test/reset` ends every session.
 
 ### Fixtures for `POST /test/seed`
 
@@ -147,17 +161,24 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
 
 ## API conventions
 
-- **Errors** always have the shape `{ "error": { "code", "message", "details" } }`. Validation failures return 422, with `details` as an array of `{ field, message }`.
+- **Errors** always have the shape `{ "error": { "code", "message", "details", "correlationId" } }`. Validation failures return 422, with `details` as an array of `{ field, message }`.
+- **Correlation IDs**: every response has an `X-Correlation-Id` header. Send your own (1 to 64 of `A-Z a-z 0-9 - _`) and it is echoed back; otherwise, or if it is invalid, the API generates a UUID. Errors repeat it as `error.correlationId`.
+- **Metrics**: `GET /metrics` serves Prometheus text: a request-duration histogram by method, route and status, orders created, payments declined, active defects, database pool usage and the Node.js process metrics. It is outside `/api/v1`, so it is never rate limited.
+- **Logs**: the API writes one JSON line per request to stdout (`docker compose logs api`) with the correlation ID, route, status, duration, user and active defects. Passwords, tokens, the `Authorization` header, cookies and card details are redacted. `LOG_LEVEL=silent` turns stdout logging off.
 - **Authentication**: send `Authorization: Bearer <accessToken>`, or rely on the httpOnly `session` cookie that `/auth/login` sets.
   - Access tokens last 15 minutes.
   - Refresh tokens last 7 days and are single use. Send one in the body of `POST /auth/refresh` or via the `refresh_token` cookie.
   - After 5 failed logins the account is locked for 15 minutes; login then returns 423 with `Retry-After`.
+  - Deleting an account ends every session at once: its access tokens return 401 `TOKEN_REVOKED` and its refresh tokens stop working.
+- **User administration** (PLS-23): `GET /admin/users` (filters `role` and `q`, paged with `page` and `limit`) for admin and support; `PATCH /admin/users/{id}` with `role` and/or `unlock: true` for admin only. A new role applies from the user's next login. API only, no admin page yet.
+- **Your account** (PLS-22): `GET /users/me`; `PATCH /users/me` with `name`, or `email` plus `currentPassword` (other fields are ignored); `DELETE /users/me` anonymises the account (its orders stay, as "Deleted user") and removes the avatar, cart, wishlist and emails. There is no account page for these yet; they are API only.
 - **Guest carts** live in an httpOnly `cart_id` cookie. On login they merge into the account cart. If a product is in both carts it keeps the larger quantity, so quantities are never doubled.
-- **Rate limit**: 100 requests a minute per user (or per IP for guests) on `/api/v1/*`, except `/health`. Over the limit returns 429 with `Retry-After`. Configure it with `RATE_LIMIT_PER_MIN`.
+- **Rate limit**: 100 requests a minute per user (or per IP for guests) on `/api/v1/*`, except `/health`. Over the limit returns 429 with `Retry-After`. Configure it with `RATE_LIMIT_PER_MIN`. A guest's IP is taken from `X-Forwarded-For` only when the web proxy sends it (`TRUSTED_PROXIES`), so rotating that header from a test doesn't reset the limit; use a [test session](#test-sessions) or `POST /test/reset` instead.
 - **Pagination**: `GET /products` returns `meta: { page, limit, total, totalPages }` plus `Link` (`first`/`prev`/`next`/`last`) and `X-Total-Count` headers.
   - Default page size is 12, maximum 48.
   - Sorts always end with a tie-breaker on `id`.
 - **Conditional reads**: `GET /products/{id}` sends an `ETag` and returns 304 on a matching `If-None-Match`.
+- **Optimistic locking** (PLS-21): `PUT` and `PATCH /products/{id}` and `PATCH /orders/{id}/status` need `If-Match` with the `ETag` from the matching `GET` (orders also carry it as `etag`, including in the list). A stale one returns 412 `PRECONDITION_FAILED`; a missing one returns 428 `PRECONDITION_REQUIRED`. `If-Match: *` matches any version. Bulk status changes and customer cancellation don't need it.
 - **Idempotency**: repeating `POST /orders` with the same `Idempotency-Key` returns the original order with status 200 and `Idempotent-Replayed: true`. Concurrent submits without a key are serialised, so only one order is created.
 - **Price changes**: if a product's price changed after it was added to the cart, `POST /orders` returns 409 `PRICE_CHANGED` unless the body includes `acceptPriceChanges: true`. The checkout shows a warning and an "Accept new prices" button.
 - **Order access**: customers can read only their own orders; another customer's order id returns 404. Admin and support users can read every order.
@@ -333,6 +354,9 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `button-moves` | PLS-6.8 | Payment frame | A banner pushes the Pay button down 500 ms after the frame loads |
 | `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
 | `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
+| `rate-limit-bypass` | PLS-24.6 | API | `X-Forwarded-For` is believed from anyone, so a guest can rotate it to dodge the rate limit |
+| `lost-update` | PLS-21.2, 21.3, 21.5, 21.7 | API | `If-Match` is ignored, so a stale or missing one still overwrites the latest version |
+| `status-any-transition` | PLS-20.2, 20.3, 20.4 | API | An admin can set any status, singly or in bulk, such as delivered back to pending |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
 | `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
 | `permission-denied-crash` | PLS-13.2 | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
@@ -342,7 +366,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 36 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 
@@ -388,6 +412,23 @@ There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There 
 | Mailbox | `mailbox-email-input`, `mailbox-open-button`, `mailbox-message` (`data-type`), `mailbox-subject`, `mailbox-body`, `mailbox-link` |
 | Toasts | `toast-region`, `toast` (`data-type`), `toast-message`, `toast-dismiss` |
 
+## Platform tests
+
+These check the app itself. They are not the training suites, which live in [`../tests/`](../tests/).
+
+- **API unit tests**, in [`api/test/`](api/test/): `cd api && npm test`. They need no database.
+- **API integration tests**, in [`api/test/integration/`](api/test/integration/): `cd api && npm run test:int`, with the
+  `db` container running. They create their own `playlab_test` database on each run (on `DB_PORT`, or
+  `TEST_DATABASE_URL`), so the stack's data is never touched.
+- **Smoke tests in a browser**, in [`e2e/`](e2e/): `cd e2e && npm ci && npx playwright install chromium && npm test`, with
+  the stack running. The suite reads `API_PORT` and `WEB_PORT` from `app/.env` (or the environment), resets the stack
+  before each test, and names each test after the AC it checks. CI runs it on a stack configured from `.env.example`
+  with non-default ports.
+- **Gate 1 screenshots**: `cd e2e && npm run test:gate1` compares 14 pages with baselines taken before Phase 1. The
+  baselines are macOS-specific, so CI doesn't run them.
+- **API probe**: [`../tools/api-probe/probe.sh`](../tools/api-probe/probe.sh) prints 46 normalised responses. Diff its
+  output with `baseline-phase0.txt` to see exactly which responses a change moved. It resets the stack.
+
 ## Environment variables
 
 | Variable | Default | Purpose |
@@ -396,6 +437,11 @@ There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There 
 | `RATE_LIMIT_PER_MIN` | `100` | API rate limit |
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
+| `NODE_ENV` | `development` in Compose (`production` in the image) | With `production`, the API refuses to start while `TEST_HOOKS=true` |
+| `PLAYLAB_ALLOW_UNSAFE` | `false` | `true` lets the API start with test hooks on in production, with a warning |
+| `TRUSTED_PROXIES` | the `WEB_URL` host | Comma-separated hosts whose `X-Forwarded-For` is believed |
+| `TEST_SESSION_IDLE_MS` | `3600000` | How long an unused test session lasts |
+| `LOG_LEVEL` | `info` | Request logs on stdout: `info`, `warn`, `error` or `silent` (`GET /test/logs` keeps them either way) |
 | `WEB_PORT` / `API_PORT` / `DB_PORT` | `5173` / `3000` / `5432` | Host ports |
 | `PUBLIC_WEB_URL` | `http://localhost:${WEB_PORT}` | Base URL used in links inside mailbox emails |
 | `PAYMENT_FRAME_URL` | `http://localhost:${API_PORT}/pay/frame` | Where the browser loads the payment iframe from |
@@ -412,9 +458,7 @@ Build phases 1–4 in the spec are done. Phases 5 (framework maturity) and 6 (Pl
 
 Every AC in PLS-1 to PLS-19 of `tests/ACCEPTANCE_CRITERIA.md` has an implementation to test against. PLS-20 to PLS-29 specify the upgrade plan's platform work and are mostly not built yet; each story says which phase builds it.
 
-Two edge-case scenarios from the spec's checklist, which aren't in any phase, are **not built**:
-- account deletion that logs out other sessions
-- the UI backing off after a 429
+One edge-case scenario from the spec's checklist, which isn't in any phase, is **not built**: the UI backing off after a 429. (Account deletion that logs out other sessions arrived with PLS-22 in Phase 1.)
 
 ## Where this differs from or adds to the spec
 
@@ -435,7 +479,7 @@ Two edge-case scenarios from the spec's checklist, which aren't in any phase, ar
 15. Log out now lives inside the account hover menu (`account-menu-button` → `logout-button`).
 16. Support users can see the admin grid but not export CSV: the spec lists the export as admin only.
 17. The leave-checkout warning also covers navigation inside the app (with a `confirm()`), not only `beforeunload`. It never fires between checkout steps, on the way to the confirmation, or on a redirect to login.
-18. Order status changes have no transition rules yet: an admin can set any status, including moving a delivered order back to paid.
+18. Order status changes follow transition rules (PLS-20): `pending → paid → processing → shipped → delivered`, and cancellation from `pending`, `paid` or `processing`, which restocks. Anything else is 409 `INVALID_TRANSITION`; bulk changes are all or nothing. Customers can cancel their own order while it is `pending` or `paid` (`POST /orders/{id}/cancel`).
 19. **GBP is display-only.** The API is EUR throughout, and the web converts each amount on its own at a fixed 0.85. In GBP the converted lines can therefore differ from the converted subtotal by a penny, so test PLS-4.4 in EUR.
 20. The Irish translations cover navigation, the cart and checkout (PLS-11.5). They are best-effort, not a professional translation, and other pages stay in English.
 21. Language, currency and theme default to the browser's `locale` and `colorScheme`, and a choice made in the header overrides them. Switching language or currency re-renders the page.

@@ -1,10 +1,12 @@
 import crypto from 'crypto';
 import { Request, Response, Router } from 'express';
+import { PoolClient } from 'pg';
 import { z } from 'zod';
-import { query } from '../db/pool';
+import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound, validationError } from '../lib/errors';
 import { isBugOn } from '../lib/bugs';
+import { checkIfMatch } from '../lib/preconditions';
 import { requireRole } from '../middleware/auth';
 import { emitStock } from '../services/stock';
 import { asyncHandler, parse } from '../middleware/validate';
@@ -143,8 +145,9 @@ productsRouter.get(
     if (!id.success) throw notFound('Product not found');
     const rows = await query(`${SELECT_PRODUCT} WHERE p.id = $1`, [id.data]);
     if (!rows[0]) throw notFound('Product not found');
-    const body = JSON.stringify({ data: productView(rows[0]) });
-    const etag = `"${crypto.createHash('sha1').update(body).digest('base64url')}"`;
+    const view = productView(rows[0]);
+    const body = JSON.stringify({ data: view });
+    const etag = productEtag(view);
     res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'no-cache');
     const inm = req.headers['if-none-match'];
@@ -167,9 +170,18 @@ async function categoryId(slug: string): Promise<number> {
   return rows[0].id;
 }
 
-async function loadProduct(id: number) {
-  const rows = await query(`${SELECT_PRODUCT} WHERE p.id = $1`, [id]);
-  return rows[0] ? productView(rows[0]) : null;
+/** A hash of the product as GET returns it, so any change (stock included) gives a new ETag. */
+export function productEtag(view: ReturnType<typeof productView>): string {
+  return `"${crypto
+    .createHash('sha1')
+    .update(JSON.stringify({ data: view }))
+    .digest('base64url')}"`;
+}
+
+/** `forUpdate` locks the row inside the caller's transaction, so the If-Match check and the write can't interleave. */
+async function loadProduct(id: number, db: PoolClient | typeof pool = pool, forUpdate = false) {
+  const rows = await db.query(`${SELECT_PRODUCT} WHERE p.id = $1${forUpdate ? ' FOR UPDATE OF p' : ''}`, [id]);
+  return rows.rows[0] ? productView(rows.rows[0]) : null;
 }
 
 function uniqueSku(err: any): never {
@@ -199,30 +211,37 @@ productsRouter.post(
 async function updateProduct(req: Request, res: Response, partial: boolean) {
   const id = idParam.safeParse(req.params.id);
   if (!id.success) throw notFound('Product not found');
-  const existing = await loadProduct(id.data);
-  if (!existing) throw notFound('Product not found');
   const schema = partial ? productBody.partial() : productBody;
-  const body = parse(schema, req.body);
-  if (partial && Object.keys(body).length === 0) {
-    throw validationError([{ field: '', message: 'Provide at least one field to update' }]);
-  }
-  const merged = {
-    sku: body.sku ?? existing.sku,
-    name: body.name ?? existing.name,
-    description: body.description ?? existing.description,
-    category: body.category ?? existing.category.slug,
-    priceCents: body.priceCents ?? existing.priceCents,
-    stock: body.stock ?? existing.stock,
-    imageUrl: body.imageUrl ?? existing.imageUrl,
-  };
-  const cat = await categoryId(merged.category);
-  await query(
-    `UPDATE products SET sku = $1, name = $2, description = $3, category_id = $4, price_cents = $5, stock = $6,
-            image_url = $7, updated_at = $8 WHERE id = $9`,
-    [merged.sku, merged.name, merged.description, cat, merged.priceCents, merged.stock, merged.imageUrl, clock.now(), id.data],
-  ).catch(uniqueSku);
-  if (merged.stock !== existing.stock) await emitStock([id.data]);
-  res.json({ data: await loadProduct(id.data) });
+  const { updated, stockChanged } = await withTransaction(async (client) => {
+    const existing = await loadProduct(id.data, client, true);
+    if (!existing) throw notFound('Product not found');
+    checkIfMatch(req, productEtag(existing), 'product');
+    const body = parse(schema, req.body);
+    if (partial && Object.keys(body).length === 0) {
+      throw validationError([{ field: '', message: 'Provide at least one field to update' }]);
+    }
+    const merged = {
+      sku: body.sku ?? existing.sku,
+      name: body.name ?? existing.name,
+      description: body.description ?? existing.description,
+      category: body.category ?? existing.category.slug,
+      priceCents: body.priceCents ?? existing.priceCents,
+      stock: body.stock ?? existing.stock,
+      imageUrl: body.imageUrl ?? existing.imageUrl,
+    };
+    const cat = await categoryId(merged.category);
+    await client
+      .query(
+        `UPDATE products SET sku = $1, name = $2, description = $3, category_id = $4, price_cents = $5, stock = $6,
+                image_url = $7, updated_at = $8 WHERE id = $9`,
+        [merged.sku, merged.name, merged.description, cat, merged.priceCents, merged.stock, merged.imageUrl, clock.now(), id.data],
+      )
+      .catch(uniqueSku);
+    return { updated: (await loadProduct(id.data, client))!, stockChanged: merged.stock !== existing.stock };
+  });
+  if (stockChanged) await emitStock([id.data]);
+  res.setHeader('ETag', productEtag(updated));
+  res.json({ data: updated });
 }
 
 productsRouter.put(
