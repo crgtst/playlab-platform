@@ -15,6 +15,13 @@ work before it is done once PRs #20 and the `tests/` scaffold are merged.
 
 ## Done
 
+- 2026-10-22: `tests/playwright-ts/` baseline, written at Craig's request as a starting point for Phase 2, on
+  `tests/playwright-ts-baseline`. Playwright 1.64.1 (same as `app/e2e`), Chromium only for now, HTML and JUnit
+  (`results/junit.xml`) reports. Fixtures give every test its own test session (an `X-Test-Session` header on every
+  page and API request) and a throwaway customer, so tests run in parallel; data comes from `tests/shared/`. Page
+  objects `LoginPage`, `ProductPage` and `Header`. One test, PLS-1.8, which fails on the code before the fix and
+  passed 160 times across 8 workers after it. Not in CI or Dependabot yet.
+
 - 2026-10-22: Fix: an expired session that can't be refreshed blocked guest actions (new AC PLS-1.8), on
   `fix/expired-session-guest`. Found by Craig: with an expired access token and a dead refresh token (e.g. after
   `/test/reset`), the header showed a guest but adding to the cart failed with "Access token has expired", because the
