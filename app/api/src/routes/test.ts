@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { config } from '../config';
 import { pool, query, withTransaction } from '../db/pool';
 import { resetDatabase, SEED_PASSWORD } from '../db/seed/base';
@@ -126,7 +126,7 @@ testRouter.delete(
 
 const clockSchema = z
   .object({
-    now: z.string().datetime({ offset: true, message: 'now must be an ISO 8601 date-time' }).optional(),
+    now: z.string().datetime({ offset: true, error: 'now must be an ISO 8601 date-time' }).optional(),
     offsetMs: z.number().int().optional(),
     advanceMs: z.number().int().optional(),
   })
@@ -152,7 +152,7 @@ const methodSchema = z
   .refine((m) => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].includes(m), 'Use GET, POST, PUT, PATCH or DELETE')
   .optional();
 const pathSchema = z
-  .string({ required_error: 'path is required, e.g. /api/v1/products*' })
+  .string(typeErrors({ required: 'path is required, e.g. /api/v1/products*' }))
   .trim()
   .refine((p) => p.startsWith('/'), 'path must start with /')
   .refine((p) => !p.startsWith('/test'), 'Test hooks cannot be slowed down or failed');
@@ -160,7 +160,11 @@ const pathSchema = z
 const latencySchema = z.object({
   path: pathSchema,
   method: methodSchema,
-  delayMs: z.number({ required_error: 'delayMs is required' }).int().min(1).max(60_000),
+  delayMs: z
+    .number(typeErrors({ required: 'delayMs is required' }))
+    .int()
+    .min(1)
+    .max(60_000),
 });
 
 const chaosSchema = z
@@ -203,7 +207,7 @@ testRouter.delete('/chaos', (_req, res) => {
 });
 
 const bugNameSchema = z.enum(BUG_NAMES as [string, ...string[]], {
-  errorMap: () => ({ message: `Unknown bug. Known bugs: ${BUG_NAMES.join(', ')}` }),
+  error: `Unknown bug. Known bugs: ${BUG_NAMES.join(', ')}`,
 });
 const bugsSchema = z
   .object({ enable: z.array(bugNameSchema).optional(), disable: z.array(bugNameSchema).optional() })
@@ -223,7 +227,7 @@ testRouter.delete('/bugs', (_req, res) => {
 
 const logsSchema = z.object({
   correlationId: z
-    .string({ required_error: 'correlationId is required' })
+    .string(typeErrors({ required: 'correlationId is required' }))
     .regex(/^[A-Za-z0-9_-]{1,64}$/, 'correlationId must be 1 to 64 letters, digits, hyphens or underscores'),
 });
 

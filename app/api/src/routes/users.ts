@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Request, Response, Router, NextFunction } from 'express';
 import multer from 'multer';
-import { z } from 'zod';
+import { z } from '../lib/zod';
 import { query, withTransaction } from '../db/pool';
 import { isBugOn } from '../lib/bugs';
 import { clock } from '../lib/clock';

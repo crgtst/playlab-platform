@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound } from '../lib/errors';
@@ -11,7 +11,12 @@ import { productView } from './products';
 export const wishlistRouter = Router();
 wishlistRouter.use(noStore, requireAuth);
 
-const addSchema = z.object({ productId: z.number({ required_error: 'productId is required' }).int().positive() });
+const addSchema = z.object({
+  productId: z
+    .number(typeErrors({ required: 'productId is required' }))
+    .int()
+    .positive(),
+});
 const orderSchema = z.object({
   productIds: z
     .array(z.number().int().positive())

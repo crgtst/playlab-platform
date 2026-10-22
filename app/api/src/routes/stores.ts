@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { isBugOn } from '../lib/bugs';
 import { parse } from '../middleware/validate';
 
@@ -43,8 +43,14 @@ export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; l
 
 const searchSchema = z.object({ q: z.string().trim().max(100).optional() });
 const nearestSchema = z.object({
-  lat: z.coerce.number({ required_error: 'lat is required', invalid_type_error: 'lat must be a number' }).min(-90).max(90),
-  lng: z.coerce.number({ required_error: 'lng is required', invalid_type_error: 'lng must be a number' }).min(-180).max(180),
+  lat: z.coerce
+    .number(typeErrors({ required: 'lat is required', invalid: 'lat must be a number' }))
+    .min(-90)
+    .max(90),
+  lng: z.coerce
+    .number(typeErrors({ required: 'lng is required', invalid: 'lng must be a number' }))
+    .min(-180)
+    .max(180),
   limit: z.coerce.number().int().min(1).max(12).default(3),
 });
 

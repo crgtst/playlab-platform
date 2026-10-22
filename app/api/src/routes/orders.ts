@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { PoolClient } from 'pg';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound } from '../lib/errors';
@@ -26,12 +26,28 @@ function isoDate(d: Date): string {
 }
 
 const shippingSchema = z.object({
-  fullName: z.string({ required_error: 'Full name is required' }).trim().min(1, 'Full name is required').max(500),
-  line1: z.string({ required_error: 'Address line 1 is required' }).trim().min(1, 'Address line 1 is required').max(200),
+  fullName: z
+    .string(typeErrors({ required: 'Full name is required' }))
+    .trim()
+    .min(1, 'Full name is required')
+    .max(500),
+  line1: z
+    .string(typeErrors({ required: 'Address line 1 is required' }))
+    .trim()
+    .min(1, 'Address line 1 is required')
+    .max(200),
   line2: z.string().trim().max(200).optional().default(''),
-  city: z.string({ required_error: 'Town or city is required' }).trim().min(1, 'Town or city is required').max(100),
+  city: z
+    .string(typeErrors({ required: 'Town or city is required' }))
+    .trim()
+    .min(1, 'Town or city is required')
+    .max(100),
   county: z.string().trim().max(100).optional().default(''),
-  postcode: z.string({ required_error: 'Eircode or postcode is required' }).trim().min(1, 'Eircode or postcode is required').max(20),
+  postcode: z
+    .string(typeErrors({ required: 'Eircode or postcode is required' }))
+    .trim()
+    .min(1, 'Eircode or postcode is required')
+    .max(20),
   country: z.string().trim().length(2, 'Use a 2-letter country code').default('IE'),
   phone: z.string().trim().max(30).optional().default(''),
 });
@@ -39,11 +55,11 @@ const shippingSchema = z.object({
 const orderSchema = z
   .object({
     shipping: shippingSchema,
-    deliveryDate: z.string({ required_error: 'Choose a delivery date' }).regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD'),
+    deliveryDate: z.string(typeErrors({ required: 'Choose a delivery date' })).regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD'),
     instructions: z.string().max(200, 'Instructions must be at most 200 characters').optional().default(''),
     // Pay either with card details directly (API clients) or with an intent confirmed in the payment iframe (the web app).
     payment: cardSchema.optional(),
-    paymentIntentId: z.string().uuid('paymentIntentId must be a UUID').optional(),
+    paymentIntentId: z.string().guid('paymentIntentId must be a UUID').optional(),
     acceptPriceChanges: z.boolean().optional().default(false),
     // Item prices sent by the client are ignored (prices always come from the database), except by the price-tamper defect.
     items: z
@@ -59,7 +75,7 @@ const orderSchema = z
 
 export const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
 const statusSchema = z.enum(ORDER_STATUSES, {
-  errorMap: () => ({ message: `Status must be one of: ${ORDER_STATUSES.join(', ')}` }),
+  error: `Status must be one of: ${ORDER_STATUSES.join(', ')}`,
 });
 type OrderStatus = (typeof ORDER_STATUSES)[number];
 

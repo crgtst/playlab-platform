@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { parse } from '../middleware/validate';
 
 export const addressesRouter = Router();
@@ -27,7 +27,11 @@ const ADDRESSES = [
 ].map((a, i) => ({ id: `addr-${i + 1}`, ...a, country: 'IE', label: `${a.line1}, ${a.city}, ${a.postcode}` }));
 
 const schema = z.object({
-  q: z.string({ required_error: 'q is required' }).trim().min(2, 'Type at least 2 characters').max(100),
+  q: z
+    .string(typeErrors({ required: 'q is required' }))
+    .trim()
+    .min(2, 'Type at least 2 characters')
+    .max(100),
   limit: z.coerce.number().int().min(1).max(10).default(5),
 });
 
