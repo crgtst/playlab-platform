@@ -1,9 +1,35 @@
 import { defineConfig } from 'vitest/config';
 
-// App unit tests (finding A11): pricing, bug isolation and hooks. They need no database or running stack.
+// Integration tests use their own database, so a run never touches the stack's data.
+// Override with TEST_DATABASE_URL; otherwise the Compose db on DB_PORT is used. Workers inherit it.
+process.env.TEST_DATABASE_URL ??= `postgres://playlab:playlab@localhost:${process.env.DB_PORT ?? '5432'}/playlab_test`;
+
+// App tests (finding A11). Unit tests need nothing running; integration tests need Postgres.
 export default defineConfig({
   test: {
-    include: ['test/**/*.test.ts'],
     environment: 'node',
+    projects: [
+      {
+        extends: true,
+        test: { name: 'unit', include: ['test/**/*.test.ts'], exclude: ['test/**/*.int.test.ts'] },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          include: ['test/**/*.int.test.ts'],
+          globalSetup: ['test/integration/global-setup.ts'],
+          setupFiles: ['test/integration/setup.ts'],
+          // One database, so one file at a time.
+          fileParallelism: false,
+          env: {
+            DATABASE_URL: process.env.TEST_DATABASE_URL,
+            TEST_HOOKS: 'true',
+            // Nothing listens here, so readiness reports the web app as down.
+            WEB_URL: 'http://127.0.0.1:9',
+          },
+        },
+      },
+    ],
   },
 });

@@ -18,5 +18,9 @@ export default defineConfig({
     serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'smoke', grepInvert: /@gate1/, use: { ...devices['Desktop Chrome'] } },
+    // Screenshot baselines for Gate 1 (existing UI unchanged). Run on purpose, not in CI.
+    { name: 'gate1', grep: /@gate1/, use: { ...devices['Desktop Chrome'] } },
+  ],
 });

@@ -40,7 +40,8 @@ export async function goToPayment(page: Page) {
   await page.getByTestId('shipping-line1').fill('1 Main Street');
   await page.getByTestId('shipping-city').fill('Dublin');
   await page.getByTestId('shipping-postcode').fill('D01 F5P2');
-  const inFiveDays = new Date(Date.now() + 5 * 86_400_000);
+  // The page's clock, which a test may have pinned with page.clock.
+  const inFiveDays = new Date((await page.evaluate(() => Date.now())) + 5 * 86_400_000);
   const local = new Date(inFiveDays.getTime() - inFiveDays.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
   await page.getByTestId('shipping-delivery-date').fill(local);
   await page.getByTestId('shipping-continue-button').click();

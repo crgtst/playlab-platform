@@ -9,11 +9,18 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 1 (rest): the Postgres integration-test harness and `api-integration` CI job (PLS-29.5), plus the
-UI screenshot and API probe baselines for Gate 1. The `app/e2e/` smoke suite part is done. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 2: correlation IDs, JSON logs with redaction, `GET /test/logs` (PLS-25.1 to 25.3, PLS-10.1 edit). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 1 complete.
+  - Integration harness: Vitest projects `unit` (`npm test`) and `integration` (`npm run test:int`). Integration
+    tests create a fresh `playlab_test` database each run, migrated and seeded by the app's own code, so the
+    stack's data is never touched. First tests: PLS-29.5, 12.1, 12.4. New `api-integration` job in `quality`
+    uses a Postgres 16 service container.
+  - Gate 1 baselines: 14 screenshots in `app/e2e` (`npm run test:gate1`, macOS only, not in CI), with both clocks
+    pinned and the fixture's random emails replaced so they're stable; 3 runs in a row matched. API probe
+    committed as `tools/api-probe/probe.sh` with `baseline-phase0.txt` (46 probes, identical across runs).
 - 2026-10-22: Phase 1 task 1, smoke suite. `app/e2e/` (Playwright 1.64.1, Chromium, one worker, reset before each
   test). It reads the ports from `app/.env` or the environment. Tests: PLS-6.1 checkout, PLS-12.5 frame and reset-link
   ports, PLS-15.1 and 15.3 clipboard, PLS-17.2 offline checkout. New `smoke` workflow builds the stack from

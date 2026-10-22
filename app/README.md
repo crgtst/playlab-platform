@@ -393,10 +393,17 @@ There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There 
 These check the app itself. They are not the training suites, which live in [`../tests/`](../tests/).
 
 - **API unit tests**, in [`api/test/`](api/test/): `cd api && npm test`. They need no database.
+- **API integration tests**, in [`api/test/integration/`](api/test/integration/): `cd api && npm run test:int`, with the
+  `db` container running. They create their own `playlab_test` database on each run (on `DB_PORT`, or
+  `TEST_DATABASE_URL`), so the stack's data is never touched.
 - **Smoke tests in a browser**, in [`e2e/`](e2e/): `cd e2e && npm ci && npx playwright install chromium && npm test`, with
   the stack running. The suite reads `API_PORT` and `WEB_PORT` from `app/.env` (or the environment), resets the stack
   before each test, and names each test after the AC it checks. CI runs it on a stack configured from `.env.example`
   with non-default ports.
+- **Gate 1 screenshots**: `cd e2e && npm run test:gate1` compares 14 pages with baselines taken before Phase 1. The
+  baselines are macOS-specific, so CI doesn't run them.
+- **API probe**: [`../tools/api-probe/probe.sh`](../tools/api-probe/probe.sh) prints 46 normalised responses. Diff its
+  output with `baseline-phase0.txt` to see exactly which responses a change moved. It resets the stack.
 
 ## Environment variables
 

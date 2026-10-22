@@ -1,0 +1,216 @@
+### health
+200 ct=application/json; charset=utf-8
+{"status":"ok","checks":{"api":"up","db":"up","web":"up"},"testHooks":true,"time":X}
+### 404
+404 ct=application/json; charset=utf-8
+{"error":{"code":"NOT_FOUND","message":"No route for GET /api/v1/nope","details":null}}
+### 404-root
+404 ct=application/json; charset=utf-8
+{"error":{"code":"NOT_FOUND","message":"No route for GET /nope","details":null}}
+### trailing-slash
+200 ct=application/json; charset=utf-8
+{"data":[{"id":X,"sku":"EL-008","name":"4K Webcam","description":"Sharp video calls with auto-framing.","category":{"slug":"electronics","name":"Electronics"},"priceCents":8999,"stock":14,"inStock":true,"imageUrl":"/img/electronics.svg","images":["/img/electronics.svg","/img/gallery/electronics-2.svg","/img/gallery/electronics-3.svg"],"createdAt":X,"updatedAt":X}],"meta":{"page":1,"limit":1,"total":40,"totalPages":40,"sort":"name_asc"}}
+### case
+200 ct=application/json; charset=utf-8
+{"data":[{"id":X,"sku":"EL-008","name":"4K Webcam","description":"Sharp video calls with auto-framing.","category":{"slug":"electronics","name":"Electronics"},"priceCents":8999,"stock":14,"inStock":true,"imageUrl":"/img/electronics.svg","images":["/img/electronics.svg","/img/gallery/electronics-2.svg","/img/gallery/electronics-3.svg"],"createdAt":X,"updatedAt":X}],"meta":{"page":1,"limit":1,"total":40,"totalPages":40,"sort":"name_asc"}}
+### products-nested-query
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"category","message":"Expected string, received object"}]}}
+### products-array-query
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"sort","message":"Expected 'price_asc' | 'price_desc' | 'name_asc' | 'name_desc' | 'newest', received array"}]}}
+### products-limit
+200 ct=application/json; charset=utf-8
+{"data":[{"id":X,"sku":"SP-003","name":"Sliotar","description":"Official-size match sliotar.","category":{"slug":"sports","name":"Sports"},"priceCents":900,"stock":70,"inStock":true,"imageUrl":"/img/sports.svg","images":["/img/sports.svg","/img/gallery/sports-2.svg","/img/gallery/sports-3.svg"],"createdAt":X,"updatedAt":X},{"id":X,"sku":"HK-005","name":"Ceramic Mug","description":"Hand-glazed 350 ml mug.","category":{"slug":"home-kitchen","name":"Home & Kitchen"},"priceCents":1250,"stock":60,"inStock":true,"imageUrl":"/img/home-kitchen.svg","
+### products-bad-limit
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"limit","message":"Expected number, received nan"}]}}
+### product-bad-id
+404 ct=application/json; charset=utf-8
+{"error":{"code":"NOT_FOUND","message":"Product not found","details":null}}
+### product-1
+200 ct=application/json; charset=utf-8
+{"data":{"id":X,"sku":"EL-001","name":"Wireless Earbuds","description":"Bluetooth 5.3 earbuds with a 24-hour charging case.","category":{"slug":"electronics","name":"Electronics"},"priceCents":4999,"stock":25,"inStock":true,"imageUrl":"/img/electronics.svg","images":["/img/electronics.svg","/img/gallery/electronics-2.svg","/img/gallery/electronics-3.svg"],"createdAt":X,"updatedAt":X}}
+### head-products
+200 ct=application/json; charset=utf-8
+HTTP/1.1 200 OK
+RateLimit-Policy: 100;w=60
+RateLimit: limit=100, remaining=90, reset=60
+ETag: "cjLN3Afox1baNB4POkq1D7KKtss"
+Cache-Control: no-cache
+Content-Type: application/json; charset=utf-8
+Content-Length: 437
+Date: X
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+
+### options
+200 ct=text/plain
+GET, HEAD, POST
+### login-nobody
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"email","message":"Email is required"},{"field":"password","message":"Password is required"}]}}
+### login-textplain
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"email","message":"Email is required"},{"field":"password","message":"Password is required"}]}}
+### login-badjson
+400 ct=application/json; charset=utf-8
+{"error":{"code":"BAD_REQUEST","message":"Request body is not valid JSON","details":null}}
+### login-emptyjson
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"email","message":"Email is required"},{"field":"password","message":"Password is required"}]}}
+### login-array
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"","message":"Expected object, received array"}]}}
+### login-toolarge
+413 ct=application/json; charset=utf-8
+{"error":{"code":"PAYLOAD_TOO_LARGE","message":"Request body is too large","details":null}}
+### login-wrong
+401 ct=application/json; charset=utf-8
+{"error":{"code":"INVALID_CREDENTIALS","message":"Email or password is incorrect","details":null}}
+### me
+200 ct=application/json; charset=utf-8
+{"user":{"id":X,"email":"customer@playlab.test","name":"Casey Customer","role":"customer","emailVerified":true,"avatarUrl":null,"createdAt":X}}
+### cart-add
+201 ct=application/json; charset=utf-8
+{"id":X,"items":[{"productId":1,"sku":"EL-001","name":"Wireless Earbuds","imageUrl":"/img/electronics.svg","quantity":1,"stock":25,"unitPriceCents":4999,"priceAtAddCents":4999,"priceChanged":false,"lineTotalCents":4999}],"itemCount":1,"discount":null,"discounts":[],"totals":{"subtotalCents":4999,"discountCents":0,"vatCents":1150,"deliveryCents":495,"totalCents":6644},"currency":"EUR","priceChanged":false,"notices":[]}
+### cart-add-nobody
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"productId","message":"productId is required"}]}}
+### cart
+200 ct=application/json; charset=utf-8
+{"id":X,"items":[{"productId":1,"sku":"EL-001","name":"Wireless Earbuds","imageUrl":"/img/electronics.svg","quantity":1,"stock":25,"unitPriceCents":4999,"priceAtAddCents":4999,"priceChanged":false,"lineTotalCents":4999}],"itemCount":1,"discount":null,"discounts":[],"totals":{"subtotalCents":4999,"discountCents":0,"vatCents":1150,"deliveryCents":495,"totalCents":6644},"currency":"EUR","priceChanged":false,"notices":[]}
+### order-nobody
+422 ct=application/json; charset=utf-8
+{"error":{"code":"VALIDATION_ERROR","message":"Validation failed","details":[{"field":"shipping","message":"Required"},{"field":"deliveryDate","message":"Choose a delivery date"}]}}
+### order
+201 ct=application/json; charset=utf-8
+{"data":{"id":X,"number":"PL-000001","userId":1,"customer":{"id":X,"email":"customer@playlab.test","name":"Casey Customer"},"status":"paid","createdAt":X,"items":[{"productId":1,"name":"Wireless Earbuds","unitPriceCents":4999,"quantity":1,"lineTotalCents":4999}],"totals":{"subtotalCents":4999,"discountCents":0,"vatCents":1150,"deliveryCents":495,"totalCents":6644},"discount":null,"currency":"EUR","shipping":{"city":"Dublin","line1":"1 Main St","line2":"","phone":"","county":"","country":"IE","fullName":"Craig Test","postcode":"D01 F5P2"},"deliveryDate":"2026-10-27","in
+### orders-list
+200 ct=application/json; charset=utf-8
+{"data":[{"id":X,"number":"PL-000001","userId":1,"customer":{"id":X,"email":"customer@playlab.test","name":"Casey Customer"},"status":"paid","createdAt":X,"items":[{"productId":1,"name":"Wireless Earbuds","unitPriceCents":4999,"quantity":1,"lineTotalCents":4999}],"totals":{"subtotalCents":4999,"discountCents":0,"vatCents":1150,"deliveryCents":495,"totalCents":6644},"discount":null,"currency":"EUR","shipping":{"city":"Dublin","line1":"1 Main St","line2":"","phone":"","county":"","country":"IE","fullName":"Craig Test","postcode":"D01 F5P2"},"deliveryDate":"2026-10-27","i
+### orders-csv
+403 ct=application/json; charset=utf-8
+{"error":{"code":"FORBIDDEN","message":"You do not have permission to do that","details":null}}
+### intent-get-bad
+404 ct=application/json; charset=utf-8
+{"error":{"code":"NOT_FOUND","message":"Payment not found","details":null}}
+### mailbox
+200 ct=application/json; charset=utf-8
+{"data":[]}
+### bugs
+200 ct=application/json; charset=utf-8
+{"data":[{"name":"discount-not-applied","enabled":false,"ac":"PLS-5.1","side":"api","description":"A valid code shows as applied but the total is unchanged"},{"name":"expired-discount-accepted","enabled":false,"ac":"PLS-5.2","side":"api","description":"An expired code is applied with no error"},{"name":"discount-stacking","enabled":false,"ac":"PLS-5.4","side":"api","description":"Two discount codes can be applied together"},{"name":"discount-survives-cart-change","enabled":false,"ac":"PLS-5.5","side":"api","description":"Dropping below the minimum spend keeps the discount"},{"name":"discount-n
+### bugs-on
+200 ct=application/json; charset=utf-8
+{"data":[{"name":"discount-not-applied","enabled":false,"ac":"PLS-5.1","side":"api","description":"A valid code shows as applied but the total is unchanged"},{"name":"expired-discount-accepted","enabled":false,"ac":"PLS-5.2","side":"api","description":"An expired code is applied with no error"},{"name":"discount-stacking","enabled":false,"ac":"PLS-5.4","side":"api","description":"Two discount codes can be applied together"},{"name":"discount-survives-cart-change","enabled":false,"ac":"PLS-5.5","side":"api","description":"Dropping below the minimum spend keeps the discount"},{"name":"discount-n
+### bug-wrong-status
+500 ct=application/json; charset=utf-8
+{"error":{"code":"INTERNAL_ERROR","message":"Something went wrong","details":null}}
+### chaos
+201 ct=application/json; charset=utf-8
+{"data":{"id":X,"failed":0,"path":"/api/v1/categories","method":null,"failureRate":0,"failNext":1,"status":503}}
+### chaos-hit
+503 ct=application/json; charset=utf-8
+{"error":{"code":"CHAOS_INJECTED","message":"Injected failure (rule N)","details":{"ruleId":N}}}
+### chaos-miss
+200 ct=application/json; charset=utf-8
+{"data":[{"slug":"books","name":"Books","productCount":8},{"slug":"clothing","name":"Clothing","productCount":8},{"slug":"electronics","name":"Electronics","productCount":8},{"slug":"home-kitchen","name":"Home & Kitchen","productCount":8},{"slug":"sports","name":"Sports","productCount":8}]}
+### openapi-json
+200 ct=application/json; charset=utf-8
+{"openapi":"3.0.3","info":{"title":"PlayLab Shop API","version":"1.0.0","description":"REST API for PlayLab Shop, a practice e-commerce site built to be tested with Playwright.\n\n* All money values are integer cents in EUR.\n* Every error uses the same shape: `{ \"error\": { \"code\", \"message\", \"details\" } }`.\n* Authenticate with `Authorization: Bearer <accessToken>` or the `session` cookie set by `/auth/login`.\n* Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.\n* Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 
+### openapi-yaml
+200 ct=text/yaml; charset=utf-8
+openapi: 3.0.3
+info:
+  title: PlayLab Shop API
+  version: 1.0.0
+  description: >
+    REST API for PlayLab Shop, a practice e-commerce site built to be tested
+    with Playwright.
+
+
+    * All money values are integer cents in EUR.
+
+    * Every error uses the same shape: `{ "error": { "code", "message",
+    "details" } }`.
+
+    * Authenticate with `Authorization: Bearer <accessToken>` or the `session`
+    cookie set by `/auth/login`.
+
+    * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new
+    one.
+
+    * Rate limit: 100 requests a minute per user (or per IP for guests). Ov
+### docs
+301 ct=text/html; charset=UTF-8
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Redirecting</title>
+</head>
+<body>
+<pre>Redirecting to /api/docs/</pre>
+</body>
+</html>
+
+### docs-slash
+200 ct=text/html; charset=utf-8
+
+<!-- HTML for static distribution bundle build -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  
+  <title>PlayLab Shop API</title>
+  <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
+  <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" /><link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
+  <style>
+    html
+    {
+      box-sizing: border-box;
+      overflow: -moz-scrollbars-vertical;
+      overflow-y: scroll;
+    }
+    *,
+    *:before,
+    *:after
+    {
+      box-sizing: inherit;
+    }
+
+    body {
+      mar
+### pay-frame
+200 ct=text/html; charset=utf-8
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PlayLab Pay</title>
+    <style>
+      :root { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #1d1d1b; line-height: 1.5; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 16px; background: #ffffff; }
+      .brand { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.9rem; color: #5c5c57; }
+      .brand strong { color: #3a2f8f; }
+      .fi
+### stores-suggest
+404 ct=application/json; charset=utf-8
+{"error":{"code":"NOT_FOUND","message":"No route for GET /api/v1/stores/suggest","details":null}}
+### stores-nearest
+200 ct=application/json; charset=utf-8
+{"data":[{"id":X,"name":"PlayLab Dún Laoghaire","address":"12 George’s Street Upper","city":"Dún Laoghaire","lat":53.2934,"lng":-6.1353,"hours":"Mon–Sat 09:00–18:00, Sun 12:00–17:00","distanceKm":4.4},{"id":X,"name":"PlayLab Grafton Street","address":"1 Grafton Street","city":"Dublin","lat":53.3421,"lng":-6.2597,"hours":"Mon–Sat 09:00–18:00, Sun 12:00–17:00","distanceKm":6.1},{"id":X,"name":"PlayLab Swords","address":"Pavilions Shopping Centre","city":"Swords","lat":53.4555,"lng":-6.2197,"hours":"Mon–Sat 09:00–18:00, Sun 12:0
+### stock
+404 ct=application/json; charset=utf-8
+{"error":{"code":"NOT_FOUND","message":"No route for GET /api/v1/stock","details":null}}
+### offers
+200 ct=application/json; charset=utf-8
+{"data":[{"code":"SAVE10","description":"10% off your order","type":"percent","value":10,"minSpendCents":0},{"code":"FIXED20","description":"€20 off your order","type":"fixed","value":2000,"minSpendCents":0}]}
+### config
+200 ct=application/json; charset=utf-8
+{"paymentFrameUrl":"http://localhost:3001/pay/frame","testHooks":true,"currencies":{"EUR":1,"GBP":0.85},"bugs":[]}
