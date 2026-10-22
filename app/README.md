@@ -388,6 +388,16 @@ There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There 
 | Mailbox | `mailbox-email-input`, `mailbox-open-button`, `mailbox-message` (`data-type`), `mailbox-subject`, `mailbox-body`, `mailbox-link` |
 | Toasts | `toast-region`, `toast` (`data-type`), `toast-message`, `toast-dismiss` |
 
+## Platform tests
+
+These check the app itself. They are not the training suites, which live in [`../tests/`](../tests/).
+
+- **API unit tests**, in [`api/test/`](api/test/): `cd api && npm test`. They need no database.
+- **Smoke tests in a browser**, in [`e2e/`](e2e/): `cd e2e && npm ci && npx playwright install chromium && npm test`, with
+  the stack running. The suite reads `API_PORT` and `WEB_PORT` from `app/.env` (or the environment), resets the stack
+  before each test, and names each test after the AC it checks. CI runs it on a stack configured from `.env.example`
+  with non-default ports.
+
 ## Environment variables
 
 | Variable | Default | Purpose |

@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [api, web]
+        app: [api, web, e2e]
     defaults:
       run:
         working-directory: app/${{ matrix.app }}

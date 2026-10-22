@@ -15,6 +15,8 @@ export default defineConfig(
     'app/web/playwright/.cache/',
     'app/web/playwright-ct-report/',
     'app/web/test-results/',
+    'app/e2e/test-results/',
+    'app/e2e/playwright-report/',
     // Test suites are written by hand as training; each suite brings its own lint setup.
     'tests/',
   ]),
@@ -47,6 +49,11 @@ export default defineConfig(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
     },
+  },
+  // Platform smoke suite: Node, with browser code inside page.evaluate
+  {
+    files: ['app/e2e/**/*.ts'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   {
     files: ['app/web/*.config.ts'],

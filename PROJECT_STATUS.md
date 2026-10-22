@@ -5,14 +5,21 @@ Last updated: 2026-10-21
 
 ## Current phase
 
-Phase 0: Foundations (branch `phase-0-foundations`)
+Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main` in PR #5 on 2026-10-22.
 
 ## Next task
 
-Phase 1, task 0 (Phase 0 close-out): merge PR #5 once CI is green, then branch `phase-1-platform-core`. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 1 (rest): the Postgres integration-test harness and `api-integration` CI job (PLS-29.5), plus the
+UI screenshot and API probe baselines for Gate 1. The `app/e2e/` smoke suite part is done. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 1, smoke suite. `app/e2e/` (Playwright 1.64.1, Chromium, one worker, reset before each
+  test). It reads the ports from `app/.env` or the environment. Tests: PLS-6.1 checkout, PLS-12.5 frame and reset-link
+  ports, PLS-15.1 and 15.3 clipboard, PLS-17.2 offline checkout. New `smoke` workflow builds the stack from
+  `.env.example` on ports 3002 and 5174 and runs the suite; the `e2e` package is also typechecked in `quality`
+  and watched by Dependabot. Passes on the local stack (3001) and on a CI-style second stack.
+- 2026-10-22: Phase 1 task 0 done: PR #5 merged to `main` (`b5cb677`); branch `phase-1-platform-core` created.
 - 2026-10-22: Phase 1 task 0, close-out (PLS-12.5). `.env.example` no longer sets `PAYMENT_FRAME_URL`, `SHOP_ORIGINS`
   or `PUBLIC_WEB_URL`, and Compose derives all three from `API_PORT` and `WEB_PORT` (`PUBLIC_WEB_URL` used to
   stay on 5173). Unit test `test/env-example.test.ts` fails on the old files. Checked on a second stack built

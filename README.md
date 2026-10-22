@@ -127,6 +127,7 @@ npm install                      # once, at the repo root: lint and format tools
 npm run lint                     # ESLint
 npm run format:check             # Prettier
 cd app/api && npm ci && npm test # API unit tests (no database needed)
+cd app/e2e && npm ci && npm test # platform smoke tests in a browser (needs the stack running)
 ```
 
 ## Licence
