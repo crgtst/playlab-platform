@@ -13,6 +13,17 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
 
 ## Done
 
+- 2026-10-22: Web stack upgrade (Dependabot #12, #14, #15) on `chore/web-stack-upgrade`: Vite 5 → 8.3.5,
+  @vitejs/plugin-react 4 → 6.1.2, React and react-dom 18 → 19.3.1 (with types), React Router 6 → 7.18.4. The three
+  PRs failed alone because each needs the others.
+  - Code changes: `useRef` needs an initial value; the `review-stars` custom element is declared on `React.JSX`;
+    `cloneElement` props are typed for the tooltip; the `v7_*` future flags are gone (now default behaviour).
+  - Regression found and fixed: Vite 6+ refuses unknown `Host` headers, so the API's readiness check of
+    `http://web:5173` got 403 and `/health` said the web app was down (PLS-12.4). `allowedHosts: ['web']` fixes it;
+    unknown hosts still get 403. New e2e test PLS-12.4 checks readiness on the real stack; it failed before the fix.
+  - App and CT harness now share one Vite 8. JS bundle 341 KB → 449 KB (React 19 and Router 7).
+  - Checked: 12 e2e tests, all 14 Gate 1 screenshots unchanged, CT harness mounts under React 19, API suites and
+    probe unchanged.
 - 2026-10-22: Dependency batch 1 (Dependabot #6, #7, #9, #10) on `chore/deps-batch-1`. API only: 10 minor and patch
   updates (pg, jsonwebtoken, ws, yaml, tsx, type packages), multer 1.4.5-lts.1 → 2.4.0 (fixes the known
   vulnerabilities), bcryptjs 2 → 3, express-rate-limit 7 → 8. No code changes needed. Hashes made by bcryptjs 2
@@ -201,8 +212,7 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
 - Express 5's automatic `OPTIONS` reply is now `text/plain` with `Allow: GET, HEAD, POST`
   (it was `text/html` with `GET,HEAD,POST`). No AC or spec covers it.
 - The latest CT package is 1.62.1. `@playwright/test` is at 1.64.1 (the version the plan cites) because the CT
-  packages trail it. CT 1.62 bundles its own Vite 8, while the app still builds with Vite 5.4. Moving
-  the app to Vite 8 is left to Dependabot or a later task.
+  packages trail it. The app and the CT harness now share one Vite 8.
 - Lint gives 0 errors and 23 `no-explicit-any` warnings, all from untyped pg rows in the API.
   The rule is `warn` until row types are added.
 - Not formatted by Prettier: Markdown (tables are aligned by hand), HTML (reflowing can change text tests assert on),
@@ -223,8 +233,8 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
 - WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
   checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
 
-- Dependabot PRs still open, for planned tasks before Phase 2: the web stack (#12 Vite 8, #14 React 19, #15 React
-  Router 7) together, and zod 4 (#8) on its own, because its error messages are quoted in the ACs.
+- Dependabot PR still open, for a planned task before Phase 2: zod 4 (#8), on its own, because its error messages are
+  quoted in the ACs.
 
 ## Local environment notes
 

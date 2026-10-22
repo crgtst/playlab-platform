@@ -1,7 +1,8 @@
 import { HTMLAttributes, useEffect, useRef } from 'react';
 import './review-stars';
 
-declare global {
+// React 19 reads intrinsic elements from React.JSX rather than a global JSX namespace.
+declare module 'react' {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
