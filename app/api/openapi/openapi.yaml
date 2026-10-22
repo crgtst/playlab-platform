@@ -964,6 +964,68 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: List users (admin and support)
+      description: Ordered by id. `q` matches the name or email. Customers get 403.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - { name: role, in: query, schema: { type: string, enum: [customer, admin, support] } }
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: One page of users
+          headers:
+            X-Total-Count: { schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdminUser' }
+                  meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /admin/users/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    patch:
+      tags: [Admin]
+      summary: Change a user's role or unlock their account (admin)
+      description: |
+        A new role applies from the user's next login; access tokens already issued keep the old role until they
+        expire. `unlock: true` clears the failed-login count and the lock. Support users get 403.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [customer, admin, support] }
+                unlock: { type: boolean, enum: [true] }
+      responses:
+        '200':
+          description: The user after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/AdminUser' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /users/me:
     get:
       tags: [Users]
@@ -1764,6 +1826,17 @@ components:
     Role:
       type: string
       enum: [customer, admin, support]
+    AdminUser:
+      description: A user as admins and support see them
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          required: [failedLogins, locked, lockedUntil, deletedAt]
+          properties:
+            failedLogins: { type: integer }
+            locked: { type: boolean }
+            lockedUntil: { type: string, format: date-time, nullable: true }
+            deletedAt: { type: string, format: date-time, nullable: true }
     User:
       type: object
       required: [id, email, name, role, emailVerified, avatarUrl, createdAt]

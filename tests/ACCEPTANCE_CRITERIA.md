@@ -281,11 +281,11 @@ Built in Phase 1 (API addition 6).
 | PLS-22.5 | Given a deleted account, when an admin views its orders, then the orders are kept but the customer's name and email are anonymised |  |  |
 | PLS-22.6 | Given an email that belongs to another account, when a customer changes their email to it, then the API returns 409 `EMAIL_IN_USE` and the email is unchanged |  |  |
 
-## PLS-23 User administration (planned: Phase 1)
+## PLS-23 User administration (Phase 1)
 
 As an admin, I want to find and manage user accounts, so that I can fix access problems.
 
-Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
+Built in Phase 1 (API addition 6).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -299,7 +299,7 @@ Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

@@ -9,10 +9,16 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 8: user administration (PLS-23.1 to 23.5, 24.8). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 9: production guard (PLS-28.5) and the rate-limit fix with the `rate-limit-bypass` defect (PLS-24.6, finding A7). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 8, user administration (PLS-23.1 to 23.5, 24.8; completes finding A6).
+  - `GET /api/v1/admin/users` for admin and support: filters `role` and `q` (name or email), `page` and `limit`,
+    `X-Total-Count`; each user shows `failedLogins`, `locked`, `lockedUntil` and `deletedAt`, never the hash.
+  - `PATCH /api/v1/admin/users/{id}` for admin only: `role` and/or `unlock: true`. A new role applies from the next
+    login; tokens already issued keep the old one until they expire. Customers and support get 403; guests 401.
+  - API only, no admin page. 9 integration tests (118 in total). API probe unchanged; Gate 1 screenshots unchanged.
 - 2026-10-22: Phase 1 task 7, account management (PLS-22.1 to 22.6; fixes finding A6 for customers).
   - `GET /users/me`; `PATCH /users/me` changes the name, or the email with `currentPassword` (422 when missing or
     wrong, 409 `EMAIL_IN_USE`); other fields such as `role` are ignored.

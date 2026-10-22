@@ -170,6 +170,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   - Refresh tokens last 7 days and are single use. Send one in the body of `POST /auth/refresh` or via the `refresh_token` cookie.
   - After 5 failed logins the account is locked for 15 minutes; login then returns 423 with `Retry-After`.
   - Deleting an account ends every session at once: its access tokens return 401 `TOKEN_REVOKED` and its refresh tokens stop working.
+- **User administration** (PLS-23): `GET /admin/users` (filters `role` and `q`, paged with `page` and `limit`) for admin and support; `PATCH /admin/users/{id}` with `role` and/or `unlock: true` for admin only. A new role applies from the user's next login. API only, no admin page yet.
 - **Your account** (PLS-22): `GET /users/me`; `PATCH /users/me` with `name`, or `email` plus `currentPassword` (other fields are ignored); `DELETE /users/me` anonymises the account (its orders stay, as "Deleted user") and removes the avatar, cart, wishlist and emails. There is no account page for these yet; they are API only.
 - **Guest carts** live in an httpOnly `cart_id` cookie. On login they merge into the account cart. If a product is in both carts it keeps the larger quantity, so quantities are never doubled.
 - **Rate limit**: 100 requests a minute per user (or per IP for guests) on `/api/v1/*`, except `/health`. Over the limit returns 429 with `Retry-After`. Configure it with `RATE_LIMIT_PER_MIN`.

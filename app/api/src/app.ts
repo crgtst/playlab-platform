@@ -13,6 +13,7 @@ import { apiRateLimit } from './middleware/rateLimit';
 import { requestLog } from './middleware/requestLog';
 import { testFaults } from './middleware/testFaults';
 import { addressesRouter } from './routes/addresses';
+import { adminRouter } from './routes/admin';
 import { authRouter } from './routes/auth';
 import { cartRouter } from './routes/cart';
 import { configRouter } from './routes/config';
@@ -72,6 +73,7 @@ export function createApp() {
   v1.use('/stock', stockRouter);
   v1.use('/stores', storesRouter);
   v1.use('/offers', offersRouter);
+  v1.use('/admin', adminRouter);
   app.use('/api/v1', v1);
   app.use('/pay', payFrameRouter);
 
