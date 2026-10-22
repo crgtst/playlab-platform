@@ -9,10 +9,21 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 2: correlation IDs, JSON logs with redaction, `GET /test/logs` (PLS-25.1 to 25.3, PLS-10.1 edit). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 3: test sessions (PLS-28.1, 28.2, 28.6 to 28.10). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 2 (PLS-25.1 to 25.3, PLS-10.1 edit applied).
+  - Per-request context (AsyncLocalStorage), ready for test sessions. `X-Correlation-Id` is echoed when valid,
+    otherwise a UUID is generated; every error body carries `correlationId`.
+  - pino writes one JSON line per request (route pattern, status, duration, user, active defects, request, and
+    error code and message on failures) to stdout and to a 5,000-line buffer behind `GET /test/logs`. Passwords,
+    tokens, the `Authorization` header, cookies and card details are redacted. The container healthcheck isn't
+    logged. `LOG_LEVEL` controls stdout.
+  - Tests: 16 new integration tests. Removing `cardNumber` from the redaction list fails PLS-25.3. Container logs
+    after the e2e smoke (UI login, card payment) contain no password, card number or token.
+  - Probe diff against the Phase 0 baseline: only `correlationId` in error bodies, the new header and OpenAPI
+    text; status codes unchanged. Gate 1 screenshots and the e2e smoke still pass.
 - 2026-10-22: Phase 1 task 1 complete.
   - Integration harness: Vitest projects `unit` (`npm test`) and `integration` (`npm run test:int`). Integration
     tests create a fresh `playlab_test` database each run, migrated and seeded by the app's own code, so the

@@ -8,6 +8,7 @@ import { clock } from '../lib/clock';
 import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
 import { resetRateLimits } from '../middleware/rateLimit';
 import { faults } from '../middleware/testFaults';
+import { logs } from '../lib/logger';
 import { BUG_NAMES, bugs } from '../lib/bugs';
 import { events } from '../lib/events';
 import { asyncHandler, parse } from '../middleware/validate';
@@ -27,6 +28,7 @@ testRouter.get('/', (_req, res) => {
       'GET|POST|DELETE /test/latency',
       'GET|POST|DELETE /test/chaos',
       'GET|POST|DELETE /test/bugs',
+      'GET /test/logs?correlationId=',
     ],
     bugs: BUG_NAMES,
     fixtures: Object.keys(FIXTURES),
@@ -40,6 +42,7 @@ testRouter.post(
     clock.reset();
     faults.clearAll();
     bugs.clear();
+    logs.clear();
     await resetDatabase();
     resetRateLimits();
     events.emitEvent('stockReset');
@@ -214,4 +217,16 @@ testRouter.post('/bugs', (req: Request, res: Response) => {
 testRouter.delete('/bugs', (_req, res) => {
   bugs.clear();
   res.status(204).end();
+});
+
+const logsSchema = z.object({
+  correlationId: z
+    .string({ required_error: 'correlationId is required' })
+    .regex(/^[A-Za-z0-9_-]{1,64}$/, 'correlationId must be 1 to 64 letters, digits, hyphens or underscores'),
+});
+
+/** The log lines for one request, already redacted (PLS-25.2). Cleared by POST /test/reset. */
+testRouter.get('/logs', (req: Request, res: Response) => {
+  const { correlationId } = parse(logsSchema, req.query);
+  res.json({ data: logs.forCorrelationId(correlationId) });
 });

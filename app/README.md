@@ -107,6 +107,7 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | `POST /test/users` | Body `{ "role"?: "customer"\|"admin"\|"support", "name"?, "email"? }`. Returns `{ user, password, accessToken, refreshToken }`. |
 | `GET /test/mailbox/{email}` | Emails the app "sent" (registration confirmation, password reset), newest first, each with a `link`. |
 | `DELETE /test/mailbox/{email}` | Empties that mailbox. |
+| `GET /test/logs?correlationId=` | The redacted log lines for one request. Keeps the last 5,000 lines; `POST /test/reset` clears them. |
 | `GET /test/clock` | Returns `{ now, offsetMs }`. |
 | `POST /test/clock` | Moves the server's "now". Body `{ "now": "<ISO date>" }`, `{ "offsetMs": n }` or `{ "advanceMs": n }`; an empty body resets it. Drives JWT expiry, lockout, reset-link expiry, discount windows and order dates. |
 | `POST /test/latency` | Delays matching requests. Body `{ "path": "/api/v1/products*", "method"?: "GET", "delayMs": 3000 }`. `GET` lists the rules, `DELETE` clears them. |
@@ -147,7 +148,9 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
 
 ## API conventions
 
-- **Errors** always have the shape `{ "error": { "code", "message", "details" } }`. Validation failures return 422, with `details` as an array of `{ field, message }`.
+- **Errors** always have the shape `{ "error": { "code", "message", "details", "correlationId" } }`. Validation failures return 422, with `details` as an array of `{ field, message }`.
+- **Correlation IDs**: every response has an `X-Correlation-Id` header. Send your own (1 to 64 of `A-Z a-z 0-9 - _`) and it is echoed back; otherwise, or if it is invalid, the API generates a UUID. Errors repeat it as `error.correlationId`.
+- **Logs**: the API writes one JSON line per request to stdout (`docker compose logs api`) with the correlation ID, route, status, duration, user and active defects. Passwords, tokens, the `Authorization` header, cookies and card details are redacted. `LOG_LEVEL=silent` turns stdout logging off.
 - **Authentication**: send `Authorization: Bearer <accessToken>`, or rely on the httpOnly `session` cookie that `/auth/login` sets.
   - Access tokens last 15 minutes.
   - Refresh tokens last 7 days and are single use. Send one in the body of `POST /auth/refresh` or via the `refresh_token` cookie.
@@ -413,6 +416,7 @@ These check the app itself. They are not the training suites, which live in [`..
 | `RATE_LIMIT_PER_MIN` | `100` | API rate limit |
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
+| `LOG_LEVEL` | `info` | Request logs on stdout: `info`, `warn`, `error` or `silent` (`GET /test/logs` keeps them either way) |
 | `WEB_PORT` / `API_PORT` / `DB_PORT` | `5173` / `3000` / `5432` | Host ports |
 | `PUBLIC_WEB_URL` | `http://localhost:${WEB_PORT}` | Base URL used in links inside mailbox emails |
 | `PAYMENT_FRAME_URL` | `http://localhost:${API_PORT}/pay/frame` | Where the browser loads the payment iframe from |

@@ -17,9 +17,10 @@ D="$(python3 -c 'import datetime; print(datetime.date.today() + datetime.timedel
 
 norm() {
   sed -E \
-    -e 's/"(time|createdAt|updatedAt|expiresAt|placedAt|durationMs|accessToken|refreshToken|token|clientSecret|id|frameUrl|orderNumber|resetTime)":("[^"]*"|[0-9]+)/"\1":X/g' \
+    -e 's/"(time|createdAt|updatedAt|expiresAt|placedAt|durationMs|accessToken|refreshToken|token|clientSecret|id|frameUrl|orderNumber|resetTime|correlationId)":("[^"]*"|[0-9]+)/"\1":X/g' \
     -e 's/[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z/TS/g' \
     -e 's/^Date: .*/Date: X/' \
+    -e 's/^X-Correlation-Id: .*/X-Correlation-Id: X/' \
     -e 's/rule [0-9]+/rule N/g; s/"ruleId":[0-9]+/"ruleId":N/g'
 }
 p() {

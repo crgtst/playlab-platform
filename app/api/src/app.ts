@@ -5,8 +5,10 @@ import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 import { config } from './config';
+import { correlation } from './lib/requestContext';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimit } from './middleware/rateLimit';
+import { requestLog } from './middleware/requestLog';
 import { testFaults } from './middleware/testFaults';
 import { addressesRouter } from './routes/addresses';
 import { authRouter } from './routes/auth';
@@ -36,6 +38,9 @@ export function createApp() {
   app.set('etag', false); // product reads set their own ETag
   // Keep Express 4's qs parsing (Express 5 defaults to 'simple'), so nested and array query params behave as before.
   app.set('query parser', 'extended');
+  // First, so every response (errors included) carries a correlation ID and gets a log line.
+  app.use(correlation);
+  app.use(requestLog);
   app.use(cookieParser());
   app.use(express.json({ limit: '100kb' }));
   // Express 5 leaves req.body undefined when no body was parsed; Express 4 set {}, so validation reports each missing field.

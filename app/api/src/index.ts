@@ -3,6 +3,7 @@ import { config } from './config';
 import { migrate } from './db/migrate';
 import { pool } from './db/pool';
 import { getSeedPasswordHash, seedIfEmpty } from './db/seed/base';
+import { logger } from './lib/logger';
 import { attachOrderSocket } from './realtime/ws';
 
 async function waitForDatabase(attempts = 30) {
@@ -22,11 +23,11 @@ async function main() {
   await migrate();
   getSeedPasswordHash();
   const seeded = await seedIfEmpty();
-  console.log(seeded ? 'Database seeded with base data' : 'Database already has data; skipping seed');
+  logger.info(seeded ? 'Database seeded with base data' : 'Database already has data; skipping seed');
 
   const app = createApp();
   const server = app.listen(config.port, () => {
-    console.log(`PlayLab Shop API listening on :${config.port} (TEST_HOOKS=${config.testHooks})`);
+    logger.info(`PlayLab Shop API listening on :${config.port} (TEST_HOOKS=${config.testHooks})`);
   });
   attachOrderSocket(server);
 

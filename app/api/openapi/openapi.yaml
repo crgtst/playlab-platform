@@ -6,7 +6,10 @@ info:
     REST API for PlayLab Shop, a practice e-commerce site built to be tested with Playwright.
 
     * All money values are integer cents in EUR.
-    * Every error uses the same shape: `{ "error": { "code", "message", "details" } }`.
+    * Every error uses the same shape: `{ "error": { "code", "message", "details", "correlationId" } }`.
+    * Every response has an `X-Correlation-Id` header. Send your own (1 to 64 of `A-Z a-z 0-9 - _`) to have it echoed;
+      otherwise, or if it is invalid, the API generates a UUID. Errors repeat it as `error.correlationId`.
+      With test hooks on, `GET /test/logs?correlationId=` returns that request's redacted log line.
     * Authenticate with `Authorization: Bearer <accessToken>` or the `session` cookie set by `/auth/login`.
     * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
     * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
@@ -1434,6 +1437,37 @@ paths:
         '204':
           description: All off
 
+  /test/logs:
+    get:
+      tags: [Test hooks]
+      summary: 'GET /test/logs - the redacted log lines for one request'
+      description: |
+        One JSON line per request: time, correlationId, method, route, path, status, durationMs, userId,
+        testSession, the active defects, the request (query, headers, body) and, for failures, the error code
+        and message. Passwords, tokens, the `Authorization` header, cookies and card details are redacted.
+        Keeps the most recent 5,000 lines; `POST /test/reset` clears them. The container healthcheck
+        (`GET /api/v1/health/live`) is not logged.
+      servers: [{ url: / }]
+      parameters:
+        - name: correlationId
+          in: query
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }
+      responses:
+        '200':
+          description: Log lines for that correlation ID (empty if none)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { type: object, additionalProperties: true }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1508,11 +1542,15 @@ components:
       properties:
         error:
           type: object
-          required: [code, message, details]
+          required: [code, message, details, correlationId]
           additionalProperties: false
           properties:
             code: { type: string, example: VALIDATION_ERROR }
             message: { type: string }
+            correlationId:
+              type: string
+              description: The request's `X-Correlation-Id`, for finding its log line.
+              example: 3f2b8c1e-6a0d-4c4e-9a52-1b7e2f0c9d11
             details:
               nullable: true
               description: For validation errors, an array of `{ field, message }`.

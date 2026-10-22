@@ -132,7 +132,7 @@ As an API consumer, I want consistent, well-behaved endpoints, so that integrati
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
-| PLS-10.1 | Given any error, when returned, then the body matches `{ error: { code, message, details } }` |  |  |
+| PLS-10.1 | Given any error, when returned, then the body matches `{ error: { code, message, details, correlationId } }` |  |  |
 | PLS-10.2 | Given invalid input, when sent, then the API returns 422, never 500 |  | `wrong-status-code` |
 | PLS-10.3 | Given 100 requests in a minute, when the 101st is sent, then the API returns 429 with a `Retry-After` header |  |  |
 | PLS-10.4 | Given every endpoint, when called, then the response matches the OpenAPI schema |  |  |
@@ -322,7 +322,7 @@ Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13
 
 As a tester, I want to trace any request through the logs, so that I can find why it failed without guessing.
 
-Not built yet: correlation IDs, logs and metrics arrive in Phase 1 (API additions 2 and 3).
+Partly built: PLS-25.1 to 25.3 (correlation IDs and logs) are built. Metrics (25.4, 25.5) arrive later in Phase 1 (API addition 3).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

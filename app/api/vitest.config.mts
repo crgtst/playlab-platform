@@ -8,6 +8,8 @@ process.env.TEST_DATABASE_URL ??= `postgres://playlab:playlab@localhost:${proces
 export default defineConfig({
   test: {
     environment: 'node',
+    // Request logs still reach GET /test/logs; they just stay off the test output.
+    env: { LOG_LEVEL: 'silent' },
     projects: [
       {
         extends: true,
@@ -25,6 +27,7 @@ export default defineConfig({
           env: {
             DATABASE_URL: process.env.TEST_DATABASE_URL,
             TEST_HOOKS: 'true',
+            LOG_LEVEL: 'silent',
             // Nothing listens here, so readiness reports the web app as down.
             WEB_URL: 'http://127.0.0.1:9',
           },
