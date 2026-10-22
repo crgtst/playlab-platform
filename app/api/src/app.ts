@@ -5,6 +5,7 @@ import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 import { config } from './config';
+import { registry } from './lib/metrics';
 import { correlation } from './lib/requestContext';
 import { resolveTestSession } from './lib/testSessions';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -75,6 +76,10 @@ export function createApp() {
   app.use('/pay', payFrameRouter);
 
   const spec = loadOpenApi();
+  // Prometheus metrics (PLS-25.4): outside /api/v1, so the rate limit never applies.
+  app.get('/metrics', async (_req, res) => {
+    res.type(registry.contentType).send(await registry.metrics());
+  });
   app.get('/api/openapi.json', (_req, res) => res.json(spec));
   app.get('/api/openapi.yaml', (_req, res) => res.type('text/yaml').send(YAML.stringify(spec)));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec, { customSiteTitle: 'PlayLab Shop API' }));

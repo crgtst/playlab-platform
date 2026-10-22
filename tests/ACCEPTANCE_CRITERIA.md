@@ -318,11 +318,11 @@ Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13
 | PLS-24.13 | (API9) Given the retired API version, when `/api/v0/orders` is called, then the API returns 404 |  | `shadow-api-v0` |
 | PLS-24.14 | (API10) Given an address suggestion that breaks the shipping-address rules, such as a 300-character line, when it is selected and the order is placed, then the API validates it like a typed address and returns 422 |  | `trust-address-provider` |
 
-## PLS-25 Observability (planned: Phase 1)
+## PLS-25 Observability (Phase 1)
 
 As a tester, I want to trace any request through the logs, so that I can find why it failed without guessing.
 
-Partly built: PLS-25.1 to 25.3 (correlation IDs and logs) are built. Metrics (25.4, 25.5) arrive later in Phase 1 (API addition 3).
+Built in Phase 1 (API additions 2 and 3): correlation IDs, logs and metrics.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

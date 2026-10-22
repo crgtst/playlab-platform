@@ -1141,6 +1141,22 @@ paths:
               schema: { $ref: '#/components/schemas/Error' }
 
   # ---- Test hooks: served from the server root (/test/*), not /api/v1 ----
+  /metrics:
+    get:
+      tags: [Health]
+      summary: 'GET /metrics - Prometheus metrics'
+      description: |
+        Prometheus text format. Not under `/api/v1`, so never rate limited, and never affected by latency or chaos
+        rules. Includes `http_request_duration_seconds` (by `method`, matched `route` and `status`; `route="unmatched"`
+        when no route matched), `playlab_orders_created_total`, `playlab_payments_declined_total`,
+        `playlab_defects_active`, `playlab_db_pool_connections{state}` and the standard Node.js process metrics.
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Metrics
+          content:
+            text/plain:
+              schema: { type: string }
   /test:
     get:
       tags: [Test hooks]

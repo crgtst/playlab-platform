@@ -1,5 +1,6 @@
 import { config } from '../config';
 import { ApiError } from './errors';
+import { paymentsDeclined } from './metrics';
 
 export const TEST_CARDS = {
   success: '4242424242424242',
@@ -27,6 +28,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** Fake payment provider. Resolves on success, throws 402 on decline and 504 after a delay on timeout. */
 export async function chargeCard(cardNumber: string): Promise<void> {
   if (cardNumber === TEST_CARDS.decline) {
+    paymentsDeclined.inc();
     throw new ApiError(402, 'PAYMENT_DECLINED', 'Your card was declined');
   }
   if (cardNumber === TEST_CARDS.timeout) {

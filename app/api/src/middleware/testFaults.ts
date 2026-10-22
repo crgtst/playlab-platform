@@ -60,7 +60,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function testFaults(req: Request, res: Response, next: NextFunction) {
   const path = req.originalUrl.split('?')[0];
-  if (path.startsWith('/test') || path.startsWith('/api/v1/health')) return next();
+  if (path.startsWith('/test') || path.startsWith('/api/v1/health') || path === '/metrics') return next();
 
   const { latency, chaos } = rules();
   const delay = latency.filter((r) => matches(r, req)).reduce((sum, r) => sum + r.delayMs, 0);

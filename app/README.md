@@ -24,6 +24,7 @@ If one of the ports is already in use, override it, for example `API_PORT=3001 d
 | OpenAPI file | http://localhost:3000/api/openapi.json and `/api/openapi.yaml` (source: [`api/openapi/openapi.yaml`](api/openapi/openapi.yaml)) |
 | Readiness (API, DB and web) | http://localhost:3000/api/v1/health |
 | Liveness (API and DB only) | http://localhost:3000/api/v1/health/live |
+| Metrics (Prometheus) | http://localhost:3000/metrics |
 | Test hooks | http://localhost:3000/test/* (also proxied at http://localhost:5173/test/*) |
 | Test mailbox page | http://localhost:5173/mailbox?email=you@example.com |
 | Admin area | http://localhost:5173/admin/orders and `/admin/products` (admin and support users) |
@@ -162,6 +163,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
 
 - **Errors** always have the shape `{ "error": { "code", "message", "details", "correlationId" } }`. Validation failures return 422, with `details` as an array of `{ field, message }`.
 - **Correlation IDs**: every response has an `X-Correlation-Id` header. Send your own (1 to 64 of `A-Z a-z 0-9 - _`) and it is echoed back; otherwise, or if it is invalid, the API generates a UUID. Errors repeat it as `error.correlationId`.
+- **Metrics**: `GET /metrics` serves Prometheus text: a request-duration histogram by method, route and status, orders created, payments declined, active defects, database pool usage and the Node.js process metrics. It is outside `/api/v1`, so it is never rate limited.
 - **Logs**: the API writes one JSON line per request to stdout (`docker compose logs api`) with the correlation ID, route, status, duration, user and active defects. Passwords, tokens, the `Authorization` header, cookies and card details are redacted. `LOG_LEVEL=silent` turns stdout logging off.
 - **Authentication**: send `Authorization: Bearer <accessToken>`, or rely on the httpOnly `session` cookie that `/auth/login` sets.
   - Access tokens last 15 minutes.

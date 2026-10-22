@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound } from '../lib/errors';
+import { ordersCreated } from '../lib/metrics';
 import { cardSchema } from '../lib/cardSchema';
 import { chargeCard } from '../lib/payments';
 import { lineTotal } from '../lib/pricing';
@@ -317,6 +318,7 @@ ordersRouter.post(
       }
       throw err;
     }
+    ordersCreated.inc();
     await emitStock(order!.items.map((i) => i.productId));
     res.status(201).location(`/api/v1/orders/${order!.id}`).json({ data: order });
   }),

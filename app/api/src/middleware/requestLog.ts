@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { NextFunction, Request, Response } from 'express';
 import { bugs } from '../lib/bugs';
 import { logger } from '../lib/logger';
+import { httpDuration } from '../lib/metrics';
 import { CORRELATION_HEADER } from '../lib/requestContext';
 import { testSessions } from '../lib/testSessions';
 
@@ -43,6 +44,8 @@ export function requestLog(req: Request, res: Response, next: NextFunction) {
   res.on(
     'finish',
     AsyncLocalStorage.bind(() => {
+      const seconds = Number(process.hrtime.bigint() - started) / 1e9;
+      httpDuration.observe({ method: req.method, route: route() ?? 'unmatched', status: String(res.statusCode) }, seconds);
       if (UNLOGGED.has(path)) return;
       const error = res.locals.error as LoggedError | undefined;
       logger.info(
@@ -52,7 +55,7 @@ export function requestLog(req: Request, res: Response, next: NextFunction) {
           route: route(),
           path,
           status: res.statusCode,
-          durationMs: Math.round(Number(process.hrtime.bigint() - started) / 1e4) / 100,
+          durationMs: Math.round(seconds * 1e5) / 100,
           userId: req.user?.id ?? null,
           testSession: testSessions.currentId(),
           defects: bugs.active(),

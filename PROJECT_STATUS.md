@@ -9,10 +9,17 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 4: metrics, `GET /metrics` (PLS-25.4, 25.5). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 5: order lifecycle (PLS-20.1 to 20.6, 24.1 cancel, PLS-8.2 and 8.3 edits; defect `status-any-transition`). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 4, metrics (PLS-25.4, 25.5). `GET /metrics` (prom-client 15.1.3, own registry):
+  `http_request_duration_seconds` by method, matched route and status (`route="unmatched"` for 404s with no
+  route), `playlab_orders_created_total` (replays not counted), `playlab_payments_declined_total` (counted at the
+  provider, so card orders and the frame both count), `playlab_defects_active`, `playlab_db_pool_connections{state}`
+  and the Node.js process metrics. Outside `/api/v1`, so never rate limited; exempt from latency and chaos rules.
+  4 new integration tests (38 in total). On the stack, the counter showed the e2e smoke's 2 UI orders.
+  API probe unchanged.
 - 2026-10-22: Phase 1 task 3, test sessions (PLS-28.1, 28.2, 28.6 to 28.10; fixes finding A1).
   - `POST /test/sessions`; the session comes from `X-Test-Session`, the `test_session` cookie or (payment frame
     only) a `testSession` URL parameter. Defects, clock offset, latency and chaos rules are kept per session
