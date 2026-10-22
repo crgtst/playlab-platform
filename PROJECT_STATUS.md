@@ -246,6 +246,8 @@ work before it is done once PRs #20 and the `tests/` scaffold are merged.
 | 7 | v2.0 FastAPI spec marked historical; PlayLab Pay (FastAPI) added as Phase 5 stretch | Agreed | 2026-10-21 |
 | 8 | A9 reconciliation: build PLS-15.3 and 17.2; reword 13.x, 14.1, 16.1, 17.1 and 18.2 to match the build | Agreed | 2026-10-21 |
 | 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Agreed | 2026-10-22 |
+| 10 | Compose ports stay published on all interfaces (not bound to `127.0.0.1`), so another machine on the network can reach the stack, e.g. to generate JMeter load. The README and `SECURITY.md` say local, trusted networks only | Agreed | 2026-10-22 |
+| 11 | `SECURITY.md` keeps "an acknowledgement within a week" as written | Agreed | 2026-10-22 |
 
 ## Known issues
 
@@ -261,9 +263,8 @@ work before it is done once PRs #20 and the `tests/` scaffold are merged.
 
 - GitHub private vulnerability reporting, which `SECURITY.md` points to, can't be enabled on a private repo.
   Turn it on when the repo goes public (Gate 3).
-- `SECURITY.md` promises an acknowledgement within a week. Craig to confirm or change.
-- Proposed plan change: Compose publishes ports 5173, 3000 and 5432 on all interfaces. Binding them to `127.0.0.1`
-  would keep the stack off the local network. That changes how people reach the stack, so it needs agreeing first.
+- Compose publishes ports 5173, 3000 and 5432 on all interfaces (decision 10), so anyone on the same network can reach
+  the test hooks and the database. Run the stack only on networks you trust.
 
 - The plan's edits to existing ACs (PLS-8.2, 8.3, 8.4 and 10.1 in "Changes to existing stories") are not
   applied yet. They describe Phase 1 behaviour, so they land with it; applying them now would make built
