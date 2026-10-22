@@ -1,10 +1,15 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { randomUUID } from 'crypto';
 import { NextFunction, Request, Response } from 'express';
+import type { TestSession } from './testSessions';
 
 /** Per-request state that code deep in a request can read without it being passed down. */
 export interface RequestContext {
   correlationId: string;
+  /** The test session the request named (header, cookie or payment-frame URL), whether or not it exists. */
+  requestedTestSession?: string;
+  /** That session, when it exists and hasn't expired. */
+  testSession?: TestSession;
 }
 
 const storage = new AsyncLocalStorage<RequestContext>();

@@ -9,10 +9,22 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 3: test sessions (PLS-28.1, 28.2, 28.6 to 28.10). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 4: metrics, `GET /metrics` (PLS-25.4, 25.5). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 3, test sessions (PLS-28.1, 28.2, 28.6 to 28.10; fixes finding A1).
+  - `POST /test/sessions`; the session comes from `X-Test-Session`, the `test_session` cookie or (payment frame
+    only) a `testSession` URL parameter. Defects, clock offset, latency and chaos rules are kept per session
+    through one `sessionScoped` store, so `isBugOn()`, `clock` and the fault rules kept their signatures.
+    Rate-limit keys include the session. No session means the global state, unchanged.
+  - Idle expiry (`TEST_SESSION_IDLE_MS`, 1 hour, real time); hook calls naming an unknown or expired session
+    get 404 `TEST_SESSION_NOT_FOUND`; reset ends every session; a session ended mid-stream falls back to global.
+  - The shop's intent adds the session to the frame URL, and the frame sends it on its own calls.
+  - The live stock stream and the request log are bound to their own request's context, since events arrive in
+    another request's context; removing that binding fails the stream test.
+  - Tests: 15 new integration tests (34 in total, stable over 3 runs) and an e2e test for the frame (6 in total).
+    API probe identical to task 2; Gate 1 screenshots unchanged.
 - 2026-10-22: Phase 1 task 2 (PLS-25.1 to 25.3, PLS-10.1 edit applied).
   - Per-request context (AsyncLocalStorage), ready for test sessions. `X-Correlation-Id` is echoed when valid,
     otherwise a UUID is generated; every error body carries `correlationId`.
@@ -133,6 +145,8 @@ Phase 1, task 3: test sessions (PLS-28.1, 28.2, 28.6 to 28.10). The Phase 1 task
 - The plan's edits to existing ACs (PLS-8.2, 8.3, 8.4 and 10.1 in "Changes to existing stories") are not
   applied yet. They describe Phase 1 behaviour, so they land with it; applying them now would make built
   ACs fail.
+- WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
+  checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
 - Finding A7 confirmed on 2026-10-21: after a guest's 429, a request with a new `X-Forwarded-For` gets 200.
   The fix is in Phase 1 (trust only the web proxy; keep the bypass as the `rate-limit-bypass` defect).
 

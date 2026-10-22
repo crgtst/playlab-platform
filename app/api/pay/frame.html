@@ -66,6 +66,9 @@
         var params = new URLSearchParams(location.search);
         var intentId = params.get('intent');
         var secret = params.get('secret');
+        // The shop's test session, if any: sent on every call so this frame sees the same defects and faults.
+        var testSession = params.get('testSession');
+        var sessionHeaders = testSession ? { 'X-Test-Session': testSession } : {};
         var form = document.getElementById('form');
         var payButton = document.getElementById('pay');
         var statusBox = document.getElementById('status');
@@ -125,7 +128,7 @@
           return;
         }
 
-        fetch('/pay/intents/' + encodeURIComponent(intentId) + '?secret=' + encodeURIComponent(secret))
+        fetch('/pay/intents/' + encodeURIComponent(intentId) + '?secret=' + encodeURIComponent(secret), { headers: sessionHeaders })
           .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
           .then(function (r) {
             if (!r.ok) throw new Error(r.body && r.body.error ? r.body.error.message : 'Payment not found');
@@ -177,7 +180,7 @@
           values.clientSecret = secret;
           fetch('/pay/intents/' + encodeURIComponent(intentId) + '/confirm', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: Object.assign({ 'Content-Type': 'application/json' }, sessionHeaders),
             body: JSON.stringify(values),
           })
             .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })

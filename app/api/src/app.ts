@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yaml';
 import { config } from './config';
 import { correlation } from './lib/requestContext';
+import { resolveTestSession } from './lib/testSessions';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimit } from './middleware/rateLimit';
 import { requestLog } from './middleware/requestLog';
@@ -42,6 +43,8 @@ export function createApp() {
   app.use(correlation);
   app.use(requestLog);
   app.use(cookieParser());
+  // Test sessions (header, cookie or payment-frame URL) exist only with test hooks on.
+  if (config.testHooks) app.use(resolveTestSession);
   app.use(express.json({ limit: '100kb' }));
   // Express 5 leaves req.body undefined when no body was parsed; Express 4 set {}, so validation reports each missing field.
   app.use((req, _res, next) => {

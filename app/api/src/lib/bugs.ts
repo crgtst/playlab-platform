@@ -1,4 +1,5 @@
 import { config } from '../config';
+import { sessionScoped } from './testSessions';
 
 /**
  * Bug mode: named defects that tests can switch on with POST /test/bugs to prove the suite catches them.
@@ -64,16 +65,17 @@ export const BUGS = {
 export type BugName = keyof typeof BUGS;
 export const BUG_NAMES = Object.keys(BUGS) as BugName[];
 
-const enabled = new Set<BugName>();
+// Each test session switches its own defects on and off; requests with no session use the global set.
+const enabled = sessionScoped(() => new Set<BugName>());
 
 export function isBugOn(name: BugName): boolean {
-  return config.testHooks && enabled.has(name);
+  return config.testHooks && enabled().has(name);
 }
 
 export const bugs = {
-  enable: (names: BugName[]) => names.forEach((n) => enabled.add(n)),
-  disable: (names: BugName[]) => names.forEach((n) => enabled.delete(n)),
-  clear: () => enabled.clear(),
-  active: (): BugName[] => (config.testHooks ? BUG_NAMES.filter((n) => enabled.has(n)) : []),
-  list: () => BUG_NAMES.map((name) => ({ name, enabled: enabled.has(name), ...BUGS[name] })),
+  enable: (names: BugName[]) => names.forEach((n) => enabled().add(n)),
+  disable: (names: BugName[]) => names.forEach((n) => enabled().delete(n)),
+  clear: () => enabled().clear(),
+  active: (): BugName[] => (config.testHooks ? BUG_NAMES.filter((n) => enabled().has(n)) : []),
+  list: () => BUG_NAMES.map((name) => ({ name, enabled: enabled().has(name), ...BUGS[name] })),
 };

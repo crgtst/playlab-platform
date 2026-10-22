@@ -52,7 +52,7 @@ All seeded accounts use the password **`Password123!`** and are already email-co
 - **admin:** everything, including order status changes, bulk actions, CSV export and product CRUD.
 - **support:** can open the admin area and read every order, but every edit control is disabled (with a "Read-only access" tooltip), and the API returns 403 for any change.
 
-For parallel tests, create a throwaway user per test with `POST /test/users` (any role).
+For parallel tests, create a throwaway user per test with `POST /test/users` (any role), and give each worker its own [test session](#test-sessions) for defects, the clock and injected faults.
 
 ## Seed data
 
@@ -103,6 +103,7 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | --- | --- |
 | `GET /test` | Lists the hooks and fixture names. |
 | `POST /test/reset` | Truncates every table, reloads the base seed, resets the clock and the rate-limit counters. Takes about 50 ms. |
+| `POST /test/sessions` | Starts an isolated test session and returns `{ id, idleTimeoutMs }`. See [Test sessions](#test-sessions). |
 | `POST /test/seed` | Creates named fixtures; body `{ "fixtures": ["…"] }`. Returns the created ids and codes. |
 | `POST /test/users` | Body `{ "role"?: "customer"\|"admin"\|"support", "name"?, "email"? }`. Returns `{ user, password, accessToken, refreshToken }`. |
 | `GET /test/mailbox/{email}` | Emails the app "sent" (registration confirmation, password reset), newest first, each with a `link`. |
@@ -116,6 +117,17 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | `POST /test/chaos` | Makes matching requests fail. Body `{ "path", "method"?, "status"?: 500, ... }` plus exactly one of `failureRate` (0 to 1, random) or `failNext` (fail the next N, deterministic). Failures use code `CHAOS_INJECTED` and an `X-Chaos-Rule` header. `GET` lists the rules, `DELETE` clears them. |
 
 Latency and chaos rules match the path without its query string, and `*` is the only wildcard. They apply to `/api/v1/*` and `/pay/*`, never to `/test/*` or `/health`. `POST /test/reset` clears them.
+
+### Test sessions
+
+Defects, the clock, latency and chaos rules, and rate-limit counters are global unless you use a test session, so one parallel worker switching on `order-leak` changes every other worker's run. A session gives each worker its own copy.
+
+- `POST /test/sessions` returns `{ id }` and sets a `test_session` cookie.
+- Send the id as the `X-Test-Session` header, or let the browser send the cookie (`context.addCookies` with `domain: 'localhost'`). That request then uses the session's state, and hook calls (`/test/bugs`, `/test/clock`, `/test/latency`, `/test/chaos`) change only the session.
+- Requests with no session use the global state, exactly as before.
+- Database rows are still shared: keep using `POST /test/users` for per-test data.
+- The payment frame is on the API origin, so the shop adds `testSession=<id>` to the frame URL, and the frame sends it on its own calls.
+- A session unused for an hour (`TEST_SESSION_IDLE_MS`) is forgotten. Hook calls naming it then return 404 `TEST_SESSION_NOT_FOUND`, and other requests fall back to the global state. `POST /test/reset` ends every session.
 
 ### Fixtures for `POST /test/seed`
 
@@ -416,6 +428,7 @@ These check the app itself. They are not the training suites, which live in [`..
 | `RATE_LIMIT_PER_MIN` | `100` | API rate limit |
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
+| `TEST_SESSION_IDLE_MS` | `3600000` | How long an unused test session lasts |
 | `LOG_LEVEL` | `info` | Request logs on stdout: `info`, `warn`, `error` or `silent` (`GET /test/logs` keeps them either way) |
 | `WEB_PORT` / `API_PORT` / `DB_PORT` | `5173` / `3000` / `5432` | Host ports |
 | `PUBLIC_WEB_URL` | `http://localhost:${WEB_PORT}` | Base URL used in links inside mailbox emails |

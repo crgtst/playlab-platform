@@ -1,7 +1,9 @@
+import { AsyncLocalStorage } from 'async_hooks';
 import { NextFunction, Request, Response } from 'express';
 import { bugs } from '../lib/bugs';
 import { logger } from '../lib/logger';
 import { CORRELATION_HEADER } from '../lib/requestContext';
+import { testSessions } from '../lib/testSessions';
 
 /** Set by sendError, so a failed request's log line says why it failed. */
 export interface LoggedError {
@@ -37,25 +39,29 @@ export function requestLog(req: Request, res: Response, next: NextFunction) {
   // req.path changes as routers strip their mount paths, so keep the path as received.
   const path = req.originalUrl.split('?')[0];
   const route = trackRoute(req);
-  res.on('finish', () => {
-    if (UNLOGGED.has(path)) return;
-    const error = res.locals.error as LoggedError | undefined;
-    logger.info(
-      {
-        correlationId: res.getHeader(CORRELATION_HEADER),
-        method: req.method,
-        route: route(),
-        path,
-        status: res.statusCode,
-        durationMs: Math.round(Number(process.hrtime.bigint() - started) / 1e4) / 100,
-        userId: req.user?.id ?? null,
-        testSession: null,
-        defects: bugs.active(),
-        req: { query: req.query, headers: req.headers, body: req.body },
-        ...(error && { error }),
-      },
-      `${req.method} ${path} ${res.statusCode}`,
-    );
-  });
+  // Bound to this request's context, so the defects and session are this request's, whoever emits 'finish'.
+  res.on(
+    'finish',
+    AsyncLocalStorage.bind(() => {
+      if (UNLOGGED.has(path)) return;
+      const error = res.locals.error as LoggedError | undefined;
+      logger.info(
+        {
+          correlationId: res.getHeader(CORRELATION_HEADER),
+          method: req.method,
+          route: route(),
+          path,
+          status: res.statusCode,
+          durationMs: Math.round(Number(process.hrtime.bigint() - started) / 1e4) / 100,
+          userId: req.user?.id ?? null,
+          testSession: testSessions.currentId(),
+          defects: bugs.active(),
+          req: { query: req.query, headers: req.headers, body: req.body },
+          ...(error && { error }),
+        },
+        `${req.method} ${path} ${res.statusCode}`,
+      );
+    }),
+  );
   next();
 }

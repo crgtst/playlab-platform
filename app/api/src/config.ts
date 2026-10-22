@@ -21,6 +21,8 @@ export const config = {
   paymentTimeoutMs: int(process.env.PAYMENT_TIMEOUT_MS, 5000),
   // Level for request logs on stdout: info (default), warn, error or silent. GET /test/logs keeps them either way.
   logLevel: process.env.LOG_LEVEL ?? 'info',
+  // A test session unused for this long is forgotten (PLS-28.8).
+  testSessionIdleMs: int(process.env.TEST_SESSION_IDLE_MS, 60 * 60 * 1000),
   // The payment iframe is served by the API on its own origin, like a real provider's hosted fields.
   paymentFrameUrl: process.env.PAYMENT_FRAME_URL ?? 'http://localhost:3000/pay/frame',
   // Origins allowed to embed the payment frame and receive its postMessage results.

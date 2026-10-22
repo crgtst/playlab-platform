@@ -364,7 +364,7 @@ Not built yet: these run against the `perf` Compose profile with generated data 
 
 As a tester, I want isolated test sessions and repeatable data, so that parallel runs don't interfere and the app can't be deployed unsafely.
 
-Not built yet: test sessions and the production guard arrive in Phase 1, and bulk data (28.3, 28.4) with the perf profile in Phase 3.
+Partly built: test sessions (28.1, 28.2, 28.6 to 28.10) are built. The production guard (28.5) arrives later in Phase 1, and bulk data (28.3, 28.4) with the perf profile in Phase 3.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

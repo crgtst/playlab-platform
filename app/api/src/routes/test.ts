@@ -9,18 +9,21 @@ import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
 import { resetRateLimits } from '../middleware/rateLimit';
 import { faults } from '../middleware/testFaults';
 import { logs } from '../lib/logger';
+import { requireKnownTestSession, TEST_SESSION_COOKIE, testSessions } from '../lib/testSessions';
 import { BUG_NAMES, bugs } from '../lib/bugs';
 import { events } from '../lib/events';
 import { asyncHandler, parse } from '../middleware/validate';
 
 /** Only mounted when TEST_HOOKS=true. Otherwise every /test/* path is a 404. */
 export const testRouter = Router();
+testRouter.use(requireKnownTestSession);
 
 testRouter.get('/', (_req, res) => {
   res.json({
     testHooks: true,
     hooks: [
       'POST /test/reset',
+      'POST /test/sessions',
       'POST /test/seed',
       'POST /test/users',
       'GET /test/mailbox/{email}',
@@ -39,9 +42,8 @@ testRouter.post(
   '/reset',
   asyncHandler(async (_req: Request, res: Response) => {
     const started = Date.now();
-    clock.reset();
-    faults.clearAll();
-    bugs.clear();
+    // Ends every test session and resets the global defects, clock, latency and chaos rules.
+    testSessions.resetAll();
     logs.clear();
     await resetDatabase();
     resetRateLimits();
@@ -229,4 +231,14 @@ const logsSchema = z.object({
 testRouter.get('/logs', (req: Request, res: Response) => {
   const { correlationId } = parse(logsSchema, req.query);
   res.json({ data: logs.forCorrelationId(correlationId) });
+});
+
+/**
+ * Starts a test session (PLS-28.6). Send its id as X-Test-Session (or rely on the test_session cookie) and that
+ * request uses the session's own defects, clock, latency and chaos rules and rate-limit counters.
+ */
+testRouter.post('/sessions', (_req: Request, res: Response) => {
+  const session = testSessions.create();
+  res.cookie(TEST_SESSION_COOKIE, session.id, { httpOnly: true, sameSite: 'lax', path: '/' });
+  res.status(201).json({ id: session.id, idleTimeoutMs: config.testSessionIdleMs });
 });

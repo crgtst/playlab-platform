@@ -14,6 +14,9 @@ info:
     * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
     * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
     * Test hooks under `/test/*` exist only when the API runs with `TEST_HOOKS=true`.
+    * Test sessions: `POST /test/sessions` returns an id. Requests that send it as `X-Test-Session` (or the
+      `test_session` cookie) get that session's own defects, clock, latency and chaos rules and rate-limit counters;
+      hook calls with it change only that session. Requests with no session use the global state.
     * Live order status: WebSocket at `ws://<host>/ws/orders` (not describable in OpenAPI).
       Authenticate with the `session` cookie or `?token=<accessToken>`; without either the upgrade gets 401.
       Messages: `{"type":"hello","userId","role"}` on connect, then
@@ -1166,6 +1169,32 @@ paths:
                 properties:
                   status: { type: string, enum: [reset] }
                   durationMs: { type: integer }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /test/sessions:
+    post:
+      tags: [Test hooks]
+      summary: 'POST /test/sessions - start an isolated test session'
+      description: |
+        Send the id as `X-Test-Session` (or rely on the `test_session` cookie this sets). That request then uses the
+        session's own defects, clock offset, latency and chaos rules and rate-limit counters, and hook calls change
+        only the session. Database rows stay shared. A session unused for `idleTimeoutMs` (1 hour by default) is
+        forgotten: hook calls naming it return 404 `TEST_SESSION_NOT_FOUND`, and other requests use the global state.
+        `POST /test/reset` ends every session. The payment frame gets the session from its URL (`testSession`).
+      servers: [{ url: / }]
+      responses:
+        '201':
+          description: Session started
+          headers:
+            Set-Cookie:
+              schema: { type: string, example: 'test_session=3f2b8c1e-6a0d-4c4e-9a52-1b7e2f0c9d11; Path=/; HttpOnly; SameSite=Lax' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, idleTimeoutMs]
+                properties:
+                  id: { type: string, format: uuid }
+                  idleTimeoutMs: { type: integer }
         '404': { $ref: '#/components/responses/NotFound' }
   /test/seed:
     post:
