@@ -13,6 +13,12 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
 
 ## Done
 
+- 2026-10-22: Dependency batch 1 (Dependabot #6, #7, #9, #10) on `chore/deps-batch-1`. API only: 10 minor and patch
+  updates (pg, jsonwebtoken, ws, yaml, tsx, type packages), multer 1.4.5-lts.1 → 2.4.0 (fixes the known
+  vulnerabilities), bcryptjs 2 → 3, express-rate-limit 7 → 8. No code changes needed. Hashes made by bcryptjs 2
+  still verify. New avatar integration tests (PLS-9.1 to 9.3 and `upload-extension-only`) guard future multer
+  upgrades: 126 integration tests in total. Dependabot now skips TypeScript majors (typescript-eslint supports
+  up to 6.0), so #11 and #13 are closed.
 - 2026-10-22: **Gate 1 passed** (Phase 1 task 10). Checked on a stack built from scratch from `.env.example` (ports 3002,
   5174, 5433; empty database, so migrations 001 to 006 ran from zero), plus CI on `73d27ba`.
   - Every Phase 1 AC (42, plus the 4 reworded ones) has at least one test named with its ID; all pass.
@@ -201,7 +207,6 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
   The rule is `warn` until row types are added.
 - Not formatted by Prettier: Markdown (tables are aligned by hand), HTML (reflowing can change text tests assert on),
   `openapi/` and SQL migrations, and `tests/` (each suite brings its own setup).
-- `multer` 1.4.5-lts.1 is deprecated with known vulnerabilities (fixed in 2.x). Expect a Dependabot major PR.
 
 - GitHub private vulnerability reporting, which `SECURITY.md` points to, can't be enabled on a private repo.
   Turn it on when the repo goes public (Gate 3).
@@ -217,6 +222,9 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
   connected until it closes.
 - WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
   checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
+
+- Dependabot PRs still open, for planned tasks before Phase 2: the web stack (#12 Vite 8, #14 React 19, #15 React
+  Router 7) together, and zod 4 (#8) on its own, because its error messages are quoted in the ACs.
 
 ## Local environment notes
 
