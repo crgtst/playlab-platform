@@ -332,7 +332,7 @@ Phase 4 follows v1.0.0 on purpose: a second language is most valuable once the T
 
 **Phase 0 tasks**
 
-- [ ] Settle the decisions at the end of this doc
+- [x] Settle the decisions at the end of this doc
 - [x] Upgrade to Node 24, the latest Playwright and Express 5; add Dependabot
 - [x] Add ESLint, Prettier, `lint-staged` and EditorConfig; remove `.DS_Store`
 - [x] Add the first workflow: lint, typecheck, and a Vitest + supertest skeleton for the API
@@ -464,13 +464,13 @@ These seven decisions shape Phase 0. Each has a recommendation; mark it Agreed o
 
 | # | Decision | Recommendation | Why | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Rename `playlab-shop` to `playlab-platform`? | Yes | It's now more than a shop. GitHub redirects the old URL, so existing clones keep working | Open |
-| 2 | Tests in the same repo or separate repos? | Same repo, one folder per suite | One clone, one pipeline, one link to share. Your SPEC's "separate folders" tip still holds | Open |
-| 3 | Second Playwright language first: Java or Python? | Java | REST Assured and Karate are Java, so one Maven build covers three skills. Java is also common in Irish enterprise QA roles (insurance, banking, government) | Open |
-| 4 | Make the repo public now or at v1.0.0? | At v1.0.0 (Gate 3) | Matches your plan to keep it private until done; first impressions count | Open |
-| 5 | Pact contracts: files in the repo or a broker? | Files in the repo first | No account needed; add a broker (PactFlow free tier) later as a stretch goal | Open |
-| 6 | Build a .NET suite? | Only if you target .NET employers | It adds a fourth toolchain for little new learning | Open |
-| 7 | What happens to the v2.0 FastAPI spec doc? | Mark it historical | Its good ideas are folded into the API additions here | Open |
+| 1 | Rename `playlab-shop` to `playlab-platform`? | Yes | It's now more than a shop. GitHub redirects the old URL, so existing clones keep working | Agreed |
+| 2 | Tests in the same repo or separate repos? | Same repo, one folder per suite | One clone, one pipeline, one link to share. Your SPEC's "separate folders" tip still holds | Agreed |
+| 3 | Second Playwright language first: Java or Python? | Java | REST Assured and Karate are Java, so one Maven build covers three skills. Java is also common in Irish enterprise QA roles (insurance, banking, government) | Agreed |
+| 4 | Make the repo public now or at v1.0.0? | At v1.0.0 (Gate 3) | Matches your plan to keep it private until done; first impressions count | Agreed |
+| 5 | Pact contracts: files in the repo or a broker? | Files in the repo first | No account needed; add a broker (PactFlow free tier) later as a stretch goal | Agreed |
+| 6 | Build a .NET suite? | Only if you target .NET employers | It adds a fourth toolchain for little new learning | Agreed |
+| 7 | What happens to the v2.0 FastAPI spec doc? | Mark it historical | Its good ideas are folded into the API additions here | Agreed |
 
 ## Sources
 

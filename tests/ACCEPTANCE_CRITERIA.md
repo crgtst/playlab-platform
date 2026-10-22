@@ -162,7 +162,7 @@ As a tester, I want reliable test hooks, so that every run starts from a known s
 | PLS-12.2 | Given `TEST_HOOKS=false`, when any `/test/*` endpoint is called, then it returns 404 |  |  |
 | PLS-12.3 | Given a named defect, when switched on through `/test/bugs`, then only that behaviour changes |  |  |
 | PLS-12.4 | Given the stack is starting, when `/health` reports ready, then the web app, API and database all respond |  |  |
-| PLS-12.5 | *(Planned: Phase 0 close-out.)* Given `app/.env` copied from `.env.example` with `API_PORT=3001`, when checkout reaches the payment step, then the payment frame loads from port 3001 |  |  |
+| PLS-12.5 | Given `app/.env` copied from `.env.example` with non-default `API_PORT` and `WEB_PORT`, when a customer checks out and requests a password reset, then the payment frame loads from the API port and takes payment, and the reset link uses the web port |  |  |
 
 ## PLS-13 Store finder (Phase 4)
 

@@ -397,7 +397,7 @@ There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There 
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
 | `WEB_PORT` / `API_PORT` / `DB_PORT` | `5173` / `3000` / `5432` | Host ports |
-| `PUBLIC_WEB_URL` | `http://localhost:5173` | Base URL used in links inside mailbox emails |
+| `PUBLIC_WEB_URL` | `http://localhost:${WEB_PORT}` | Base URL used in links inside mailbox emails |
 | `PAYMENT_FRAME_URL` | `http://localhost:${API_PORT}/pay/frame` | Where the browser loads the payment iframe from |
 | `SHOP_ORIGINS` | `http://localhost:${WEB_PORT}` | Comma-separated origins allowed to embed the frame (`frame-ancestors`) and receive its `postMessage` results |
 

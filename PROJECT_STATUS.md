@@ -9,11 +9,15 @@ Phase 0: Foundations (branch `phase-0-foundations`)
 
 ## Next task
 
-Phase 1, task 0 (Phase 0 close-out): derive `PAYMENT_FRAME_URL` from `API_PORT` in `.env.example` (PLS-12.5), settle
-decisions 2 to 6, and merge PR #5. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 0 (Phase 0 close-out): merge PR #5 once CI is green, then branch `phase-1-platform-core`. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 0, close-out (PLS-12.5). `.env.example` no longer sets `PAYMENT_FRAME_URL`, `SHOP_ORIGINS`
+  or `PUBLIC_WEB_URL`, and Compose derives all three from `API_PORT` and `WEB_PORT` (`PUBLIC_WEB_URL` used to
+  stay on 5173). Unit test `test/env-example.test.ts` fails on the old files. Checked on a second stack built
+  from `.env.example` with ports 3002, 5174 and 5433: checkout reaches the confirmation and the reset link uses 5174.
+  Decisions 2 to 6 agreed as recommended; decision 9 agreed.
 - 2026-10-21: Phase 1 planned. "Phase 1 tasks" added to `docs/REVIEW_AND_PLAN.md`: 11 tasks, each with its ACs,
   defects and platform tests. Gap analysis against the plan's API additions found 13 behaviours with no AC.
   Added as PLS-12.5, 21.5–21.7, 22.6, 23.5, 25.5, 28.6–28.10 and 29.5 (166 ACs in total), with PLS-25.2 widened
@@ -72,20 +76,17 @@ decisions 2 to 6, and merge PR #5. The Phase 1 task list is in `docs/REVIEW_AND_
 | # | Decision | Outcome | Date |
 |---|----------|---------|------|
 | 1 | Rename repo to `playlab-platform` | Agreed (compose project and GitHub repo renamed) | 2026-10-21 |
-| 2 | Tests in the same repo, one folder per suite | Open | |
-| 3 | Second Playwright language: Java or Python | Open | |
-| 4 | Go public at v1.0.0 | Open | |
-| 5 | Pact files in repo before a broker | Open | |
-| 6 | .NET suite | Open | |
+| 2 | Tests in the same repo, one folder per suite | Agreed (same repo, one folder per suite) | 2026-10-22 |
+| 3 | Second Playwright language: Java or Python | Agreed (Java) | 2026-10-22 |
+| 4 | Go public at v1.0.0 | Agreed (public at v1.0.0, Gate 3) | 2026-10-22 |
+| 5 | Pact files in repo before a broker | Agreed (files in the repo; broker later as a stretch) | 2026-10-22 |
+| 6 | .NET suite | Agreed (no .NET suite unless targeting .NET employers) | 2026-10-22 |
 | 7 | v2.0 FastAPI spec marked historical; PlayLab Pay (FastAPI) added as Phase 5 stretch | Agreed | 2026-10-21 |
 | 8 | A9 reconciliation: build PLS-15.3 and 17.2; reword 13.x, 14.1, 16.1, 17.1 and 18.2 to match the build | Agreed | 2026-10-21 |
-| 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Proposed | 2026-10-21 |
+| 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Agreed | 2026-10-22 |
 
 ## Known issues
 
-- `app/.env.example` hard-codes `PAYMENT_FRAME_URL=http://localhost:3000/pay/frame`.
-  Changing `API_PORT` alone leaves the payment frame on the wrong port (404).
-  Fix in Phase 0: remove the line and let `docker-compose.yml` derive it from `API_PORT`.
 - `app/README.md` examples assume port 3000. The landing README uses the defaults and shows how to override them.
 - Express 5's automatic `OPTIONS` reply is now `text/plain` with `Allow: GET, HEAD, POST`
   (it was `text/html` with `GET,HEAD,POST`). No AC or spec covers it.
@@ -113,3 +114,5 @@ decisions 2 to 6, and merge PR #5. The Phase 1 task list is in `docs/REVIEW_AND_
 ## Local environment notes
 
 - API on 3001 (`app/.env`): port 3000 is taken by the `open-webui` container.
+- `app/.env` still sets `PAYMENT_FRAME_URL`, `SHOP_ORIGINS` and `PUBLIC_WEB_URL` explicitly. They match the current
+  ports, so they work; deleting them lets them follow `API_PORT` and `WEB_PORT` automatically.
