@@ -9,10 +9,20 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 10: Gate 1 check (every Phase 1 AC passes, existing UI unchanged), then PR #16 leaves draft. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your functional suites). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: **Gate 1 passed** (Phase 1 task 10). Checked on a stack built from scratch from `.env.example` (ports 3002,
+  5174, 5433; empty database, so migrations 001 to 006 ran from zero), plus CI on `73d27ba`.
+  - Every Phase 1 AC (42, plus the 4 reworded ones) has at least one test named with its ID; all pass.
+  - Original ACs PLS-1 to 19: only the 4 planned edits changed (8.2, 8.3, 8.4, 10.1); none added or removed.
+  - API unit 31, integration 121 (fresh database), e2e smoke 11 and Gate 1 screenshots (14 pages) all pass.
+  - API probe against the Phase 0 baseline: all 46 status codes and content types identical. The 27 changed
+    bodies are all explained: `correlationId` in 21 error bodies, the `X-Correlation-Id` header, `etag` on orders,
+    the OpenAPI text, and the frame URL following `API_PORT`.
+  - All 36 defects switch on together, reach the web app's `/config`, and switch off. Platform tests exercise
+    9 of them; proving all 33 original defects are caught is Gate 2, for your suites.
 - 2026-10-22: Phase 1 task 9 (PLS-28.5, 24.6; fixes findings R3 and A7).
   - Production guard: the API refuses to start with `TEST_HOOKS=true` and `NODE_ENV=production` unless
     `PLAYLAB_ALLOW_UNSAFE=true` (then it warns). The image stays `production`; Compose now sets `NODE_ENV=development`
