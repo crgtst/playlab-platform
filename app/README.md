@@ -456,7 +456,7 @@ Build phases 1–4 in the spec are done. Phases 5 (framework maturity) and 6 (Pl
 - **Phase 3:** WebSocket and SSE, shadow DOM, infinite scroll, i18n, currency and timezone, planted a11y faults, bug mode, theme toggle and offline.
 - **Phase 4:** store finder (geolocation), order notifications, copy buttons, the battery-saver banner, the service-worker offline cache, the swipeable gallery, stable regions for aria snapshots, the component-test harness, the price-tracker extension and 7 more defects.
 
-Every AC in PLS-1 to PLS-19 of `tests/ACCEPTANCE_CRITERIA.md` has an implementation to test against. PLS-20 to PLS-29 specify the upgrade plan's platform work and are mostly not built yet; each story says which phase builds it.
+Every AC in PLS-1 to PLS-19 of `docs/ACCEPTANCE_CRITERIA.md` has an implementation to test against. PLS-20 to PLS-29 specify the upgrade plan's platform work and are mostly not built yet; each story says which phase builds it.
 
 One edge-case scenario from the spec's checklist, which isn't in any phase, is **not built**: the UI backing off after a 429. (Account deletion that logs out other sessions arrived with PLS-22 in Phase 1.)
 

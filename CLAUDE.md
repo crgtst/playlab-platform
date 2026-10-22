@@ -7,7 +7,7 @@ API security testing and CI/CD. The app exists to be tested.
 ## Source of truth
 
 - Plan: `docs/REVIEW_AND_PLAN.md` (phases, findings, API additions, AC changes).
-- Behaviour: `tests/SPEC.md` and `tests/ACCEPTANCE_CRITERIA.md` (moving to `docs/` in Phase 0).
+- Behaviour: `docs/SPEC.md` and `docs/ACCEPTANCE_CRITERIA.md`.
 - Progress: `PROJECT_STATUS.md`.
 - Follow the plan. If something in it looks wrong, propose a change to the plan instead of deviating.
 
