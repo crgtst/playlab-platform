@@ -26,7 +26,10 @@ const latencyRules: LatencyRule[] = [];
 const chaosRules: ChaosRule[] = [];
 
 function toRegex(pattern: string): RegExp {
-  const escaped = pattern.split('*').map((p) => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+  const escaped = pattern
+    .split('*')
+    .map((p) => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+    .join('.*');
   return new RegExp(`^${escaped}$`);
 }
 

@@ -237,11 +237,7 @@ export async function buildCartView(
 }
 
 export function stockError(stock: number): ApiError {
-  return conflict(
-    'INSUFFICIENT_STOCK',
-    stock === 0 ? 'This item is out of stock' : `Only ${stock} left`,
-    { available: stock },
-  );
+  return conflict('INSUFFICIENT_STOCK', stock === 0 ? 'This item is out of stock' : `Only ${stock} left`, { available: stock });
 }
 
 /**

@@ -60,12 +60,19 @@ export function ProductDetail() {
     }
   };
 
-  if (status === 'loading') return <p role="status" data-testid="product-loading">Loading…</p>;
+  if (status === 'loading')
+    return (
+      <p role="status" data-testid="product-loading">
+        Loading…
+      </p>
+    );
   if (status === 'notfound') {
     return (
       <div data-testid="product-not-found">
         <h1>Product not found</h1>
-        <Link to="/products" data-testid="product-not-found-shop-link">Back to the shop</Link>
+        <Link to="/products" data-testid="product-not-found-shop-link">
+          Back to the shop
+        </Link>
       </div>
     );
   }
@@ -82,7 +89,10 @@ export function ProductDetail() {
   return (
     <article className="product-detail" data-testid="product-detail" data-product-id={product.id}>
       <nav aria-label="Breadcrumb" className="breadcrumb">
-        <Link to="/products" data-testid="breadcrumb-shop">Shop</Link> /{' '}
+        <Link to="/products" data-testid="breadcrumb-shop">
+          Shop
+        </Link>{' '}
+        /{' '}
         <Link to={`/products?category=${product.category.slug}`} data-testid="breadcrumb-category">
           {product.category.name}
         </Link>
@@ -101,7 +111,8 @@ export function ProductDetail() {
           <p className="muted small">
             <span data-testid="product-stock-count">{stock} available</span> ·{' '}
             <span className={`live live-${streamState}`} data-testid="stock-live-indicator" data-state={streamState}>
-              <span aria-hidden="true">●</span> {streamState === 'open' ? 'Live stock' : streamState === 'error' ? 'Reconnecting…' : 'Connecting…'}
+              <span aria-hidden="true">●</span>{' '}
+              {streamState === 'open' ? 'Live stock' : streamState === 'error' ? 'Reconnecting…' : 'Connecting…'}
             </span>
           </p>
           <form onSubmit={onAdd} noValidate className="inline-form" data-testid="add-to-cart-form">

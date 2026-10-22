@@ -3,18 +3,11 @@
   "name": "PlayLab Price Tracker",
   "version": "1.0.0",
   "description": "Practice extension: reads PlayLab Shop product prices and remembers the lowest one seen.",
-  "permissions": [
-    "storage"
-  ],
+  "permissions": ["storage"],
   "content_scripts": [
     {
-      "matches": [
-        "http://localhost/*",
-        "http://127.0.0.1/*"
-      ],
-      "js": [
-        "content.js"
-      ],
+      "matches": ["http://localhost/*", "http://127.0.0.1/*"],
+      "js": ["content.js"],
       "run_at": "document_idle"
     }
   ],

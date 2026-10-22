@@ -32,7 +32,10 @@ export function OrderNotifications() {
   useOrderEvents((e) => {
     if (!notificationsSupported() || Notification.permission !== 'granted' || !notificationsWanted()) return;
     const title = `Order ${e.number} is now ${e.status}`;
-    const options: NotificationOptions = { body: `Was ${e.from}. Tap to see your order.`, tag: spam ? undefined : `order-${e.orderId}-${e.status}` };
+    const options: NotificationOptions = {
+      body: `Was ${e.from}. Tap to see your order.`,
+      tag: spam ? undefined : `order-${e.orderId}-${e.status}`,
+    };
     const n = new Notification(title, options);
     n.onclick = () => {
       window.focus();

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { errorMessage } from '../api/client';
 import { DiscountForm } from '../components/DiscountForm';
 import { OffersStrip } from '../components/OffersStrip';
-import { useOnline } from '../components/OfflineBanner';
+import { useIsOnline, useOnline } from '../components/OfflineBanner';
 import { QuantityStepper } from '../components/QuantityStepper';
 import { Totals } from '../components/Totals';
 import { useCart } from '../context/CartContext';
@@ -29,6 +29,7 @@ export function CartNotices() {
 export function Cart() {
   const { cart, loading, setQuantity, removeItem, refresh } = useCart();
   useOnline(refresh);
+  const online = useIsOnline();
   // currency-switch-stale: the cart keeps showing euro prices after switching to GBP.
   const stale = useBug('currency-switch-stale');
   const priceOpts: { currency?: Currency } = stale ? { currency: 'EUR' } : {};
@@ -127,7 +128,13 @@ export function Cart() {
                 {formatPrice(item.lineTotalCents, priceOpts)}
               </td>
               <td>
-                <button type="button" className="link-button" onClick={() => onRemove(item.productId)} aria-label={`${t('cart.remove')}: ${item.name}`} data-testid="cart-item-remove">
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => onRemove(item.productId)}
+                  aria-label={`${t('cart.remove')}: ${item.name}`}
+                  data-testid="cart-item-remove"
+                >
                   {t('cart.remove')}
                 </button>
               </td>
@@ -143,9 +150,21 @@ export function Cart() {
             {t('cart.summary')}
           </h2>
           <Totals totals={cart.totals} discount={cart.discount} currency={priceOpts.currency} />
-          <Link to="/checkout/shipping" className="button" data-testid="checkout-button">
-            {t('cart.checkout')}
-          </Link>
+          {online ? (
+            <Link to="/checkout/shipping" className="button" data-testid="checkout-button">
+              {t('cart.checkout')}
+            </Link>
+          ) : (
+            // PLS-17.2: checkout needs the network, so it is disabled while offline.
+            <>
+              <button type="button" disabled aria-describedby="checkout-offline-message" data-testid="checkout-button">
+                {t('cart.checkout')}
+              </button>
+              <p id="checkout-offline-message" className="muted small" role="status" data-testid="checkout-offline-message">
+                {t('cart.checkoutOffline')}
+              </p>
+            </>
+          )}
         </section>
       </div>
     </div>

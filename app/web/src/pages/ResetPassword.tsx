@@ -65,8 +65,26 @@ export function ResetPassword() {
               {formError}
             </p>
           )}
-          <Field id="reset-password" label="New password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} error={errors.password} testId="reset-password-input" />
-          <Field id="reset-confirm" label="Confirm new password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} error={errors.confirm} testId="reset-password-confirm" />
+          <Field
+            id="reset-password"
+            label="New password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={errors.password}
+            testId="reset-password-input"
+          />
+          <Field
+            id="reset-confirm"
+            label="Confirm new password"
+            type="password"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            error={errors.confirm}
+            testId="reset-password-confirm"
+          />
           <button type="submit" disabled={busy} data-testid="reset-password-submit">
             Change password
           </button>

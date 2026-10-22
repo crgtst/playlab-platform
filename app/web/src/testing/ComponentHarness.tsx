@@ -30,7 +30,15 @@ export interface HarnessConfig {
  * Wraps a component in the providers it may need, without fetching anything unless `app` is set:
  * a fixed config, preferences (language, currency, theme), toasts and an in-memory router.
  */
-export function ComponentHarness({ children, route = '/', bugs = [], lang = 'en', currency = 'EUR', theme = 'light', app = false }: HarnessConfig & { children: ReactNode }) {
+export function ComponentHarness({
+  children,
+  route = '/',
+  bugs = [],
+  lang = 'en',
+  currency = 'EUR',
+  theme = 'light',
+  app = false,
+}: HarnessConfig & { children: ReactNode }) {
   const routed = (
     <PrefsProvider initial={{ lang, currency, theme }}>
       <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>

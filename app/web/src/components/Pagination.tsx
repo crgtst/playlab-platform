@@ -28,7 +28,13 @@ export function Pagination({ page, totalPages, onPage }: Props) {
           </li>
         ))}
       </ul>
-      <button type="button" className="secondary" disabled={page >= totalPages} onClick={() => onPage(page + 1)} data-testid="pagination-next">
+      <button
+        type="button"
+        className="secondary"
+        disabled={page >= totalPages}
+        onClick={() => onPage(page + 1)}
+        data-testid="pagination-next"
+      >
         Next
       </button>
     </nav>

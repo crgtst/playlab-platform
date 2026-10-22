@@ -38,7 +38,9 @@ export function AdminProducts() {
 
   useEffect(() => {
     document.title = 'Admin: products – PlayLab Shop';
-    api<{ data: Category[] }>('/categories').then((r) => setCategories(r.data)).catch(() => setCategories([]));
+    api<{ data: Category[] }>('/categories')
+      .then((r) => setCategories(r.data))
+      .catch(() => setCategories([]));
   }, []);
 
   const load = useCallback(async () => {
@@ -151,7 +153,13 @@ export function AdminProducts() {
       <div className="admin-toolbar">
         <form role="search" className="inline-form" onSubmit={onSearch} aria-label="Search products">
           <label htmlFor="admin-product-search">Search</label>
-          <input id="admin-product-search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} data-testid="admin-product-search-input" />
+          <input
+            id="admin-product-search"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            data-testid="admin-product-search-input"
+          />
           <button type="submit" data-testid="admin-product-search-button">
             Search
           </button>
@@ -201,12 +209,26 @@ export function AdminProducts() {
                   <td>
                     <span className="row-actions">
                       <EditControl id={`product-edit-${p.id}`}>
-                        <button type="button" className="secondary" disabled={!canEdit} onClick={() => openEditor(p)} aria-label={`Edit ${p.name}`} data-testid="admin-product-edit">
+                        <button
+                          type="button"
+                          className="secondary"
+                          disabled={!canEdit}
+                          onClick={() => openEditor(p)}
+                          aria-label={`Edit ${p.name}`}
+                          data-testid="admin-product-edit"
+                        >
                           Edit
                         </button>
                       </EditControl>
                       <EditControl id={`product-delete-${p.id}`}>
-                        <button type="button" className="secondary danger" disabled={!canEdit} onClick={() => onDelete(p)} aria-label={`Delete ${p.name}`} data-testid="admin-product-delete">
+                        <button
+                          type="button"
+                          className="secondary danger"
+                          disabled={!canEdit}
+                          onClick={() => onDelete(p)}
+                          aria-label={`Delete ${p.name}`}
+                          data-testid="admin-product-delete"
+                        >
                           Delete
                         </button>
                       </EditControl>
@@ -220,19 +242,43 @@ export function AdminProducts() {
         </>
       )}
 
-      <Modal open={editing !== null} title={editing === 'new' ? 'New product' : 'Edit product'} onClose={() => setEditing(null)} testId="product-modal">
+      <Modal
+        open={editing !== null}
+        title={editing === 'new' ? 'New product' : 'Edit product'}
+        onClose={() => setEditing(null)}
+        testId="product-modal"
+      >
         <form onSubmit={onSave} noValidate data-testid="product-form">
           {formError && (
             <p className="alert error" role="alert" data-testid="product-form-error">
               {formError}
             </p>
           )}
-          <Field id="pf-name" label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} error={errors.name} testId="product-form-name" />
+          <Field
+            id="pf-name"
+            label="Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            error={errors.name}
+            testId="product-form-name"
+          />
           <div className="row">
-            <Field id="pf-sku" label="SKU" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} error={errors.sku} testId="product-form-sku" />
+            <Field
+              id="pf-sku"
+              label="SKU"
+              value={form.sku}
+              onChange={(e) => setForm({ ...form, sku: e.target.value })}
+              error={errors.sku}
+              testId="product-form-sku"
+            />
             <div className="field">
               <label htmlFor="pf-category">Category</label>
-              <select id="pf-category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} data-testid="product-form-category">
+              <select
+                id="pf-category"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                data-testid="product-form-category"
+              >
                 {categories.map((c) => (
                   <option key={c.slug} value={c.slug}>
                     {c.name}
@@ -242,12 +288,40 @@ export function AdminProducts() {
             </div>
           </div>
           <div className="row">
-            <Field id="pf-price" label="Price (€, excl. VAT)" type="number" min={0} step="0.01" inputMode="decimal" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} error={errors.priceCents} testId="product-form-price" />
-            <Field id="pf-stock" label="Stock" type="number" min={0} step={1} inputMode="numeric" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} error={errors.stock} testId="product-form-stock" />
+            <Field
+              id="pf-price"
+              label="Price (€, excl. VAT)"
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              error={errors.priceCents}
+              testId="product-form-price"
+            />
+            <Field
+              id="pf-stock"
+              label="Stock"
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              error={errors.stock}
+              testId="product-form-stock"
+            />
           </div>
           <div className="field">
             <label htmlFor="pf-description">Description</label>
-            <textarea id="pf-description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} data-testid="product-form-description" />
+            <textarea
+              id="pf-description"
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              data-testid="product-form-description"
+            />
           </div>
           <div className="form-actions">
             <button type="button" className="secondary" onClick={() => setEditing(null)} data-testid="product-form-cancel">

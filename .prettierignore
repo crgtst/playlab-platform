@@ -1,0 +1,21 @@
+# Lockfiles and build output
+**/package-lock.json
+**/dist
+**/node_modules
+app/web/playwright/.cache
+app/web/playwright-ct-report
+app/web/test-results
+app/web/__snapshots__
+
+# Prose: Markdown is hand-wrapped and its tables are hand-aligned
+*.md
+
+# Hand-written OpenAPI contract and the seed SQL stay as authored
+app/api/openapi
+app/api/src/db/migrations
+
+# Test suites under tests/ are Craig's: each suite brings its own formatter settings
+tests
+
+# HTML is left as authored: reflowing it can change text whitespace that tests assert on
+*.html

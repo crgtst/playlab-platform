@@ -26,7 +26,8 @@ export function Shipping() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setField = (key: keyof ShippingAddress, value: string) => update({ shipping: { ...state.shipping, [key]: value }, shippingComplete: false });
+  const setField = (key: keyof ShippingAddress, value: string) =>
+    update({ shipping: { ...state.shipping, [key]: value }, shippingComplete: false });
 
   const validate = (): Errors => {
     const e: Errors = {};
@@ -61,7 +62,16 @@ export function Shipping() {
       <CheckoutSteps current={1} />
       <form onSubmit={onSubmit} noValidate className="checkout-form" data-testid="shipping-form" aria-labelledby="shipping-heading">
         <h2 id="shipping-heading">{t('shipping.heading')}</h2>
-        <Field id="ship-name" label={t('shipping.fullName')} autoComplete="name" dir="auto" value={s.fullName} onChange={(e) => setField('fullName', e.target.value)} error={errors.fullName} testId="shipping-full-name" />
+        <Field
+          id="ship-name"
+          label={t('shipping.fullName')}
+          autoComplete="name"
+          dir="auto"
+          value={s.fullName}
+          onChange={(e) => setField('fullName', e.target.value)}
+          error={errors.fullName}
+          testId="shipping-full-name"
+        />
         <AddressAutocomplete
           value={s.line1}
           error={errors.line1}
@@ -73,14 +83,52 @@ export function Shipping() {
             })
           }
         />
-        <Field id="ship-line2" label={t('shipping.line2')} autoComplete="address-line2" value={s.line2} onChange={(e) => setField('line2', e.target.value)} testId="shipping-line2" />
+        <Field
+          id="ship-line2"
+          label={t('shipping.line2')}
+          autoComplete="address-line2"
+          value={s.line2}
+          onChange={(e) => setField('line2', e.target.value)}
+          testId="shipping-line2"
+        />
         <div className="row">
-          <Field id="ship-city" label={t('shipping.city')} autoComplete="address-level2" value={s.city} onChange={(e) => setField('city', e.target.value)} error={errors.city} testId="shipping-city" />
-          <Field id="ship-county" label={t('shipping.county')} autoComplete="address-level1" value={s.county} onChange={(e) => setField('county', e.target.value)} testId="shipping-county" />
+          <Field
+            id="ship-city"
+            label={t('shipping.city')}
+            autoComplete="address-level2"
+            value={s.city}
+            onChange={(e) => setField('city', e.target.value)}
+            error={errors.city}
+            testId="shipping-city"
+          />
+          <Field
+            id="ship-county"
+            label={t('shipping.county')}
+            autoComplete="address-level1"
+            value={s.county}
+            onChange={(e) => setField('county', e.target.value)}
+            testId="shipping-county"
+          />
         </div>
         <div className="row">
-          <Field id="ship-postcode" label={t('shipping.postcode')} autoComplete="postal-code" value={s.postcode} onChange={(e) => setField('postcode', e.target.value)} error={errors.postcode} testId="shipping-postcode" />
-          <Field id="ship-phone" label={t('shipping.phone')} type="tel" autoComplete="tel" value={s.phone} onChange={(e) => setField('phone', e.target.value)} testId="shipping-phone" />
+          <Field
+            id="ship-postcode"
+            label={t('shipping.postcode')}
+            autoComplete="postal-code"
+            value={s.postcode}
+            onChange={(e) => setField('postcode', e.target.value)}
+            error={errors.postcode}
+            testId="shipping-postcode"
+          />
+          <Field
+            id="ship-phone"
+            label={t('shipping.phone')}
+            type="tel"
+            autoComplete="tel"
+            value={s.phone}
+            onChange={(e) => setField('phone', e.target.value)}
+            testId="shipping-phone"
+          />
         </div>
         <Field
           id="ship-date"
@@ -106,7 +154,12 @@ export function Shipping() {
             aria-invalid={errors.instructions ? true : undefined}
             data-testid="shipping-instructions"
           />
-          <p id="ship-instructions-counter" className={remaining < 20 ? 'hint warn' : 'hint'} aria-live="polite" data-testid="shipping-instructions-counter">
+          <p
+            id="ship-instructions-counter"
+            className={remaining < 20 ? 'hint warn' : 'hint'}
+            aria-live="polite"
+            data-testid="shipping-instructions-counter"
+          >
             {t('shipping.counter', { n: state.instructions.length, max: INSTRUCTIONS_MAX })}
           </p>
           {errors.instructions && (

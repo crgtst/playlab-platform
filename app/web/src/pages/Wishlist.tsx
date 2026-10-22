@@ -145,16 +145,41 @@ export function Wishlist() {
                     </span>
                   </div>
                   <div className="row-actions">
-                    <button type="button" className="secondary" disabled={index === 0} onClick={() => move(p.id, -1)} aria-label={`Move ${p.name} up`} data-testid="wishlist-move-up">
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={index === 0}
+                      onClick={() => move(p.id, -1)}
+                      aria-label={`Move ${p.name} up`}
+                      data-testid="wishlist-move-up"
+                    >
                       ↑
                     </button>
-                    <button type="button" className="secondary" disabled={index === items.length - 1} onClick={() => move(p.id, 1)} aria-label={`Move ${p.name} down`} data-testid="wishlist-move-down">
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={index === items.length - 1}
+                      onClick={() => move(p.id, 1)}
+                      aria-label={`Move ${p.name} down`}
+                      data-testid="wishlist-move-down"
+                    >
                       ↓
                     </button>
-                    <button type="button" disabled={!p.inStock} onClick={() => onAddToCart(p.id, p.name)} data-testid="wishlist-add-to-cart">
+                    <button
+                      type="button"
+                      disabled={!p.inStock}
+                      onClick={() => onAddToCart(p.id, p.name)}
+                      data-testid="wishlist-add-to-cart"
+                    >
                       Add to cart
                     </button>
-                    <button type="button" className="link-button" onClick={() => onRemove(p.id, p.name)} aria-label={`Remove ${p.name}`} data-testid="wishlist-remove">
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => onRemove(p.id, p.name)}
+                      aria-label={`Remove ${p.name}`}
+                      data-testid="wishlist-remove"
+                    >
                       Remove
                     </button>
                   </div>

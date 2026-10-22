@@ -12,7 +12,12 @@ const BUGS = (new URL(self.location.href).searchParams.get('bugs') || '').split(
 const STALE_PRICES = BUGS.includes('offline-stale-prices');
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(SHELL))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (event) => {

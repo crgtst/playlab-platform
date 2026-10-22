@@ -66,7 +66,14 @@ function Layout() {
 
 export const routes: RouteObject[] = [
   // The print receipt opens in a popup window without the site chrome.
-  { path: '/orders/:id/receipt', element: <RequireAuth><Receipt /></RequireAuth> },
+  {
+    path: '/orders/:id/receipt',
+    element: (
+      <RequireAuth>
+        <Receipt />
+      </RequireAuth>
+    ),
+  },
   {
     element: <Layout />,
     children: [
@@ -82,14 +89,70 @@ export const routes: RouteObject[] = [
       { path: '/reset-password', element: <ResetPassword /> },
       { path: '/confirm-email', element: <ConfirmEmail /> },
       { path: '/mailbox', element: <Mailbox /> },
-      { path: '/checkout/shipping', element: <CheckoutGuard><Shipping /></CheckoutGuard> },
-      { path: '/checkout/review', element: <CheckoutGuard><Review /></CheckoutGuard> },
-      { path: '/checkout/payment', element: <CheckoutGuard><Payment /></CheckoutGuard> },
-      { path: '/orders/:id/confirmation', element: <RequireAuth><OrderConfirmation /></RequireAuth> },
-      { path: '/account', element: <RequireAuth><Account /></RequireAuth> },
-      { path: '/account/orders/:id', element: <RequireAuth><OrderDetail /></RequireAuth> },
-      { path: '/wishlist', element: <RequireAuth><Wishlist /></RequireAuth> },
-      { path: '/track/:id', element: <RequireAuth><Track /></RequireAuth> },
+      {
+        path: '/checkout/shipping',
+        element: (
+          <CheckoutGuard>
+            <Shipping />
+          </CheckoutGuard>
+        ),
+      },
+      {
+        path: '/checkout/review',
+        element: (
+          <CheckoutGuard>
+            <Review />
+          </CheckoutGuard>
+        ),
+      },
+      {
+        path: '/checkout/payment',
+        element: (
+          <CheckoutGuard>
+            <Payment />
+          </CheckoutGuard>
+        ),
+      },
+      {
+        path: '/orders/:id/confirmation',
+        element: (
+          <RequireAuth>
+            <OrderConfirmation />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/account',
+        element: (
+          <RequireAuth>
+            <Account />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/account/orders/:id',
+        element: (
+          <RequireAuth>
+            <OrderDetail />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/wishlist',
+        element: (
+          <RequireAuth>
+            <Wishlist />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/track/:id',
+        element: (
+          <RequireAuth>
+            <Track />
+          </RequireAuth>
+        ),
+      },
       {
         path: '/admin',
         element: (

@@ -42,7 +42,17 @@ async function upsertCode(client: PoolClient, s: CodeSpec) {
      ON CONFLICT (code) DO UPDATE SET description = EXCLUDED.description, type = EXCLUDED.type, value = EXCLUDED.value,
        min_spend_cents = EXCLUDED.min_spend_cents, starts_at = EXCLUDED.starts_at, expires_at = EXCLUDED.expires_at,
        single_use = EXCLUDED.single_use, used_count = EXCLUDED.used_count`,
-    [s.code, s.description, s.type, s.value, s.minSpendCents ?? 0, s.startsAt ?? null, s.expiresAt ?? null, s.singleUse ?? false, s.usedCount ?? 0],
+    [
+      s.code,
+      s.description,
+      s.type,
+      s.value,
+      s.minSpendCents ?? 0,
+      s.startsAt ?? null,
+      s.expiresAt ?? null,
+      s.singleUse ?? false,
+      s.usedCount ?? 0,
+    ],
   );
   return {
     code: s.code,
@@ -91,7 +101,10 @@ async function insertOrder(client: PoolClient, user: { id: number; name: string 
     const d = await client.query('SELECT type, value FROM discount_codes WHERE code = $1', [spec.discountCode]);
     discount = d.rows[0] ? { type: d.rows[0].type, value: d.rows[0].value } : null;
   }
-  const totals = calculateTotals(products.rows.map((p: any) => ({ unitPriceCents: p.price_cents, quantity: 1 })), discount);
+  const totals = calculateTotals(
+    products.rows.map((p: any) => ({ unitPriceCents: p.price_cents, quantity: 1 })),
+    discount,
+  );
   const seq = await client.query("SELECT 'PL-' || lpad(nextval('order_number_seq')::text, 6, '0') AS number");
   const created = new Date(clock.nowMs() - spec.daysAgo * DAY);
   const o = await client.query(
@@ -99,8 +112,15 @@ async function insertOrder(client: PoolClient, user: { id: number; name: string 
                          discount_code, shipping, delivery_date, card_last4, created_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, '4242', $12) RETURNING id, number, status, created_at`,
     [
-      seq.rows[0].number, user.id, spec.status, totals.subtotalCents, totals.discountCents, totals.vatCents, totals.deliveryCents,
-      totals.totalCents, discount ? spec.discountCode : null,
+      seq.rows[0].number,
+      user.id,
+      spec.status,
+      totals.subtotalCents,
+      totals.discountCents,
+      totals.vatCents,
+      totals.deliveryCents,
+      totals.totalCents,
+      discount ? spec.discountCode : null,
       JSON.stringify({ ...FIXTURE_ADDRESS, fullName: user.name }),
       new Date(created.getTime() + 3 * DAY).toISOString().slice(0, 10),
       created,
@@ -108,10 +128,19 @@ async function insertOrder(client: PoolClient, user: { id: number; name: string 
   );
   for (const p of products.rows) {
     await client.query('INSERT INTO order_items (order_id, product_id, name, unit_price_cents, quantity) VALUES ($1, $2, $3, $4, 1)', [
-      o.rows[0].id, p.id, p.name, p.price_cents,
+      o.rows[0].id,
+      p.id,
+      p.name,
+      p.price_cents,
     ]);
   }
-  return { id: o.rows[0].id, number: o.rows[0].number, status: o.rows[0].status, createdAt: o.rows[0].created_at, totalCents: totals.totalCents };
+  return {
+    id: o.rows[0].id,
+    number: o.rows[0].number,
+    status: o.rows[0].status,
+    createdAt: o.rows[0].created_at,
+    totalCents: totals.totalCents,
+  };
 }
 
 function publicFixtureUser(user: any) {
@@ -160,7 +189,10 @@ async function customerWithWishlist(client: PoolClient) {
   for (let i = 0; i < skus.length; i++) {
     const p = await client.query('SELECT id, name FROM products WHERE sku = $1', [skus[i]]);
     await client.query('INSERT INTO wishlist_items (user_id, product_id, position, added_at) VALUES ($1, $2, $3, $4)', [
-      user.id, p.rows[0].id, i, clock.now(),
+      user.id,
+      p.rows[0].id,
+      i,
+      clock.now(),
     ]);
     items.push({ productId: p.rows[0].id, name: p.rows[0].name, position: i });
   }
@@ -168,15 +200,15 @@ async function customerWithWishlist(client: PoolClient) {
 }
 
 // A 1x1 green PNG.
-const TINY_PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-  'base64',
-);
+const TINY_PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
 async function customerWithAvatar(client: PoolClient) {
   const user = await createUser(client, { name: 'Ava Avatar', email: uniqueEmail('avatar') });
   await client.query('INSERT INTO avatars (user_id, content_type, data, updated_at) VALUES ($1, $2, $3, $4)', [
-    user.id, 'image/png', TINY_PNG, clock.now(),
+    user.id,
+    'image/png',
+    TINY_PNG,
+    clock.now(),
   ]);
   return { user: publicFixtureUser(user), avatarUrl: `/api/v1/users/${user.id}/avatar` };
 }
@@ -210,13 +242,32 @@ export const FIXTURES: Record<string, (client: PoolClient) => Promise<unknown>> 
   'out-of-stock-product': (c) => upsertProduct(c, 'FX-OOS', 'Sold Out Synthesiser', 0),
   'low-stock-product': (c) => upsertProduct(c, 'FX-LOW', 'Last One Lamp', 1),
   'expired-discount': (c) =>
-    upsertCode(c, { code: 'EXPIRED10', description: 'Expired 10% code', type: 'percent', value: 10, expiresAt: new Date(clock.nowMs() - DAY) }),
+    upsertCode(c, {
+      code: 'EXPIRED10',
+      description: 'Expired 10% code',
+      type: 'percent',
+      value: 10,
+      expiresAt: new Date(clock.nowMs() - DAY),
+    }),
   'future-discount': (c) =>
-    upsertCode(c, { code: 'FUTURE10', description: 'Not yet active 10% code', type: 'percent', value: 10, startsAt: new Date(clock.nowMs() + 7 * DAY) }),
+    upsertCode(c, {
+      code: 'FUTURE10',
+      description: 'Not yet active 10% code',
+      type: 'percent',
+      value: 10,
+      startsAt: new Date(clock.nowMs() + 7 * DAY),
+    }),
   'single-use-discount': (c) =>
     upsertCode(c, { code: 'ONCE15', description: 'Single-use 15% code', type: 'percent', value: 15, singleUse: true }),
   'used-discount': (c) =>
-    upsertCode(c, { code: 'USED10', description: 'Already used single-use code', type: 'percent', value: 10, singleUse: true, usedCount: 1 }),
+    upsertCode(c, {
+      code: 'USED10',
+      description: 'Already used single-use code',
+      type: 'percent',
+      value: 10,
+      singleUse: true,
+      usedCount: 1,
+    }),
   'min-spend-discount': (c) =>
     upsertCode(c, { code: 'MIN50', description: '10% off when you spend €50', type: 'percent', value: 10, minSpendCents: 5000 }),
 };

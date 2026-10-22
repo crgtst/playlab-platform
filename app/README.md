@@ -259,7 +259,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
 
 - **Geolocation** (`/stores`): use `context.grantPermissions(['geolocation'])` with `geolocation: { latitude: 53.2707, longitude: -9.0568 }` (Galway), then click `store-locate-button`; three `store-result` items appear, Galway first. Leaving permission ungranted (or denying it) shows `store-finder-denied`, and `store-search-input` searches by town. `store-finder-loading` is the spinner.
 - **Notifications**: grant `notifications`, or replace `window.Notification` with a counting fake via `page.addInitScript` (headless browsers don't show real notifications). Click `notifications-toggle` (calls `Notification.requestPermission()`; `notifications-status` has `data-status` on, off, blocked or unsupported), then change the order's status with the API. Each change creates one notification, titled "Order PL-000123 is now shipped", with a `tag` so repeats collapse.
-- **Clipboard**: `context.grantPermissions(['clipboard-read', 'clipboard-write'])`. Click `copy-code-SAVE10` or `copy-order-number-button`, then read the clipboard back with `page.evaluate(() => navigator.clipboard.readText())`. A "Copied …" toast confirms it.
+- **Clipboard**: `context.grantPermissions(['clipboard-read', 'clipboard-write'])`. Click `copy-code-SAVE10` or `copy-order-number-button`, then read the clipboard back with `page.evaluate(() => navigator.clipboard.readText())`. A "Copied …" toast confirms it. If the clipboard is denied or missing (PLS-15.3), the button is followed by `<button test id>-fallback`, a read-only input with the text selected, and `<button test id>-fallback-hint`, "Press Ctrl+C to copy".
 - **Battery** (Chromium only): mock it before the page loads. The banner (`battery-banner`) and `<html data-battery-saver="on">` follow `levelchange` and `chargingchange` events, and the battery saver stops the CSS animations (`.pulse`, `.offer-code` and spinners). Use `page.exposeFunction` if you'd rather drive the mock from the test.
   ```ts
   await page.addInitScript(() => {
@@ -273,6 +273,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   - When offline, `/products` still loads from the cache with `offline-catalogue-notice`, and cached responses carry `X-SW-Cache: hit`.
   - Requests the worker handles **are not seen by `page.route`**, so use `serviceWorkers: 'block'` in every project that isn't testing the worker.
   - To test it, let it install (load a page, reload), then `context.setOffline(true)` and reload.
+  - While the browser is offline, the cart's `checkout-button` is a disabled button and `checkout-offline-message` explains why (PLS-17.2). It turns back into the checkout link on the `online` event.
 - **Touch** (gallery): with `hasTouch: true` (any mobile device profile), `locator.tap()` on `gallery-stage` advances. A swipe is a horizontal pointer drag of more than 40 px; dispatch `touchstart`, `touchmove` and `touchend`, or use the mouse with `page.mouse` on desktop. `gallery-status` reads "Image 2 of 3", and the dots have `aria-current`.
 - **Aria snapshots**: the product card, the order summary and the header (`site-header`) have stable accessible structure. Generate a starting point with `await locator.ariaSnapshot()` and replace the values that change with regexes. For example, a product card looks roughly like this:
   ```yaml
@@ -286,7 +287,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
     - button "Add Wireless Earbuds to wishlist"
   ```
   The order summary is a region named "Order summary": an h2, then h3 headings for Items, Totals and Delivery address.
-- **Component tests**: the harness lives in `web/` (`@playwright/experimental-ct-react` 1.49.1, `playwright-ct.config.ts`, `playwright/index.tsx`).
+- **Component tests**: the harness lives in `web/` (`@playwright/experimental-ct-react` 1.62.1, `playwright-ct.config.ts`, `playwright/index.tsx`).
   - Write `*.ct.tsx` files under `web/src` and run `cd web && npm run test-ct` (install browsers with `npx playwright install chromium` first).
   - Every mount is wrapped by `src/testing/ComponentHarness.tsx`. Pass `hooksConfig: { lang: 'ga', currency: 'GBP', theme: 'dark', bugs: ['quantity-negative'], route: '/cart' }` as needed. Add `app: true` to also mount auth, cart and wishlist, and mock `/api/v1/**` with `page.route`.
   - Good first candidates: `Totals`, `QuantityStepper`, `ReviewStars`, `Pagination`, `ProductGallery` and `CopyButton`.
@@ -312,18 +313,18 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `discount-stacking` | PLS-5.4 | API | A second code is accepted and both apply (the cart's `discounts` lists both) |
 | `discount-survives-cart-change` | PLS-5.5 | API | The minimum spend is not re-checked when the cart changes |
 | `discount-negative-total` | PLS-5.6 | API | Fixed codes are not capped, so the total goes negative |
-| `single-use-reused` | PLS-5.3 | API | A used single-use code still works |
+| `single-use-reused` | PLS-5.3, 24.9 | API | A used single-use code still works |
 | `discount-case-sensitive` | PLS-5.7 | API | `save10` is rejected; only `SAVE10` works |
 | `vat-before-discount` | PLS-5.8 | API | VAT is charged on the pre-discount subtotal |
 | `cart-total-rounding` | PLS-4.4 | API | The subtotal is 1 cent more than the sum of lines with 3 or more items |
 | `currency-switch-stale` | PLS-4.6 | Web | The cart page keeps € prices after switching to GBP |
 | `price-tamper` | PLS-6.7 | API | `POST /orders` uses `items[].unitPriceCents` sent by the client |
 | `quantity-negative` | PLS-4.2 | API + web | A quantity of 0 or below is accepted and saved |
-| `stock-oversell` | PLS-4.3 | API | No stock checks in the cart or orders (stock bottoms out at 0) |
+| `stock-oversell` | PLS-4.3, 21.4 | API | No stock checks in the cart or orders (stock bottoms out at 0) |
 | `double-submit` | PLS-6.4 | API + web | No locking or payment-reuse check; the payment page places the order twice |
-| `order-leak` | PLS-7.2 | API | Any customer can read any order (and its tracking) by id |
+| `order-leak` | PLS-7.2, 24.1 | API | Any customer can read any order (and its tracking) by id |
 | `logout-incomplete` | PLS-1.4 | API + web | Logout leaves the session alive, so Back shows the account page |
-| `token-never-expires` | PLS-1.5 | API | Expired access tokens are accepted |
+| `token-never-expires` | PLS-1.5, 24.2 | API | Expired access tokens are accepted |
 | `search-apostrophe` | PLS-3.2 | API | A search containing `'` returns 500 |
 | `pagination-duplicate` | PLS-3.5 | API | Page 2 onwards starts with the previous page's last item |
 | `fada-rejected` | PLS-2.3 | API | Names with accents (Seán, Ní Bhriain) get 422 |
@@ -333,13 +334,13 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
 | `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
-| `geolocation-ignored` | Phase 4: store finder | API | `/stores/nearest` ignores the position and always returns Dublin stores |
-| `permission-denied-crash` | Phase 4: store finder | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
-| `clipboard-wrong-value` | Phase 4: copy buttons | Web | Each "Copy code" button copies the previous code in the list (`SAVE10` copies `FIXED20`) |
-| `notification-spam` | Phase 4: notifications | Web | One status change fires two notifications, with no `tag` |
-| `battery-banner-stuck` | Phase 4: battery saver | Web | `chargingchange` is ignored, so the banner stays after charging starts |
-| `offline-stale-prices` | Phase 4: offline cache | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
-| `aria-heading-skip` | Phase 4: stable regions | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
+| `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
+| `permission-denied-crash` | PLS-13.2 | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
+| `clipboard-wrong-value` | PLS-15.1 | Web | Each "Copy code" button copies the previous code in the list (`SAVE10` copies `FIXED20`) |
+| `notification-spam` | PLS-14.2 | Web | One status change fires two notifications, with no `tag` |
+| `battery-banner-stuck` | PLS-16.2 | Web | `chargingchange` is ignored, so the banner stays after charging starts |
+| `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
+| `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
 There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
@@ -396,7 +397,7 @@ There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There 
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
 | `WEB_PORT` / `API_PORT` / `DB_PORT` | `5173` / `3000` / `5432` | Host ports |
-| `PUBLIC_WEB_URL` | `http://localhost:5173` | Base URL used in links inside mailbox emails |
+| `PUBLIC_WEB_URL` | `http://localhost:${WEB_PORT}` | Base URL used in links inside mailbox emails |
 | `PAYMENT_FRAME_URL` | `http://localhost:${API_PORT}/pay/frame` | Where the browser loads the payment iframe from |
 | `SHOP_ORIGINS` | `http://localhost:${WEB_PORT}` | Comma-separated origins allowed to embed the frame (`frame-ancestors`) and receive its `postMessage` results |
 
@@ -409,7 +410,7 @@ Build phases 1–4 in the spec are done. Phases 5 (framework maturity) and 6 (Pl
 - **Phase 3:** WebSocket and SSE, shadow DOM, infinite scroll, i18n, currency and timezone, planted a11y faults, bug mode, theme toggle and offline.
 - **Phase 4:** store finder (geolocation), order notifications, copy buttons, the battery-saver banner, the service-worker offline cache, the swipeable gallery, stable regions for aria snapshots, the component-test harness, the price-tracker extension and 7 more defects.
 
-Every AC in `tests/ACCEPTANCE_CRITERIA.md` now has an implementation to test against.
+Every AC in PLS-1 to PLS-19 of `tests/ACCEPTANCE_CRITERIA.md` has an implementation to test against. PLS-20 to PLS-29 specify the upgrade plan's platform work and are mostly not built yet; each story says which phase builds it.
 
 Two edge-case scenarios from the spec's checklist, which aren't in any phase, are **not built**:
 - account deletion that logs out other sessions
@@ -442,10 +443,10 @@ Two edge-case scenarios from the spec's checklist, which aren't in any phase, ar
 23. Bug mode: `discount-not-applied` and `vat-before-discount` also break PLS-5.6 (see [Bug mode](#bug-mode)). `double-submit` adds a 300 ms pause when placing an order, so concurrent requests overlap reliably. `search-apostrophe` simulates a SQL error rather than actually building unsafe SQL.
 24. The product page shows `product-stock-count` ("N available") next to `product-stock`. The text of `product-stock` is unchanged, so exact-text locators still work.
 25. Reviews (PLS-11.2) are new in Phase 3: one per user per product, with no editing or deleting.
-26. The Phase 4 defects have no AC IDs, because `ACCEPTANCE_CRITERIA.md` has no stories for Phase 4 yet. `/test/bugs` labels them "Phase 4: <feature>".
+26. The Phase 4 features are specified by PLS-13 to PLS-19, which were reconciled with the build in Phase 0: the ACs now use the build's messages, results appear after "Find stores near me" is selected, and a tap on the gallery advances. The Phase 4 defects map to those IDs like every other defect.
 27. The service worker is registered only by the production build (`vite preview`, which Docker runs), not the dev server. It handles requests before `page.route` can see them, so block service workers in tests that mock the network.
 28. The Battery Status API exists only in Chromium, so the battery banner never appears in Firefox or WebKit unless you mock `navigator.getBattery`.
 29. "Copy discount code" lives in a "Current offers" strip on the home and cart pages (new `GET /offers`, plus a `public` flag on discount codes). The strip changes those pages' visual baselines.
 30. The order summary is now a labelled region with an h2 "Order summary" and h3 sub-headings, for stable aria snapshots. Its test ids are unchanged.
-31. The component harness ships with no component tests; they're part of your Phase 5. The CT package is pinned to 1.49.1.
+31. The component harness ships with no component tests; they're part of your Phase 5. The CT package is pinned to 1.62.1.
 32. The price-tracker extension has a small background service worker so tests can find its ID. It runs only in Chromium.

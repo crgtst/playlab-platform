@@ -118,11 +118,22 @@ export function Products() {
       <form className="filters" onSubmit={onSubmit} noValidate aria-label="Filter products" data-testid="filters-form">
         <div className="field">
           <label htmlFor="filter-q">Search</label>
-          <input id="filter-q" type="search" value={form.q} onChange={(e) => setForm({ ...form, q: e.target.value })} data-testid="filter-search-input" />
+          <input
+            id="filter-q"
+            type="search"
+            value={form.q}
+            onChange={(e) => setForm({ ...form, q: e.target.value })}
+            data-testid="filter-search-input"
+          />
         </div>
         <div className="field">
           <label htmlFor="filter-category">Category</label>
-          <select id="filter-category" value={form.category} onChange={(e) => onSelect('category', e.target.value)} data-testid="filter-category-select">
+          <select
+            id="filter-category"
+            value={form.category}
+            onChange={(e) => onSelect('category', e.target.value)}
+            data-testid="filter-category-select"
+          >
             <option value="">All categories</option>
             {categories.map((c) => (
               <option key={c.slug} value={c.slug}>
@@ -133,11 +144,29 @@ export function Products() {
         </div>
         <div className="field">
           <label htmlFor="filter-min">Min price (€)</label>
-          <input id="filter-min" type="number" min={0} step="0.01" inputMode="decimal" value={form.minPrice} onChange={(e) => setForm({ ...form, minPrice: e.target.value })} data-testid="filter-min-price-input" />
+          <input
+            id="filter-min"
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            value={form.minPrice}
+            onChange={(e) => setForm({ ...form, minPrice: e.target.value })}
+            data-testid="filter-min-price-input"
+          />
         </div>
         <div className="field">
           <label htmlFor="filter-max">Max price (€)</label>
-          <input id="filter-max" type="number" min={0} step="0.01" inputMode="decimal" value={form.maxPrice} onChange={(e) => setForm({ ...form, maxPrice: e.target.value })} data-testid="filter-max-price-input" />
+          <input
+            id="filter-max"
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            value={form.maxPrice}
+            onChange={(e) => setForm({ ...form, maxPrice: e.target.value })}
+            data-testid="filter-max-price-input"
+          />
         </div>
         <div className="field">
           <label htmlFor="filter-sort">Sort by</label>

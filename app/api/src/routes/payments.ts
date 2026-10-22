@@ -56,7 +56,7 @@ paymentsRouter.post(
 
 paymentsRouter.get(
   '/intents/:id',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const rows = /^[0-9a-f-]{36}$/i.test(req.params.id)
       ? await query('SELECT * FROM payment_intents WHERE id = $1 AND user_id = $2', [req.params.id, req.user!.id])
       : [];
@@ -88,7 +88,7 @@ async function intentForSecret(id: string, secret: unknown) {
 
 payFrameRouter.get(
   '/intents/:id',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json({ data: intentView(await intentForSecret(req.params.id, req.query.secret)) });
   }),
@@ -98,7 +98,7 @@ const confirmSchema = cardSchema.extend({ clientSecret: z.string({ required_erro
 
 payFrameRouter.post(
   '/intents/:id/confirm',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const body = parse(confirmSchema, req.body);
     const intent = await intentForSecret(req.params.id, body.clientSecret);
     if (intent.status === 'succeeded') throw new ApiError(409, 'PAYMENT_ALREADY_CONFIRMED', 'This payment has already been taken');
@@ -120,7 +120,10 @@ payFrameRouter.post(
       await query('UPDATE payment_intents SET status = $1, card_last4 = $2 WHERE id = $3', [status, last4, intent.id]);
       throw err;
     }
-    const rows = await query(`UPDATE payment_intents SET status = 'succeeded', card_last4 = $1 WHERE id = $2 RETURNING *`, [last4, intent.id]);
+    const rows = await query(`UPDATE payment_intents SET status = 'succeeded', card_last4 = $1 WHERE id = $2 RETURNING *`, [
+      last4,
+      intent.id,
+    ]);
     res.json({ data: intentView(rows[0]) });
   }),
 );

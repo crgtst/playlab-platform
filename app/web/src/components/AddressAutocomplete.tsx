@@ -86,7 +86,13 @@ export function AddressAutocomplete({ value, error, onChange, onSelect }: Props)
         {t('shipping.line1Hint')}
       </p>
       {open && (
-        <ul id="address-listbox" role="listbox" aria-label={t('shipping.suggestions')} className="listbox" data-testid="address-suggestions">
+        <ul
+          id="address-listbox"
+          role="listbox"
+          aria-label={t('shipping.suggestions')}
+          className="listbox"
+          data-testid="address-suggestions"
+        >
           {options.map((a, i) => (
             <li
               key={a.id}

@@ -95,7 +95,17 @@ export function Register() {
           testId="register-name"
           hint={<span data-testid="register-name-counter">{name.length}/500 characters</span>}
         />
-        <Field id="register-email" label="Email" unlabelled={missingLabel} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} testId="register-email" />
+        <Field
+          id="register-email"
+          label="Email"
+          unlabelled={missingLabel}
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          error={errors.email}
+          testId="register-email"
+        />
         <Field
           id="register-password"
           label="Password"

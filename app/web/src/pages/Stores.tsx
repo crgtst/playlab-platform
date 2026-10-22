@@ -18,7 +18,10 @@ function StoreList({ stores, testId }: { stores: Store[]; testId: string }) {
             {s.distanceKm !== undefined && (
               <>
                 {' '}
-                · <strong data-testid="store-distance" data-km={s.distanceKm}>{s.distanceKm.toFixed(1)} km away</strong>
+                ·{' '}
+                <strong data-testid="store-distance" data-km={s.distanceKm}>
+                  {s.distanceKm.toFixed(1)} km away
+                </strong>
               </>
             )}
           </p>

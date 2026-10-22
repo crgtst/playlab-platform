@@ -34,22 +34,26 @@ const shippingSchema = z.object({
   phone: z.string().trim().max(30).optional().default(''),
 });
 
-const orderSchema = z.object({
-  shipping: shippingSchema,
-  deliveryDate: z.string({ required_error: 'Choose a delivery date' }).regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD'),
-  instructions: z.string().max(200, 'Instructions must be at most 200 characters').optional().default(''),
-  // Pay either with card details directly (API clients) or with an intent confirmed in the payment iframe (the web app).
-  payment: cardSchema.optional(),
-  paymentIntentId: z.string().uuid('paymentIntentId must be a UUID').optional(),
-  acceptPriceChanges: z.boolean().optional().default(false),
-  // Item prices sent by the client are ignored (prices always come from the database), except by the price-tamper defect.
-  items: z
-    .array(z.object({ productId: z.number().int(), unitPriceCents: z.number().int().optional(), priceCents: z.number().int().optional() }))
-    .optional(),
-}).refine((v) => (v.payment === undefined) !== (v.paymentIntentId === undefined), {
-  message: 'Send either payment (card details) or paymentIntentId, not both',
-  path: ['payment'],
-});
+const orderSchema = z
+  .object({
+    shipping: shippingSchema,
+    deliveryDate: z.string({ required_error: 'Choose a delivery date' }).regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD'),
+    instructions: z.string().max(200, 'Instructions must be at most 200 characters').optional().default(''),
+    // Pay either with card details directly (API clients) or with an intent confirmed in the payment iframe (the web app).
+    payment: cardSchema.optional(),
+    paymentIntentId: z.string().uuid('paymentIntentId must be a UUID').optional(),
+    acceptPriceChanges: z.boolean().optional().default(false),
+    // Item prices sent by the client are ignored (prices always come from the database), except by the price-tamper defect.
+    items: z
+      .array(
+        z.object({ productId: z.number().int(), unitPriceCents: z.number().int().optional(), priceCents: z.number().int().optional() }),
+      )
+      .optional(),
+  })
+  .refine((v) => (v.payment === undefined) !== (v.paymentIntentId === undefined), {
+    message: 'Send either payment (card details) or paymentIntentId, not both',
+    path: ['payment'],
+  });
 
 export const ORDER_STATUSES = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled'] as const;
 const statusSchema = z.enum(ORDER_STATUSES, {
@@ -165,7 +169,8 @@ async function checkIntent(id: string, userId: number, totalCents: number, db: P
   if (!intent) throw new ApiError(422, 'PAYMENT_NOT_FOUND', 'Payment not found');
   if (intent.status === 'declined') throw new ApiError(402, 'PAYMENT_DECLINED', 'Your card was declined');
   if (intent.status !== 'succeeded') throw new ApiError(409, 'PAYMENT_NOT_COMPLETED', 'This payment has not been completed');
-  if (intent.used_at && !isBugOn('double-submit')) throw new ApiError(409, 'PAYMENT_ALREADY_USED', 'This payment has already been used for an order');
+  if (intent.used_at && !isBugOn('double-submit'))
+    throw new ApiError(409, 'PAYMENT_ALREADY_USED', 'This payment has already been used for an order');
   if (intent.amount_cents !== totalCents) {
     throw new ApiError(409, 'PAYMENT_AMOUNT_MISMATCH', 'Your order total changed after payment. Please pay again.', {
       paidCents: intent.amount_cents,
@@ -204,9 +209,15 @@ ordersRouter.post(
     // Pre-flight checks without locks, so a slow payment never holds row locks.
     const cartRow = await query<{ id: string }>('SELECT id FROM carts WHERE user_id = $1', [user.id]);
     // price-tamper: trust prices sent by the client.
-    const priceOverrides = isBugOn('price-tamper') && body.items
-      ? new Map(body.items.map((i) => [i.productId, i.unitPriceCents ?? i.priceCents ?? NaN]).filter(([, v]) => Number.isInteger(v)) as [number, number][])
-      : undefined;
+    const priceOverrides =
+      isBugOn('price-tamper') && body.items
+        ? new Map(
+            body.items.map((i) => [i.productId, i.unitPriceCents ?? i.priceCents ?? NaN]).filter(([, v]) => Number.isInteger(v)) as [
+              number,
+              number,
+            ][],
+          )
+        : undefined;
     const preCart = await buildCartView(cartRow[0]?.id ?? null, pool, { priceOverrides });
     assertCartReady(preCart, body.acceptPriceChanges);
 
@@ -277,7 +288,7 @@ ordersRouter.post(
             cardLast4,
             idemKey ?? null,
             clock.now(),
-            doubleSubmit ? null : body.paymentIntentId ?? null,
+            doubleSubmit ? null : (body.paymentIntentId ?? null),
           ],
         );
         const orderId = inserted.rows[0].id;
@@ -290,7 +301,9 @@ ordersRouter.post(
           await client.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE id = $2', [item.quantity, item.productId]);
         }
         await client.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
-        await client.query('UPDATE carts SET discount_code_id = NULL, extra_discount_code_id = NULL, updated_at = now() WHERE id = $1', [cartId]);
+        await client.query('UPDATE carts SET discount_code_id = NULL, extra_discount_code_id = NULL, updated_at = now() WHERE id = $1', [
+          cartId,
+        ]);
         return loadOrder(orderId, client);
       });
     } catch (err: any) {
@@ -364,7 +377,20 @@ ordersRouter.get(
       f.params,
     );
     const csv = toCsv(
-      ['number', 'created_at', 'customer_email', 'status', 'items', 'subtotal', 'discount_code', 'discount', 'vat', 'delivery', 'total', 'currency'],
+      [
+        'number',
+        'created_at',
+        'customer_email',
+        'status',
+        'items',
+        'subtotal',
+        'discount_code',
+        'discount',
+        'vat',
+        'delivery',
+        'total',
+        'currency',
+      ],
       rows.map((o: any) => [
         o.number,
         new Date(o.created_at).toISOString(),
@@ -397,7 +423,12 @@ ordersRouter.post(
       const rows = await client.query('SELECT id, number, user_id, status FROM orders WHERE id = ANY($1) FOR UPDATE', [ids]);
       if (rows.rowCount !== ids.length) {
         const found = new Set(rows.rows.map((r: any) => r.id));
-        throw new ApiError(422, 'VALIDATION_ERROR', 'Some orders do not exist', ids.filter((i) => !found.has(i)).map((i) => ({ field: 'ids', message: `Order ${i} not found` })));
+        throw new ApiError(
+          422,
+          'VALIDATION_ERROR',
+          'Some orders do not exist',
+          ids.filter((i) => !found.has(i)).map((i) => ({ field: 'ids', message: `Order ${i} not found` })),
+        );
       }
       await client.query('UPDATE orders SET status = $1 WHERE id = ANY($2)', [body.status, ids]);
       return rows.rows;
@@ -429,7 +460,7 @@ function orderIdParam(raw: string): number {
 }
 
 /** Loads an order the current user may see. Other customers' orders are a 404, so ids are not revealed. */
-async function visibleOrder(req: Request) {
+async function visibleOrder(req: Request<{ id: string }>) {
   const order = await loadOrder(orderIdParam(req.params.id));
   const user = req.user!;
   const leak = isBugOn('order-leak');
@@ -439,7 +470,7 @@ async function visibleOrder(req: Request) {
 
 ordersRouter.get(
   '/:id',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     res.json({ data: await visibleOrder(req) });
   }),
 );
@@ -447,7 +478,7 @@ ordersRouter.get(
 ordersRouter.patch(
   '/:id/status',
   requireRole('admin'),
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const id = orderIdParam(req.params.id);
     const { status } = parse(z.object({ status: statusSchema }), req.body);
     const before = await withTransaction(async (client) => {
@@ -466,7 +497,7 @@ const STEP_ORDER = ['paid', 'processing', 'shipped', 'delivered'];
 
 ordersRouter.get(
   '/:id/tracking',
-  asyncHandler(async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const order = await visibleOrder(req);
     const placed = new Date(order.createdAt).getTime();
     const hour = 3_600_000;

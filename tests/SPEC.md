@@ -41,7 +41,7 @@ The API is the centre of gravity: the web app only talks to it, and the tests ca
 | Layer | Choice | Why |
 | --- | --- | --- |
 | Front end | React + Vite + TypeScript | Common in real teams; produces realistic dynamic DOM |
-| API | Node 20 + Express + TypeScript (or FastAPI) | Same language as your Playwright tests |
+| API | Node 24 + Express 5 + TypeScript (or FastAPI) | Same language as your Playwright tests |
 | Database | Postgres 16 | Realistic; easy to wipe and reseed |
 | Docs | OpenAPI 3 + Swagger UI | Lets you practise contract and schema checks |
 | CI | GitHub Actions | Runs Compose, then the suite, then publishes the report |
@@ -306,7 +306,7 @@ a practice e-commerce site built to be tested with Playwright.
 
 Build Phase 1 only. Requirements:
 - docker-compose.yml with three services: web (React + Vite),
-  api (Node 20 + Express + TypeScript), db (Postgres 16).
+  api (Node 24 + Express 5 + TypeScript), db (Postgres 16).
 - `docker compose up` starts everything; `docker compose down -v` wipes it.
 - API at /api/v1 with an OpenAPI 3 file and Swagger UI at /api/docs.
 - Seed script with 3 users (customer, admin, support), 40 products

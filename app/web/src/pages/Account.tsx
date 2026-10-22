@@ -14,7 +14,9 @@ export function Account() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [error, setError] = useState('');
 
-  useOrderEvents((e) => setOrders((list) => list?.map((o) => (o.id === e.orderId ? { ...o, status: e.status as Order['status'] } : o)) ?? null));
+  useOrderEvents((e) =>
+    setOrders((list) => list?.map((o) => (o.id === e.orderId ? { ...o, status: e.status as Order['status'] } : o)) ?? null),
+  );
 
   useEffect(() => {
     document.title = 'My account – PlayLab Shop';

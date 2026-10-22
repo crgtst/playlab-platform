@@ -109,10 +109,11 @@ authRouter.post(
       );
       const created = rows.rows[0];
       const token = randomToken();
-      await client.query(
-        `INSERT INTO email_tokens (user_id, type, token_hash, expires_at) VALUES ($1, 'confirm', $2, $3)`,
-        [created.id, hashToken(token), new Date(clock.nowMs() + config.confirmLinkTtlSec * 1000)],
-      );
+      await client.query(`INSERT INTO email_tokens (user_id, type, token_hash, expires_at) VALUES ($1, 'confirm', $2, $3)`, [
+        created.id,
+        hashToken(token),
+        new Date(clock.nowMs() + config.confirmLinkTtlSec * 1000),
+      ]);
       const link = `${config.publicWebUrl}/confirm-email?token=${token}`;
       await sendEmail(
         {
@@ -135,10 +136,9 @@ authRouter.post(
   asyncHandler(async (req: Request, res: Response) => {
     const { token } = parse(tokenSchema, req.body);
     const user = await withTransaction(async (client) => {
-      const rows = await client.query(
-        `SELECT * FROM email_tokens WHERE token_hash = $1 AND type = 'confirm' FOR UPDATE`,
-        [hashToken(token)],
-      );
+      const rows = await client.query(`SELECT * FROM email_tokens WHERE token_hash = $1 AND type = 'confirm' FOR UPDATE`, [
+        hashToken(token),
+      ]);
       const t = rows.rows[0];
       if (!t || t.used_at) throw new ApiError(400, 'CONFIRM_TOKEN_INVALID', 'This confirmation link is invalid or has already been used');
       if (t.expires_at <= clock.now()) throw new ApiError(400, 'CONFIRM_TOKEN_EXPIRED', 'This confirmation link has expired');
@@ -175,11 +175,7 @@ authRouter.post(
     if (!ok) {
       const failed = (user.locked_until ? 0 : user.failed_logins) + 1;
       const lockedUntil = failed >= config.lockoutThreshold ? new Date(now.getTime() + config.lockoutMinutes * 60_000) : null;
-      await query('UPDATE users SET failed_logins = $1, locked_until = $2 WHERE id = $3', [
-        lockedUntil ? 0 : failed,
-        lockedUntil,
-        user.id,
-      ]);
+      await query('UPDATE users SET failed_logins = $1, locked_until = $2 WHERE id = $3', [lockedUntil ? 0 : failed, lockedUntil, user.id]);
       throw badCredentials;
     }
 
@@ -273,22 +269,15 @@ authRouter.post(
     const body = parse(resetSchema, req.body);
     const hash = await bcrypt.hash(body.password, 10);
     await withTransaction(async (client) => {
-      const rows = await client.query(
-        `SELECT * FROM email_tokens WHERE token_hash = $1 AND type = 'reset' FOR UPDATE`,
-        [hashToken(body.token)],
-      );
+      const rows = await client.query(`SELECT * FROM email_tokens WHERE token_hash = $1 AND type = 'reset' FOR UPDATE`, [
+        hashToken(body.token),
+      ]);
       const t = rows.rows[0];
       if (!t || t.used_at) throw new ApiError(400, 'RESET_TOKEN_INVALID', 'This reset link is invalid or has already been used');
       if (t.expires_at <= clock.now()) throw new ApiError(400, 'RESET_TOKEN_EXPIRED', 'This reset link has expired');
       await client.query('UPDATE email_tokens SET used_at = $1 WHERE id = $2', [clock.now(), t.id]);
-      await client.query('UPDATE users SET password_hash = $1, failed_logins = 0, locked_until = NULL WHERE id = $2', [
-        hash,
-        t.user_id,
-      ]);
-      await client.query('UPDATE refresh_tokens SET revoked_at = $1 WHERE user_id = $2 AND revoked_at IS NULL', [
-        clock.now(),
-        t.user_id,
-      ]);
+      await client.query('UPDATE users SET password_hash = $1, failed_logins = 0, locked_until = NULL WHERE id = $2', [hash, t.user_id]);
+      await client.query('UPDATE refresh_tokens SET revoked_at = $1 WHERE user_id = $2 AND revoked_at IS NULL', [clock.now(), t.user_id]);
     });
     res.json({ message: 'Your password has been changed. You can now log in.' });
   }),

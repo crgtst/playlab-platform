@@ -61,7 +61,10 @@ export function Header() {
           PlayLab Shop
         </Link>
         <Link to="/cart" className="cart-link cart-link-compact" data-testid="nav-cart-compact" aria-label={`${t('nav.cart')}, ${count}`}>
-          🛒 <span className="badge" data-testid="cart-count-compact">{count}</span>
+          🛒{' '}
+          <span className="badge" data-testid="cart-count-compact">
+            {count}
+          </span>
         </Link>
         <button
           type="button"
@@ -120,7 +123,10 @@ export function Header() {
           <div className="header-actions">
             <PrefsControls />
             <Link to="/cart" className="cart-link" data-testid="nav-cart" aria-label={`${t('nav.cart')}, ${count}`}>
-              {t('nav.cart')} <span className="badge" data-testid="cart-count">{count}</span>
+              {t('nav.cart')}{' '}
+              <span className="badge" data-testid="cart-count">
+                {count}
+              </span>
             </Link>
             {user ? (
               <AccountMenu onLogout={onLogout} />

@@ -49,7 +49,14 @@ export function QuantityStepper({ id, label, value, max = 99, disabled, onCommit
 
   return (
     <div className="stepper" role="group" aria-label={label} data-testid="qty-stepper">
-      <button type="button" className="secondary" aria-label="Decrease quantity" disabled={disabled || value <= 1} onClick={() => commit(String(value - 1))} data-testid="qty-decrement">
+      <button
+        type="button"
+        className="secondary"
+        aria-label="Decrease quantity"
+        disabled={disabled || value <= 1}
+        onClick={() => commit(String(value - 1))}
+        data-testid="qty-decrement"
+      >
         −
       </button>
       <label htmlFor={id} className="visually-hidden">
@@ -69,7 +76,14 @@ export function QuantityStepper({ id, label, value, max = 99, disabled, onCommit
         onKeyDown={onKeyDown}
         data-testid="qty-input"
       />
-      <button type="button" className="secondary" aria-label="Increase quantity" disabled={disabled || value >= max} onClick={() => commit(String(value + 1))} data-testid="qty-increment">
+      <button
+        type="button"
+        className="secondary"
+        aria-label="Increase quantity"
+        disabled={disabled || value >= max}
+        onClick={() => commit(String(value + 1))}
+        data-testid="qty-increment"
+      >
         +
       </button>
     </div>

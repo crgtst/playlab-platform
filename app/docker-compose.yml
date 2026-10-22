@@ -1,4 +1,4 @@
-name: playlab-shop
+name: playlab-platform
 
 services:
   db:
@@ -23,7 +23,7 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://playlab:playlab@db:5432/playlab
       WEB_URL: http://web:5173
-      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:5173}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:${WEB_PORT:-5173}}
       TEST_HOOKS: ${TEST_HOOKS:-true}
       JWT_SECRET: ${JWT_SECRET:-playlab-dev-secret-not-for-production}
       RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-100}

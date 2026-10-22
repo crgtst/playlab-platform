@@ -25,7 +25,7 @@ export function ForgotPassword() {
       await api('/auth/forgot-password', { method: 'POST', body: { email: email.trim() } });
       setSent(true);
     } catch (err) {
-      setError(err instanceof ApiRequestError && err.status === 422 ? err.fieldErrors().email ?? err.message : errorMessage(err));
+      setError(err instanceof ApiRequestError && err.status === 422 ? (err.fieldErrors().email ?? err.message) : errorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -45,7 +45,16 @@ export function ForgotPassword() {
         </div>
       ) : (
         <form onSubmit={onSubmit} noValidate data-testid="forgot-password-form">
-          <Field id="forgot-email" label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={error} testId="forgot-password-email" />
+          <Field
+            id="forgot-email"
+            label="Email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={error}
+            testId="forgot-password-email"
+          />
           <button type="submit" disabled={busy} data-testid="forgot-password-submit">
             Send reset link
           </button>
