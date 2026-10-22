@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cart",
+  "type": "object",
+  "required": [
+    "id",
+    "items",
+    "itemCount",
+    "discount",
+    "discounts",
+    "totals",
+    "currency",
+    "priceChanged",
+    "notices"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "CartItem.json"
+      }
+    },
+    "itemCount": {
+      "type": "integer"
+    },
+    "discount": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "code",
+        "description",
+        "type",
+        "value",
+        "amountCents"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "percent",
+            "fixed"
+          ]
+        },
+        "value": {
+          "type": "integer"
+        },
+        "amountCents": {
+          "type": "integer"
+        }
+      }
+    },
+    "discounts": {
+      "type": "array",
+      "description": "The applied codes. At most one, except with the discount-stacking defect in bug mode.",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "description",
+          "type",
+          "value",
+          "amountCents"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "fixed"
+            ]
+          },
+          "value": {
+            "type": "integer"
+          },
+          "amountCents": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "totals": {
+      "$ref": "Totals.json"
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "EUR"
+      ]
+    },
+    "priceChanged": {
+      "type": "boolean"
+    },
+    "notices": {
+      "type": "array",
+      "description": "One-off messages, e.g. a discount removed because the cart fell below its minimum spend.",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

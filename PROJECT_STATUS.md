@@ -10,9 +10,24 @@ Between Phase 1 and Phase 2: dependency upgrades and housekeeping. Phase 1 merge
 
 ## Next task
 
-Scaffold `tests/` (folders, shared data contract, JSON schemas). Then Phase 2 (your functional suites).
+Phase 2: your functional suites (Playwright TS, Postman/Newman, Karate, REST Assured, traceability). The platform
+work before it is done once PRs #20 and the `tests/` scaffold are merged.
 
 ## Done
+
+- 2026-10-22: `tests/` scaffolded on `chore/tests-scaffold` (plan layout and parity rule 2).
+  - `tests/README.md` (folders, phases, the rules every suite follows, how to start and reset the stack) and a
+    README per suite folder with the techniques and showcase from the plan. No suite code: that's Phase 2 onwards.
+  - `tests/shared/`: `accounts.json`, `products.json` (with post-reset IDs), `cards.json`, `discounts.json` and
+    `fixtures.json`. `discounts.json` was added to the plan (layout and parity rule 2) because the PLS-5 tests need
+    the codes.
+  - `tests/shared/schemas/`: 38 draft-07 JSON Schemas generated from the OpenAPI components by
+    `npm run export:schemas` (`app/api/scripts/export-schemas.ts`): `nullable` becomes a `null` type, `example`
+    becomes `examples`, and references point at sibling files.
+  - Guards: `shared-contract.test.ts` (6 unit tests: each data file against the seed source, schemas up to date),
+    `shared-data.int.test.ts` (fixture discount codes) and `schemas.int.test.ts`, which walks about 90 requests
+    through the API and checks every status is documented and every JSON body matches its schema (ajv). The OpenAPI
+    file matched the API throughout; a deliberately broken schema made it fail. 58 unit and 132 integration tests.
 
 - 2026-10-22: `SPEC.md` and `ACCEPTANCE_CRITERIA.md` moved from `tests/` to `docs/` (plan layout), on
   `chore/docs-move`. References updated in `CLAUDE.md`, the Copilot instructions, both READMEs and the AC-map unit
@@ -231,6 +246,8 @@ Scaffold `tests/` (folders, shared data contract, JSON schemas). Then Phase 2 (y
 | 7 | v2.0 FastAPI spec marked historical; PlayLab Pay (FastAPI) added as Phase 5 stretch | Agreed | 2026-10-21 |
 | 8 | A9 reconciliation: build PLS-15.3 and 17.2; reword 13.x, 14.1, 16.1, 17.1 and 18.2 to match the build | Agreed | 2026-10-21 |
 | 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Agreed | 2026-10-22 |
+| 10 | Compose ports stay published on all interfaces (not bound to `127.0.0.1`), so another machine on the network can reach the stack, e.g. to generate JMeter load. The README and `SECURITY.md` say local, trusted networks only | Agreed | 2026-10-22 |
+| 11 | `SECURITY.md` keeps "an acknowledgement within a week" as written | Agreed | 2026-10-22 |
 
 ## Known issues
 
@@ -246,9 +263,8 @@ Scaffold `tests/` (folders, shared data contract, JSON schemas). Then Phase 2 (y
 
 - GitHub private vulnerability reporting, which `SECURITY.md` points to, can't be enabled on a private repo.
   Turn it on when the repo goes public (Gate 3).
-- `SECURITY.md` promises an acknowledgement within a week. Craig to confirm or change.
-- Proposed plan change: Compose publishes ports 5173, 3000 and 5432 on all interfaces. Binding them to `127.0.0.1`
-  would keep the stack off the local network. That changes how people reach the stack, so it needs agreeing first.
+- Compose publishes ports 5173, 3000 and 5432 on all interfaces (decision 10), so anyone on the same network can reach
+  the test hooks and the database. Run the stack only on networks you trust.
 
 - The plan's edits to existing ACs (PLS-8.2, 8.3, 8.4 and 10.1 in "Changes to existing stories") are not
   applied yet. They describe Phase 1 behaviour, so they land with it; applying them now would make built

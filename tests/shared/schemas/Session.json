@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Session",
+  "type": "object",
+  "required": [
+    "accessToken",
+    "refreshToken",
+    "expiresIn",
+    "tokenType",
+    "user"
+  ],
+  "properties": {
+    "accessToken": {
+      "type": "string"
+    },
+    "refreshToken": {
+      "type": "string"
+    },
+    "expiresIn": {
+      "type": "integer",
+      "examples": [
+        900
+      ],
+      "description": "Seconds until the access token expires"
+    },
+    "tokenType": {
+      "type": "string",
+      "enum": [
+        "Bearer"
+      ]
+    },
+    "user": {
+      "$ref": "User.json"
+    }
+  }
+}

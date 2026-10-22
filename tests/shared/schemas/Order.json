@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Order",
+  "type": "object",
+  "required": [
+    "id",
+    "number",
+    "etag",
+    "userId",
+    "customer",
+    "status",
+    "createdAt",
+    "items",
+    "totals",
+    "discount",
+    "currency",
+    "shipping",
+    "deliveryDate",
+    "instructions",
+    "cardLast4"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "number": {
+      "type": "string",
+      "examples": [
+        "PL-000001"
+      ]
+    },
+    "etag": {
+      "type": "string",
+      "description": "The order's ETag, as on `GET /orders/{id}`. Send it as `If-Match` to change the status.",
+      "examples": [
+        "\"order-12-v3\""
+      ]
+    },
+    "userId": {
+      "type": "integer"
+    },
+    "customer": {
+      "type": "object",
+      "required": [
+        "id",
+        "email",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "$ref": "OrderStatus.json"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "productId",
+          "name",
+          "unitPriceCents",
+          "quantity",
+          "lineTotalCents"
+        ],
+        "properties": {
+          "productId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unitPriceCents": {
+            "type": "integer"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "lineTotalCents": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "totals": {
+      "$ref": "Totals.json"
+    },
+    "discount": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "code",
+        "amountCents"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "amountCents": {
+          "type": "integer"
+        }
+      }
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "EUR"
+      ]
+    },
+    "shipping": {
+      "$ref": "ShippingAddress.json"
+    },
+    "deliveryDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "instructions": {
+      "type": "string"
+    },
+    "cardLast4": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReviewMeta",
+  "type": "object",
+  "required": [
+    "count",
+    "average"
+  ],
+  "properties": {
+    "count": {
+      "type": "integer"
+    },
+    "average": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Mean rating to one decimal place"
+    }
+  }
+}

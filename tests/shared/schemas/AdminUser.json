@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AdminUser",
+  "description": "A user as admins and support see them",
+  "allOf": [
+    {
+      "$ref": "User.json"
+    },
+    {
+      "type": "object",
+      "required": [
+        "failedLogins",
+        "locked",
+        "lockedUntil",
+        "deletedAt"
+      ],
+      "properties": {
+        "failedLogins": {
+          "type": "integer"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "lockedUntil": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "deletedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    }
+  ]
+}

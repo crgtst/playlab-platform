@@ -1,0 +1,20 @@
+[
+  { "name": "customer-with-orders", "creates": "A new customer with 3 orders (20, 5 and 1 days ago). Returns user.email and user.password." },
+  {
+    "name": "orders-for-admin",
+    "creates": "2 customers (Nora Grid, Liam Grid) with 12 orders: 3 paid, 3 processing, 3 shipped, 2 delivered and 1 cancelled. Two use SAVE10."
+  },
+  { "name": "customer-with-wishlist", "creates": "A customer with 4 wishlist items in a known order" },
+  { "name": "customer-with-avatar", "creates": "A customer who already has an avatar" },
+  {
+    "name": "product-with-reviews",
+    "creates": "3 reviews (ratings 5, 4, 2; average 3.7) on product 1, Wireless Earbuds. One review contains <script>alert('xss')</script>."
+  },
+  { "name": "out-of-stock-product", "creates": "Product FX-OOS with stock 0" },
+  { "name": "low-stock-product", "creates": "Product FX-LOW with stock 1" },
+  { "name": "expired-discount", "creates": "EXPIRED10: 10% off, expired yesterday" },
+  { "name": "future-discount", "creates": "FUTURE10: 10% off, starts in 7 days" },
+  { "name": "single-use-discount", "creates": "ONCE15: 15% off, single use, not used yet" },
+  { "name": "used-discount", "creates": "USED10: single use, already used" },
+  { "name": "min-spend-discount", "creates": "MIN50: 10% off with a €50 minimum spend" }
+]

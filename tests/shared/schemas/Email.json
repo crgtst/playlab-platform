@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Email",
+  "type": "object",
+  "required": [
+    "id",
+    "to",
+    "type",
+    "subject",
+    "body",
+    "link",
+    "createdAt"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "to": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "confirm-email",
+        "password-reset"
+      ]
+    },
+    "subject": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "link": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
