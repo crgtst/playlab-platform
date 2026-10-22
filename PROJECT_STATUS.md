@@ -10,10 +10,14 @@ Between Phase 1 and Phase 2: dependency upgrades and housekeeping. Phase 1 merge
 
 ## Next task
 
-Move `SPEC.md` and `ACCEPTANCE_CRITERIA.md` to `docs/` (and update the AC-map test's path), then scaffold `tests/`
-(folders, shared data contract, JSON schemas). Then Phase 2 (your functional suites).
+Scaffold `tests/` (folders, shared data contract, JSON schemas). Then Phase 2 (your functional suites).
 
 ## Done
+
+- 2026-10-22: `SPEC.md` and `ACCEPTANCE_CRITERIA.md` moved from `tests/` to `docs/` (plan layout), on
+  `chore/docs-move`. References updated in `CLAUDE.md`, the Copilot instructions, both READMEs and the AC-map unit
+  test, which now reads `docs/ACCEPTANCE_CRITERIA.md`. The plan's mention of `tests/` on line 13 is left as is: it
+  describes the repo at the commit that was reviewed. `tests/` is empty until the scaffold task.
 
 - 2026-10-22: zod 3.24.1 → 4.6.7 (Dependabot #8) on `chore/zod-4`. Validation messages reach clients in
   `error.details` and the ACs quote them, so the aim was identical responses.

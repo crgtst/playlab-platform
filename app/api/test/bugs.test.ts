@@ -32,7 +32,7 @@ describe('bug registry', () => {
   });
 
   it("agrees with the 'Defect it catches' column in ACCEPTANCE_CRITERIA.md", () => {
-    const md = fs.readFileSync(path.join(__dirname, '../../../tests/ACCEPTANCE_CRITERIA.md'), 'utf8');
+    const md = fs.readFileSync(path.join(__dirname, '../../../docs/ACCEPTANCE_CRITERIA.md'), 'utf8');
     const fromAcs = new Map<string, string[]>();
     for (const [, id, defects] of md.matchAll(/^\| (PLS-\d+\.\d+) \|.*\| *([^|]*?) *\|$/gm)) {
       for (const [, name] of defects.matchAll(/`([a-z0-9-]+)`/g)) fromAcs.set(name, [...(fromAcs.get(name) ?? []), id]);

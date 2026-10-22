@@ -20,7 +20,7 @@ Most practice sites let you write tests but can't tell you whether those tests w
 - **Bug mode.** 36 named defects across the API, web app, payment frame and service worker. Switch any of them on with
   one HTTP call; each changes only its own behaviour and maps to the acceptance criterion it breaks.
 - **A real specification.** 29 Jira-ready stories with 153 numbered acceptance criteria
-  ([`tests/ACCEPTANCE_CRITERIA.md`](tests/ACCEPTANCE_CRITERIA.md)), so every test can trace back to a requirement.
+  ([`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md)), so every test can trace back to a requirement.
   97 describe the app as built; the rest specify the platform features on the roadmap.
 - **Test hooks a real team would want.** A reset in about 50 ms, named fixtures, a throwaway-user factory, a movable
   server clock, injected latency, and deterministic or random failures.
@@ -100,8 +100,8 @@ provider.
 ```
 playlab-platform/
 ├── app/                # web (React + Vite), api (Express + TypeScript), docker-compose.yml, price-tracker extension
-├── tests/              # SPEC.md, ACCEPTANCE_CRITERIA.md; one folder per test suite as they are added
-├── docs/               # REVIEW_AND_PLAN.md: the roadmap
+├── tests/              # one folder per test suite as they are added
+├── docs/               # SPEC.md and ACCEPTANCE_CRITERIA.md (the behaviour), REVIEW_AND_PLAN.md (the roadmap)
 └── .github/            # workflows and Dependabot
 ```
 

@@ -1,6 +1,6 @@
 # Acceptance criteria
 
-Twenty-nine Jira-ready stories, each with numbered acceptance criteria. PLS-1 to PLS-19 describe the app as built (PLS-13 to PLS-19 cover its Phase 4 browser features). PLS-20 to PLS-29 come from the upgrade plan in [`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md): each says which phase builds it, and most of their ACs fail until then. Every AC has a unique ID (`PLS-5.2`), so you can link each one to a test case and report coverage as ACs with a passing test ÷ total ACs.
+Twenty-nine Jira-ready stories, each with numbered acceptance criteria. PLS-1 to PLS-19 describe the app as built (PLS-13 to PLS-19 cover its Phase 4 browser features). PLS-20 to PLS-29 come from the upgrade plan in [`docs/REVIEW_AND_PLAN.md`](REVIEW_AND_PLAN.md): each says which phase builds it, and most of their ACs fail until then. Every AC has a unique ID (`PLS-5.2`), so you can link each one to a test case and report coverage as ACs with a passing test ÷ total ACs.
 
 How to use it: create each story in Jira with its ACs in the description, put the AC ID in each Playwright test title (`test('PLS-5.2 expired code is rejected', …)`) or tag (`@PLS-5.2`), and fill the Test ID column as tests are written. The last column shows which bug-mode defect that AC should catch. In the planned stories it can name defects that don't exist yet; they arrive with the same phase.
 
@@ -239,7 +239,7 @@ As a screen-reader user, I want a predictable page structure, so that I can navi
 
 As an admin, I want orders to move only through valid statuses, so that an order's history always makes sense.
 
-Built in Phase 1 ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API addition 4).
+Built in Phase 1 ([`docs/REVIEW_AND_PLAN.md`](REVIEW_AND_PLAN.md), API addition 4).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
