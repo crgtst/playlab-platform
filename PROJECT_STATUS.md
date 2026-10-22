@@ -15,6 +15,27 @@ work before it is done once PRs #20 and the `tests/` scaffold are merged.
 
 ## Done
 
+- 2026-10-22: Fix: an expired session that can't be refreshed blocked guest actions (new AC PLS-1.8), on
+  `fix/expired-session-guest`. Found by Craig: with an expired access token and a dead refresh token (e.g. after
+  `/test/reset`), the header showed a guest but adding to the cart failed with "Access token has expired", because the
+  browser kept sending the dead cookie. Not a defect; no AC covered it.
+  - API: a failed `/auth/refresh` now clears the session and refresh cookies (the guest cart cookie stays). A refresh
+    token used up in the last minute doesn't clear them: another tab has just rotated it and holds the new cookies.
+  - Web: after a failed refresh, a request refused only for its token (`TOKEN_EXPIRED`, `TOKEN_INVALID`,
+    `TOKEN_REVOKED`) is sent once more, as a guest. Expired tokens are still refused with 401 (PLS-1.5, PLS-24.2).
+  - Two web races found by running the new `tests/playwright-ts` PLS-1.8 test in parallel, both fixed (160 parallel
+    runs then passed):
+    - The cart: a reload sent just before an add could answer after it and show the older, empty cart (count 0).
+      Reloads that started before a finished change are now ignored, and a change made across a login or logout
+      reloads the cart after it.
+    - Login (older than this fix): the page-load session check could answer after a quick login and sign the user
+      straight out. A counter in the API client now goes up on every login and logout, and a 401 for a request sent
+      before the latest one no longer signs anyone out.
+  - Tests first, seen failing: `session-expiry.int.test.ts` (2 for PLS-1.8, 1 for the two-tab case, which fails
+    without the one-minute grace) and e2e `session-expiry.spec.ts`, which showed the same "Access token has expired"
+    alert. 58 unit, 135 integration and 13 e2e tests pass; Gate 1 screenshots and probe unchanged.
+  - README: the AC count was stale since Phase 1 (said 153); now 167, worded so it doesn't go stale per phase.
+
 - 2026-10-22: `tests/` scaffolded on `chore/tests-scaffold` (plan layout and parity rule 2).
   - `tests/README.md` (folders, phases, the rules every suite follows, how to start and reset the stack) and a
     README per suite folder with the techniques and showcase from the plan. No suite code: that's Phase 2 onwards.

@@ -100,9 +100,17 @@ async function issueSession(res: Response, user: UserRow, db: { query: typeof po
   return { accessToken, refreshToken, expiresIn: config.accessTokenTtlSec, tokenType: 'Bearer' as const };
 }
 
-export function clearSessionCookies(res: Response) {
+// A refresh token used up within this long was rotated by a concurrent refresh, not by a session that has ended.
+const ROTATION_GRACE_MS = 60_000;
+
+/** Ends the login but keeps any guest cart. */
+function clearLoginCookies(res: Response) {
   res.clearCookie(SESSION_COOKIE, { path: '/' });
   res.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' });
+}
+
+export function clearSessionCookies(res: Response) {
+  clearLoginCookies(res);
   res.clearCookie(CART_COOKIE, { path: '/' });
 }
 
@@ -204,15 +212,29 @@ authRouter.post(
   '/refresh',
   asyncHandler(async (req: Request, res: Response) => {
     const token: string | undefined = req.body?.refreshToken ?? req.cookies?.[REFRESH_COOKIE];
-    if (!token) throw unauthorized('Refresh token is missing', 'REFRESH_TOKEN_MISSING');
+    // A failed refresh leaves the browser's login cookies dead. Clearing them sends its next request as a guest instead of
+    // with an expired token, which would be refused even where no login is needed (PLS-1.8).
+    const fail = (message: string, code: string) => {
+      clearLoginCookies(res);
+      return unauthorized(message, code);
+    };
+    if (!token) throw fail('Refresh token is missing', 'REFRESH_TOKEN_MISSING');
     const result = await withTransaction(async (client) => {
       const rows = await client.query('SELECT * FROM refresh_tokens WHERE token_hash = $1 FOR UPDATE', [hashToken(token)]);
       const t = rows.rows[0];
-      if (!t || t.revoked_at) throw unauthorized('Refresh token is invalid', 'REFRESH_TOKEN_INVALID');
-      if (t.expires_at <= clock.now()) throw unauthorized('Refresh token has expired', 'REFRESH_TOKEN_EXPIRED');
+      if (!t) throw fail('Refresh token is invalid', 'REFRESH_TOKEN_INVALID');
+      if (t.revoked_at) {
+        // Revoked moments ago means another tab or request has just rotated it, and the browser already holds the new
+        // cookies, so leave them alone.
+        const justRotated = clock.nowMs() - new Date(t.revoked_at).getTime() < ROTATION_GRACE_MS;
+        throw justRotated
+          ? unauthorized('Refresh token is invalid', 'REFRESH_TOKEN_INVALID')
+          : fail('Refresh token is invalid', 'REFRESH_TOKEN_INVALID');
+      }
+      if (t.expires_at <= clock.now()) throw fail('Refresh token has expired', 'REFRESH_TOKEN_EXPIRED');
       await client.query('UPDATE refresh_tokens SET revoked_at = $1 WHERE id = $2', [clock.now(), t.id]);
       const u = await client.query<UserRow>('SELECT * FROM users WHERE id = $1', [t.user_id]);
-      if (!u.rows[0]) throw unauthorized('Refresh token is invalid', 'REFRESH_TOKEN_INVALID');
+      if (!u.rows[0]) throw fail('Refresh token is invalid', 'REFRESH_TOKEN_INVALID');
       const session = await issueSession(res, u.rows[0], client);
       return { ...session, user: publicUser(u.rows[0]) };
     });

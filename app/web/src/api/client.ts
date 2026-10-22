@@ -40,6 +40,15 @@ interface RequestOptions {
 }
 
 const NO_REFRESH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+const TOKEN_ERRORS = ['TOKEN_EXPIRED', 'TOKEN_INVALID', 'TOKEN_REVOKED'];
+
+// Goes up on every login and logout. A 401 for a request sent before the latest one says nothing about the session
+// now, so it must not sign out someone who has just logged in.
+let authEpoch = 0;
+export const authChanged = () => {
+  authEpoch++;
+};
+export const currentAuthEpoch = () => authEpoch;
 
 let refreshInFlight: Promise<boolean> | null = null;
 
@@ -69,6 +78,7 @@ async function toError(res: Response): Promise<ApiRequestError> {
 
 export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, headers = {}, base = '/api/v1', retryOnAuth = true, onHeaders } = opts;
+  const epoch = authEpoch;
   const init: RequestInit = {
     method,
     credentials: 'same-origin',
@@ -86,7 +96,12 @@ export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T
 
   if (res.status === 401 && retryOnAuth && base === '/api/v1' && !NO_REFRESH_PATHS.includes(path)) {
     if (await refreshSession()) return api<T>(path, { ...opts, retryOnAuth: false });
-    window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+    if (epoch === authEpoch) window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+    // The failed refresh cleared the dead login cookies, so a request refused only for its token can go again as a
+    // guest: adding to the cart still works after the session has gone (PLS-1.8).
+    const error = await toError(res);
+    if (TOKEN_ERRORS.includes(error.code)) return api<T>(path, { ...opts, retryOnAuth: false });
+    throw error;
   }
 
   if (!res.ok) throw await toError(res);

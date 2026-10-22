@@ -26,12 +26,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const userId = user?.id ?? null;
   const userIdRef = useRef(userId);
   userIdRef.current = userId;
+  // Counts finished cart changes. A reload that started before one may answer after it with the older cart, for
+  // example when an expired session drops to a guest just as an item is added (PLS-1.8); that answer is ignored.
+  const changes = useRef(0);
 
   const refresh = useCallback(async () => {
     const forUser = userIdRef.current;
+    const changesBefore = changes.current;
     try {
       const c = await api<Cart>('/cart');
-      if (userIdRef.current === forUser) {
+      if (userIdRef.current === forUser && changes.current === changesBefore) {
         setCart(c);
         setOwner(forUser);
       }
@@ -50,11 +54,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const stale = authLoading || owner !== userId;
 
-  const mutate = useCallback(async (path: string, method: string, body?: unknown) => {
-    const c = await api<Cart>(path, { method, body });
-    setCart(c);
-    return c;
-  }, []);
+  const mutate = useCallback(
+    async (path: string, method: string, body?: unknown) => {
+      const forUser = userIdRef.current;
+      const c = await api<Cart>(path, { method, body });
+      changes.current++;
+      setCart(c);
+      setOwner(userIdRef.current);
+      // Signed in or out while the change was in flight: its answer may be the old identity's cart, so load the
+      // current one.
+      if (userIdRef.current !== forUser) void refresh();
+      return c;
+    },
+    [refresh],
+  );
 
   const value = useMemo<CartApi>(
     () => ({
