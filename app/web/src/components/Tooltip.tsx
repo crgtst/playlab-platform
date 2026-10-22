@@ -3,7 +3,7 @@ import { cloneElement, ReactElement, useEffect, useId, useState } from 'react';
 interface Props {
   content: string;
   testId: string;
-  children: ReactElement;
+  children: ReactElement<{ 'aria-describedby'?: string }>;
 }
 
 /** Shows on hover and keyboard focus, hides on Escape. The trigger is described by the tooltip text. */

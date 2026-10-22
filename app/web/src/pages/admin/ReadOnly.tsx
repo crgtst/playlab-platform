@@ -7,7 +7,7 @@ export function useCanEdit(): boolean {
 }
 
 /** Wraps an edit control: support users get it disabled, with a tooltip explaining why. */
-export function EditControl({ children, id }: { children: ReactElement; id: string }) {
+export function EditControl({ children, id }: { children: ReactElement<{ 'aria-describedby'?: string }>; id: string }) {
   const canEdit = useCanEdit();
   if (canEdit) return children;
   return (

@@ -11,8 +11,12 @@ const proxy = {
   '/ws': { target, changeOrigin: true, ws: true },
 };
 
+// Vite only answers requests for hosts it knows (DNS-rebinding protection). The API's readiness check calls this app
+// as http://web:5173 inside Compose, so the service name must be allowed as well as localhost.
+const allowedHosts = ['web'];
+
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173, host: true, strictPort: true, proxy },
-  preview: { port: 5173, host: true, strictPort: true, proxy },
+  server: { port: 5173, host: true, strictPort: true, allowedHosts, proxy },
+  preview: { port: 5173, host: true, strictPort: true, allowedHosts, proxy },
 });

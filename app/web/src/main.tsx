@@ -11,16 +11,9 @@ import { ToastProvider } from './context/ToastContext';
 import { WishlistProvider } from './context/WishlistContext';
 import './styles.css';
 
-// A data router is needed for useBlocker (the leave-checkout warning).
-const router = createBrowserRouter(routes, {
-  future: {
-    v7_relativeSplatPath: true,
-    v7_fetcherPersist: true,
-    v7_normalizeFormMethod: true,
-    v7_partialHydration: true,
-    v7_skipActionErrorRevalidation: true,
-  },
-});
+// A data router is needed for useBlocker (the leave-checkout warning). React Router 7 made the old v7_* future flags
+// the default behaviour, so none are set here.
+const router = createBrowserRouter(routes);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -31,7 +24,7 @@ createRoot(document.getElementById('root')!).render(
             <WishlistProvider>
               <RealtimeProvider>
                 <PrefsProvider>
-                  <RouterProvider router={router} future={{ v7_startTransition: true }} />
+                  <RouterProvider router={router} />
                 </PrefsProvider>
               </RealtimeProvider>
             </WishlistProvider>

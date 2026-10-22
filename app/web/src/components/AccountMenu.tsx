@@ -14,7 +14,7 @@ export function AccountMenu({ onLogout }: { onLogout: () => void }) {
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
-  const closeTimer = useRef<number>();
+  const closeTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!open) return;
