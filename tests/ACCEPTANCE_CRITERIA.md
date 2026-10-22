@@ -266,11 +266,11 @@ Built in Phase 1 (API addition 5).
 | PLS-21.6 | Given an order, when `GET /orders/{id}` is called, then the response has an `ETag`, and the ETag changes when the order's status changes |  |  |
 | PLS-21.7 | Given the admin orders grid is open and another admin then changes an order's status, when the first admin edits that order's status, then the grid says the order was changed by someone else and shows its current status |  | `lost-update` |
 
-## PLS-22 Account management (planned: Phase 1)
+## PLS-22 Account management (Phase 1)
 
 As a customer, I want to manage and delete my account, so that I stay in control of my data.
 
-Not built yet: the account endpoints arrive in Phase 1 (API addition 6).
+Built in Phase 1 (API addition 6).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

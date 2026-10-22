@@ -9,10 +9,21 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 7: account management (PLS-22.1 to 22.6). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 8: user administration (PLS-23.1 to 23.5, 24.8). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 7, account management (PLS-22.1 to 22.6; fixes finding A6 for customers).
+  - `GET /users/me`; `PATCH /users/me` changes the name, or the email with `currentPassword` (422 when missing or
+    wrong, 409 `EMAIL_IN_USE`); other fields such as `role` are ignored.
+  - `DELETE /users/me` anonymises the user ("Deleted user", `deleted-<id>@playlab.invalid`) so orders stay, removes
+    avatar, cart, wishlist, email links and mailbox, revokes refresh tokens and bumps `token_version` (migration 006).
+  - Access tokens now carry `ver`; the auth middleware checks it against the user row (one lookup by id), so a
+    deleted account's tokens return 401 `TOKEN_REVOKED` on every device at once. Logout doesn't change the version,
+    so `logout-incomplete` (PLS-1.4) behaves as before.
+  - The profile name uses the plain name rule, so `fada-rejected` still affects registration only.
+  - API only: no account-page UI. 10 integration tests (109 in total), 1 e2e test for the header name (11 in total).
+    API probe unchanged; Gate 1 screenshots unchanged.
 - 2026-10-22: Phase 1 task 6, optimistic locking (PLS-21.1 to 21.7, PLS-8.4 edit; fixes finding A5).
   - `PUT`/`PATCH /products/{id}` and `PATCH /orders/{id}/status` need `If-Match`: 428 when missing, 412 when stale,
     `*` matches any version. The check and the write share a locked transaction, so two writes with the same ETag
@@ -175,6 +186,9 @@ Phase 1, task 7: account management (PLS-22.1 to 22.6). The Phase 1 task list is
 - The plan's edits to existing ACs (PLS-8.2, 8.3, 8.4 and 10.1 in "Changes to existing stories") are not
   applied yet. They describe Phase 1 behaviour, so they land with it; applying them now would make built
   ACs fail.
+- Every authenticated request now does one user lookup (token version check). Cheap, but it shows up in perf tests.
+- The WebSocket (`/ws/orders`) checks the token's signature only, so a deleted account's open socket stays
+  connected until it closes.
 - WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
   checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
 - Finding A7 confirmed on 2026-10-21: after a guest's 429, a request with a new `X-Forwarded-For` gets 200.

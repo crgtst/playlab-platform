@@ -12,6 +12,7 @@ info:
       With test hooks on, `GET /test/logs?correlationId=` returns that request's redacted log line.
     * Authenticate with `Authorization: Bearer <accessToken>` or the `session` cookie set by `/auth/login`.
     * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
+    * Deleting an account (`DELETE /users/me`) ends all its sessions: its access tokens then return 401 `TOKEN_REVOKED`.
     * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
     * Test hooks under `/test/*` exist only when the API runs with `TEST_HOOKS=true`.
     * Test sessions: `POST /test/sessions` returns an id. Requests that send it as `X-Test-Session` (or the
@@ -963,6 +964,63 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Your profile
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Your account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Users]
+      summary: Change your name or email
+      description: |
+        Changing the email needs `currentPassword` (422 on `currentPassword` if it is missing or wrong) and returns 409
+        `EMAIL_IN_USE` if another account has it. Any other field, such as `role`, is ignored.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 500 }
+                email: { type: string, format: email, maxLength: 254 }
+                currentPassword: { type: string, description: Needed to change the email }
+      responses:
+        '200':
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Users]
+      summary: Delete your account
+      description: |
+        The account is anonymised ("Deleted user", `deleted-<id>@playlab.invalid`) so its orders stay for the shop's
+        records; the avatar, cart, wishlist and emails are removed. Every refresh token is revoked and every access
+        token already issued returns 401 `TOKEN_REVOKED`, on every device. Clears the session cookies.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '204': { description: Deleted }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /users/me/avatar:
     post:
       tags: [Users]

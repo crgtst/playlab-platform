@@ -169,6 +169,8 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   - Access tokens last 15 minutes.
   - Refresh tokens last 7 days and are single use. Send one in the body of `POST /auth/refresh` or via the `refresh_token` cookie.
   - After 5 failed logins the account is locked for 15 minutes; login then returns 423 with `Retry-After`.
+  - Deleting an account ends every session at once: its access tokens return 401 `TOKEN_REVOKED` and its refresh tokens stop working.
+- **Your account** (PLS-22): `GET /users/me`; `PATCH /users/me` with `name`, or `email` plus `currentPassword` (other fields are ignored); `DELETE /users/me` anonymises the account (its orders stay, as "Deleted user") and removes the avatar, cart, wishlist and emails. There is no account page for these yet; they are API only.
 - **Guest carts** live in an httpOnly `cart_id` cookie. On login they merge into the account cart. If a product is in both carts it keeps the larger quantity, so quantities are never doubled.
 - **Rate limit**: 100 requests a minute per user (or per IP for guests) on `/api/v1/*`, except `/health`. Over the limit returns 429 with `Retry-After`. Configure it with `RATE_LIMIT_PER_MIN`.
 - **Pagination**: `GET /products` returns `meta: { page, limit, total, totalPages }` plus `Link` (`first`/`prev`/`next`/`last`) and `X-Total-Count` headers.
@@ -451,9 +453,7 @@ Build phases 1–4 in the spec are done. Phases 5 (framework maturity) and 6 (Pl
 
 Every AC in PLS-1 to PLS-19 of `tests/ACCEPTANCE_CRITERIA.md` has an implementation to test against. PLS-20 to PLS-29 specify the upgrade plan's platform work and are mostly not built yet; each story says which phase builds it.
 
-Two edge-case scenarios from the spec's checklist, which aren't in any phase, are **not built**:
-- account deletion that logs out other sessions
-- the UI backing off after a 429
+One edge-case scenario from the spec's checklist, which isn't in any phase, is **not built**: the UI backing off after a 429. (Account deletion that logs out other sessions arrived with PLS-22 in Phase 1.)
 
 ## Where this differs from or adds to the spec
 
