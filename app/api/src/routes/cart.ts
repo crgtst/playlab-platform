@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { withTransaction } from '../db/pool';
 import { isBugOn } from '../lib/bugs';
 import { ApiError, conflict, notFound } from '../lib/errors';
@@ -23,7 +23,7 @@ cartRouter.use(noStore, optionalAuth);
 // Built per request so the quantity-negative defect can relax the minimum.
 function quantitySchema() {
   return z
-    .number({ required_error: 'Quantity is required', invalid_type_error: 'Quantity must be a number' })
+    .number(typeErrors({ required: 'Quantity is required', invalid: 'Quantity must be a number' }))
     .int('Quantity must be a whole number')
     .min(isBugOn('quantity-negative') ? -99 : 1, 'Quantity must be at least 1')
     .max(99, 'Quantity must be 99 or fewer');
@@ -31,7 +31,10 @@ function quantitySchema() {
 
 const addSchema = () =>
   z.object({
-    productId: z.number({ required_error: 'productId is required' }).int().positive(),
+    productId: z
+      .number(typeErrors({ required: 'productId is required' }))
+      .int()
+      .positive(),
     quantity: quantitySchema().default(1),
   });
 const updateSchema = () => z.object({ quantity: quantitySchema() });
@@ -40,7 +43,7 @@ const checkStock = (wanted: number, stock: number) => {
   if (wanted > stock && !isBugOn('stock-oversell')) throw stockError(stock);
 };
 const discountSchema = z.object({
-  code: z.string({ required_error: 'Enter a discount code' }).refine((s) => s.trim().length > 0, 'Enter a discount code'),
+  code: z.string(typeErrors({ required: 'Enter a discount code' })).refine((s) => s.trim().length > 0, 'Enter a discount code'),
 });
 const productIdParam = z.coerce.number().int().positive();
 

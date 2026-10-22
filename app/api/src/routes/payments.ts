@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { config } from '../config';
 import { query, withTransaction } from '../db/pool';
 import { cardSchema } from '../lib/cardSchema';
@@ -98,7 +98,7 @@ payFrameRouter.get(
   }),
 );
 
-const confirmSchema = cardSchema.extend({ clientSecret: z.string({ required_error: 'clientSecret is required' }).min(1) });
+const confirmSchema = cardSchema.extend({ clientSecret: z.string(typeErrors({ required: 'clientSecret is required' })).min(1) });
 
 payFrameRouter.post(
   '/intents/:id/confirm',

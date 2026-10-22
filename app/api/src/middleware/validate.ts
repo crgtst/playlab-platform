@@ -1,8 +1,8 @@
-import { z, ZodTypeAny } from 'zod';
+import { z } from '../lib/zod';
 import { validationError } from '../lib/errors';
 import { zodDetails } from './errorHandler';
 
-export function parse<S extends ZodTypeAny>(schema: S, data: unknown): z.output<S> {
+export function parse<S extends z.ZodType>(schema: S, data: unknown): z.output<S> {
   const result = schema.safeParse(data);
   if (!result.success) throw validationError(zodDetails(result.error));
   return result.data;

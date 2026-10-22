@@ -4,6 +4,7 @@ import { isBugOn } from '../lib/bugs';
 import { ApiError } from '../lib/errors';
 import { logger } from '../lib/logger';
 import { CORRELATION_HEADER } from '../lib/requestContext';
+import { zod3Issues } from '../lib/zod';
 
 export function sendError(res: Parameters<RequestHandler>[1], err: ApiError) {
   // wrong-status-code: validation failures surface as a 500.
@@ -37,5 +38,5 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 };
 
 export function zodDetails(err: ZodError) {
-  return err.issues.map((i) => ({ field: i.path.join('.'), message: i.message }));
+  return zod3Issues(err.issues).map((i) => ({ field: i.path.join('.'), message: i.message }));
 }

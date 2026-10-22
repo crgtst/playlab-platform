@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { z } from '../lib/zod';
 import { query } from '../db/pool';
 import { clock } from '../lib/clock';
 import { notFound } from '../lib/errors';
@@ -28,7 +28,7 @@ function adminUserView(u: AdminUserRow) {
 }
 
 const listSchema = z.object({
-  role: z.enum(ROLES, { errorMap: () => ({ message: `Role must be one of: ${ROLES.join(', ')}` }) }).optional(),
+  role: z.enum(ROLES, { error: `Role must be one of: ${ROLES.join(', ')}` }).optional(),
   q: z.string().trim().max(200).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -62,8 +62,8 @@ adminRouter.get(
 
 const changeSchema = z
   .object({
-    role: z.enum(ROLES, { errorMap: () => ({ message: `Role must be one of: ${ROLES.join(', ')}` }) }).optional(),
-    unlock: z.literal(true, { errorMap: () => ({ message: 'unlock can only be true' }) }).optional(),
+    role: z.enum(ROLES, { error: `Role must be one of: ${ROLES.join(', ')}` }).optional(),
+    unlock: z.literal(true, { error: 'unlock can only be true' }).optional(),
   })
   .refine((b) => b.role !== undefined || b.unlock !== undefined, { message: 'Send a role, or unlock: true', path: ['role'] });
 

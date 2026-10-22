@@ -1,17 +1,39 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-21
+Last updated: 2026-10-22
 
 ## Current phase
 
-Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main` in PR #5 on 2026-10-22.
+Between Phase 1 and Phase 2: dependency upgrades and housekeeping. Phase 1 merged to `main` in PR #16 on 2026-10-22
+(Gate 1 passed).
 
 ## Next task
 
-Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your functional suites). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Move `SPEC.md` and `ACCEPTANCE_CRITERIA.md` to `docs/` (and update the AC-map test's path), then scaffold `tests/`
+(folders, shared data contract, JSON schemas). Then Phase 2 (your functional suites).
 
 ## Done
+
+- 2026-10-22: zod 3.24.1 → 4.6.7 (Dependabot #8) on `chore/zod-4`. Validation messages reach clients in
+  `error.details` and the ACs quote them, so the aim was identical responses.
+  - Schemas now import `z` from `src/lib/zod.ts`, which restores zod 3's English default messages (zod 4 reworded
+    them all) and provides `typeErrors()` in place of the removed `required_error` and `invalid_type_error`.
+    `errorMap` became `error`; `paymentIntentId` uses `.guid()`, the same loose UUID check as zod 3's `.uuid()`.
+  - Checked by a throwaway differential corpus: 9,159 good and bad requests across every validated endpoint, run on
+    zod 3 and then zod 4, and diffed. It found two regressions, both fixed with tests that fail without the fix:
+    - PATCH `/products/:id` blanked the description when the change left it out, and accepted an empty body
+      (zod 4 applies `.default()` inside `.partial()`).
+    - A value of the wrong type also got length errors, e.g. `password: []` added "Password must be at least 8
+      characters" (zod 4 runs length checks on anything with a length). `zod3Issues()` drops them.
+  - Accepted differences, all still 422 with a correct message (81 of the 9,159 responses):
+    - Integers above 2^53 are rejected. They were a 500 (the database refused them), e.g. `productId: 1e20`.
+    - `Infinity` in a query number is rejected as not a number ("Expected number, received Infinity").
+    - A fraction that is also out of range (`page=-6.2`) reports only "not a whole number", not both.
+    - `/test/clock` `now` offsets must be `+hh:mm`: `+0100` is now refused, and `+25:00` is a 422, not a 500.
+  - New tests: `test/zod.test.ts` (21 unit tests: each default message, as recorded from zod 3) and
+    `validation.int.test.ts` (4). 52 unit and 130 integration tests in total; e2e, Gate 1 screenshots and probe
+    unchanged.
 
 - 2026-10-22: Web stack upgrade (Dependabot #12, #14, #15) on `chore/web-stack-upgrade`: Vite 5 → 8.3.5,
   @vitejs/plugin-react 4 → 6.1.2, React and react-dom 18 → 19.3.1 (with types), React Router 6 → 7.18.4. The three
@@ -233,8 +255,9 @@ Gate 1 passed. Next: take PR #16 out of draft and merge it, then Phase 2 (your f
 - WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
   checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
 
-- Dependabot PR still open, for a planned task before Phase 2: zod 4 (#8), on its own, because its error messages are
-  quoted in the ACs.
+- zod 4 marks the chained string formats (`.email()`, `.guid()`, `.datetime()`) as deprecated in favour of
+  `z.email()` and friends. The schemas keep the chained forms on purpose: `z.email().trim()` would check the email
+  before trimming it. They still work in zod 4; revisit if a later major removes them.
 
 ## Local environment notes
 

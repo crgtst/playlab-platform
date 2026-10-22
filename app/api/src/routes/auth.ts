@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { Request, Response, Router } from 'express';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { config } from '../config';
 import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
@@ -44,13 +44,18 @@ export function publicUser(u: UserRow) {
   };
 }
 
-export const email = z.string({ required_error: 'Email is required' }).trim().toLowerCase().email('Enter a valid email address').max(254);
+export const email = z
+  .string(typeErrors({ required: 'Email is required' }))
+  .trim()
+  .toLowerCase()
+  .email('Enter a valid email address')
+  .max(254);
 const password = z
-  .string({ required_error: 'Password is required' })
+  .string(typeErrors({ required: 'Password is required' }))
   .min(8, 'Password must be at least 8 characters')
   .max(128, 'Password must be at most 128 characters');
 const name = z
-  .string({ required_error: 'Name is required' })
+  .string(typeErrors({ required: 'Name is required' }))
   .trim()
   .min(1, 'Name is required')
   .max(500, 'Name must be at most 500 characters');
@@ -65,8 +70,12 @@ const registerSchema = () =>
     password,
   });
 const loginSchema = z.object({
-  email: z.string({ required_error: 'Email is required' }).trim().toLowerCase().min(1, 'Email is required'),
-  password: z.string({ required_error: 'Password is required' }).min(1, 'Password is required'),
+  email: z
+    .string(typeErrors({ required: 'Email is required' }))
+    .trim()
+    .toLowerCase()
+    .min(1, 'Email is required'),
+  password: z.string(typeErrors({ required: 'Password is required' })).min(1, 'Password is required'),
 });
 const tokenSchema = z.object({ token: z.string().min(1, 'Token is required') });
 const resetSchema = z.object({ token: z.string().min(1, 'Token is required'), password });

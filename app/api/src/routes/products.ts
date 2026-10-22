@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Request, Response, Router } from 'express';
 import { PoolClient } from 'pg';
-import { z } from 'zod';
+import { typeErrors, z } from '../lib/zod';
 import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound, validationError } from '../lib/errors';
@@ -22,7 +22,10 @@ const SORTS = {
   newest: 'p.created_at DESC, p.id DESC',
 } as const;
 
-const euros = z.coerce.number({ invalid_type_error: 'Must be a number' }).min(0, 'Must be zero or more').max(1_000_000, 'Too large');
+const euros = z.coerce
+  .number(typeErrors({ invalid: 'Must be a number' }))
+  .min(0, 'Must be zero or more')
+  .max(1_000_000, 'Too large');
 
 const listSchema = z
   .object({
@@ -39,15 +42,18 @@ const listSchema = z
     path: ['minPrice'],
   });
 
-const productBody = z.object({
+const productFields = z.object({
   sku: z.string().trim().min(1).max(40),
   name: z.string().trim().min(1, 'Name is required').max(200),
-  description: z.string().max(2000).default(''),
+  description: z.string().max(2000),
   category: z.string().trim().min(1, 'Category is required'),
   priceCents: z.number().int('Must be whole cents').min(0),
   stock: z.number().int('Must be a whole number').min(0),
   imageUrl: z.string().max(500).optional(),
 });
+// A new or replaced product gets an empty description by default. PATCH uses productFields.partial(), with no default:
+// zod 4 applies defaults even inside .partial(), which would blank the description on every PATCH that leaves it out.
+const productBody = productFields.extend({ description: productFields.shape.description.default('') });
 
 const idParam = z.coerce.number().int().positive();
 
@@ -211,7 +217,7 @@ productsRouter.post(
 async function updateProduct(req: Request, res: Response, partial: boolean) {
   const id = idParam.safeParse(req.params.id);
   if (!id.success) throw notFound('Product not found');
-  const schema = partial ? productBody.partial() : productBody;
+  const schema = partial ? productFields.partial() : productBody;
   const { updated, stockChanged } = await withTransaction(async (client) => {
     const existing = await loadProduct(id.data, client, true);
     if (!existing) throw notFound('Product not found');
