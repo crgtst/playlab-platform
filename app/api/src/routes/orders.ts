@@ -5,6 +5,7 @@ import { pool, query, withTransaction } from '../db/pool';
 import { clock } from '../lib/clock';
 import { ApiError, conflict, notFound } from '../lib/errors';
 import { ordersCreated } from '../lib/metrics';
+import { checkIfMatch } from '../lib/preconditions';
 import { cardSchema } from '../lib/cardSchema';
 import { chargeCard } from '../lib/payments';
 import { lineTotal } from '../lib/pricing';
@@ -101,7 +102,7 @@ function invalidTransition(o: StatusRow, to: OrderStatus, allowed = TRANSITIONS[
 async function applyStatus(client: PoolClient, orders: StatusRow[], to: OrderStatus): Promise<number[]> {
   const moving = orders.filter((o) => o.status !== to).map((o) => o.id);
   if (!moving.length) return [];
-  await client.query('UPDATE orders SET status = $1 WHERE id = ANY($2)', [to, moving]);
+  await client.query('UPDATE orders SET status = $1, version = version + 1 WHERE id = ANY($2)', [to, moving]);
   if (to !== 'cancelled') return [];
   const restocked = await client.query(
     `UPDATE products p SET stock = p.stock + s.qty
@@ -183,10 +184,16 @@ export async function loadOrder(id: number, db: PoolClient | typeof pool = pool)
   return orderView(o, items.rows);
 }
 
+/** Changes with every status change, so it works for If-Match (PLS-21.5, 21.6). */
+export function orderEtag(o: { id: number; version: number }): string {
+  return `"order-${o.id}-v${o.version}"`;
+}
+
 function orderView(o: any, items: any[]) {
   return {
     id: o.id,
     number: o.number,
+    etag: orderEtag(o),
     userId: o.user_id,
     customer: { id: o.user_id, email: o.customer_email, name: o.customer_name },
     status: o.status,
@@ -536,7 +543,9 @@ async function visibleOrder(req: Request<{ id: string }>) {
 ordersRouter.get(
   '/:id',
   asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    res.json({ data: await visibleOrder(req) });
+    const order = await visibleOrder(req);
+    res.setHeader('ETag', order.etag);
+    res.json({ data: order });
   }),
 );
 
@@ -547,15 +556,18 @@ ordersRouter.patch(
     const id = orderIdParam(req.params.id);
     const { status } = parse(z.object({ status: statusSchema }), req.body);
     const before = await withTransaction(async (client) => {
-      const rows = await client.query('SELECT id, number, user_id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
-      const order = rows.rows[0] as StatusRow | undefined;
+      const rows = await client.query('SELECT id, number, user_id, status, version FROM orders WHERE id = $1 FOR UPDATE', [id]);
+      const order = rows.rows[0] as (StatusRow & { version: number }) | undefined;
       if (!order) throw notFound('Order not found');
+      checkIfMatch(req, orderEtag(order), 'order');
       if (!canMove(order.status, status)) throw invalidTransition(order, status);
       return { order, restocked: await applyStatus(client, [order], status) };
     });
     await emitStock(before.restocked);
     emitStatusChange(before.order, status, req.user!.id);
-    res.json({ data: await loadOrder(id) });
+    const updated = (await loadOrder(id))!;
+    res.setHeader('ETag', updated.etag);
+    res.json({ data: updated });
   }),
 );
 

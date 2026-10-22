@@ -31,6 +31,8 @@ export function AdminProducts() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState(q);
   const [editing, setEditing] = useState<Product | 'new' | null>(null);
+  // The ETag of the product as the form loaded it, sent as If-Match so a stale edit is refused (PLS-8.4).
+  const [editingEtag, setEditingEtag] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
@@ -59,9 +61,21 @@ export function AdminProducts() {
     load();
   }, [load]);
 
-  const openEditor = (p: Product | 'new') => {
+  const openEditor = async (listed: Product | 'new') => {
     setErrors({});
     setFormError('');
+    let p = listed;
+    setEditingEtag(null);
+    if (listed !== 'new') {
+      // Load the product as it is now, with its ETag, rather than trusting the list.
+      try {
+        const r = await api<{ data: Product }>(`/products/${listed.id}`, { onHeaders: (h) => setEditingEtag(h.get('ETag')) });
+        p = r.data;
+      } catch (err) {
+        show(errorMessage(err), 'error');
+        return;
+      }
+    }
     setForm(
       p === 'new'
         ? emptyForm
@@ -108,14 +122,22 @@ export function AdminProducts() {
         const r = await api<{ data: Product }>('/products', { method: 'POST', body });
         show(`${r.data.name} created`, 'success');
       } else if (editing) {
-        const r = await api<{ data: Product }>(`/products/${editing.id}`, { method: 'PUT', body });
+        const r = await api<{ data: Product }>(`/products/${editing.id}`, {
+          method: 'PUT',
+          body,
+          headers: editingEtag ? { 'If-Match': editingEtag } : {},
+        });
         show(`${r.data.name} saved`, 'success');
       }
       setEditing(null);
       await load();
     } catch (err) {
       if (err instanceof ApiRequestError && err.status === 422) setErrors(err.fieldErrors());
-      setFormError(errorMessage(err));
+      if (err instanceof ApiRequestError && err.status === 412) {
+        setFormError('This product was changed by someone else. Close this form and open it again to see the latest version.');
+      } else {
+        setFormError(errorMessage(err));
+      }
     } finally {
       setSaving(false);
     }

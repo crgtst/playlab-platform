@@ -35,6 +35,8 @@ interface RequestOptions {
   base?: string;
   /** Set false to skip the refresh-and-retry on 401. */
   retryOnAuth?: boolean;
+  /** Called with the headers of a successful response, for example to keep its ETag. */
+  onHeaders?: (headers: Headers) => void;
 }
 
 const NO_REFRESH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
@@ -66,7 +68,7 @@ async function toError(res: Response): Promise<ApiRequestError> {
 }
 
 export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, headers = {}, base = '/api/v1', retryOnAuth = true } = opts;
+  const { method = 'GET', body, headers = {}, base = '/api/v1', retryOnAuth = true, onHeaders } = opts;
   const init: RequestInit = {
     method,
     credentials: 'same-origin',
@@ -88,6 +90,7 @@ export async function api<T>(path: string, opts: RequestOptions = {}): Promise<T
   }
 
   if (!res.ok) throw await toError(res);
+  onHeaders?.(res.headers);
   if (res.status === 204) return undefined as T;
   try {
     return (await res.json()) as T;

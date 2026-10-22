@@ -222,9 +222,11 @@ describe('live stock stream', () => {
       await new Promise((r) => setTimeout(r, 200));
 
       // A request with no session changes the stock.
+      const product = await request(app).get('/api/v1/products/6').expect(200);
       await request(app)
         .patch('/api/v1/products/6')
         .set('Authorization', `Bearer ${admin.body.accessToken}`)
+        .set('If-Match', product.headers.etag)
         .send({ stock: 2 })
         .expect(200);
       await new Promise((r) => setTimeout(r, 300));

@@ -111,7 +111,7 @@ As an admin, I want to manage orders and products, so that I can run the shop.
 | PLS-8.1 | Given the admin orders grid, when filtered by status, then only orders with that status show |  |  |
 | PLS-8.2 | Given an order, when its status is edited inline to an allowed next status, then it saves and a WebSocket event is sent; a status that isn't allowed is refused with the reason shown |  |  |
 | PLS-8.3 | Given several selected orders, when a bulk status change is applied, then all of them update if every one can make the transition; otherwise none change and the ones that can't are listed |  |  |
-| PLS-8.4 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue |  |  |
+| PLS-8.4 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue; an edit made after someone else changed the product returns 412 and the modal says "This product was changed by someone else" |  |  |
 | PLS-8.5 | Given a support user, when they try to edit an order, then the controls are disabled and the API returns 403 |  |  |
 | PLS-8.6 | Given a product page is open, when stock changes, then the stock counter updates within 5 seconds |  | `stale-stock` |
 
@@ -250,11 +250,11 @@ Built in Phase 1 ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API a
 | PLS-20.5 | Given a `processing` order, when an admin cancels it, then it becomes `cancelled` and each item's stock goes back up by its quantity |  |  |
 | PLS-20.6 | Given a customer's own order, when they call `POST /orders/{id}/cancel`, then it is cancelled if it was `pending` or `paid`, and returns 409 `INVALID_TRANSITION` if it was `processing` or later |  |  |
 
-## PLS-21 Concurrency and lost updates (planned: Phase 1)
+## PLS-21 Concurrency and lost updates (Phase 1)
 
 As an admin, I want to be told when someone else changed a product first, so that I never overwrite their edit unknowingly.
 
-Not built yet: `If-Match` and order ETags arrive in Phase 1 (API addition 5). PLS-21.4 already holds today.
+Built in Phase 1 (API addition 5).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

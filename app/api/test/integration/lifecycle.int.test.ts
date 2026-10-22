@@ -51,8 +51,19 @@ async function quantities(orderId: number): Promise<Record<number, number>> {
   return Object.fromEntries(rows.map((r) => [r.product_id, r.quantity]));
 }
 
-function patchStatus(id: number, status: Status) {
-  return request(app).patch(`/api/v1/orders/${id}/status`).set('Authorization', admin).send({ status });
+/** An admin status change, sending the order's current ETag as If-Match the way a real client must (PLS-21.5). */
+async function patchStatus(id: number, status: Status) {
+  const current = await request(app).get(`/api/v1/orders/${id}`).set('Authorization', admin).expect(200);
+  return request(app)
+    .patch(`/api/v1/orders/${id}/status`)
+    .set('Authorization', admin)
+    .set('If-Match', current.headers.etag)
+    .send({ status });
+}
+
+function expectStatus<T extends { status: number }>(res: T, status: number): T {
+  expect(res.status).toBe(status);
+  return res;
 }
 
 /** The customer's own new order, paid by card. */
@@ -74,21 +85,21 @@ describe('PLS-20 admin status changes follow the transition map', () => {
   it('PLS-20.1 moves an order one step at a time from pending to delivered', async () => {
     const id = await orderIn('pending');
     for (const next of ['paid', 'processing', 'shipped', 'delivered'] as const) {
-      const res = await patchStatus(id, next).expect(200);
+      const res = expectStatus(await patchStatus(id, next), 200);
       expect(res.body.data.status).toBe(next);
     }
   });
 
   it('PLS-20.2 refuses delivered back to pending with 409 and the allowed moves', async () => {
     const id = await orderIn('delivered');
-    const res = await patchStatus(id, 'pending').expect(409);
+    const res = expectStatus(await patchStatus(id, 'pending'), 409);
     expect(res.body.error).toMatchObject({ code: 'INVALID_TRANSITION', details: { from: 'delivered', to: 'pending', allowed: [] } });
     expect(await statusOf(id)).toBe('delivered');
   });
 
   it('PLS-20.3 refuses to cancel a shipped order', async () => {
     const id = await orderIn('shipped');
-    const res = await patchStatus(id, 'cancelled').expect(409);
+    const res = expectStatus(await patchStatus(id, 'cancelled'), 409);
     expect(res.body.error.details).toEqual({ from: 'shipped', to: 'cancelled', allowed: ['delivered'] });
   });
 
@@ -98,7 +109,7 @@ describe('PLS-20 admin status changes follow the transition map', () => {
       const allowed = from === to || TRANSITIONS[from].includes(to);
       it(`${from} → ${to} is ${allowed ? 'allowed' : 'refused'}`, async () => {
         const id = await orderIn(from);
-        await patchStatus(id, to).expect(allowed ? 200 : 409);
+        expectStatus(await patchStatus(id, to), allowed ? 200 : 409);
         expect(await statusOf(id)).toBe(allowed ? to : from);
       });
     }
@@ -141,7 +152,7 @@ describe('PLS-20.5 cancelling restocks', () => {
   it('puts each item back in stock when an admin cancels a processing order', async () => {
     const id = await orderIn('processing');
     const [before, qty] = [await stockFor(id), await quantities(id)];
-    await patchStatus(id, 'cancelled').expect(200);
+    expectStatus(await patchStatus(id, 'cancelled'), 200);
     const after = await stockFor(id);
     for (const productId of Object.keys(qty)) expect(after[+productId]).toBe(before[+productId] + qty[+productId]);
   });
@@ -176,7 +187,7 @@ describe('PLS-20.6 customers cancel their own order', () => {
 
   it('refuses once the order is being packed', async () => {
     const id = await customerOrder();
-    await patchStatus(id, 'processing').expect(200);
+    expectStatus(await patchStatus(id, 'processing'), 200);
     const res = await request(app).post(`/api/v1/orders/${id}/cancel`).set('Authorization', customer).expect(409);
     expect(res.body.error.details).toEqual({ from: 'processing', to: 'cancelled', allowed: [] });
   });
@@ -192,12 +203,12 @@ describe('PLS-20.6 customers cancel their own order', () => {
 describe('defect status-any-transition', () => {
   it('lets refused moves through when on, and only when on', async () => {
     const id = await orderIn('delivered');
-    await patchStatus(id, 'pending').expect(409);
+    expectStatus(await patchStatus(id, 'pending'), 409);
     await request(app)
       .post('/test/bugs')
       .send({ enable: ['status-any-transition'] })
       .expect(200);
-    await patchStatus(id, 'pending').expect(200);
+    expectStatus(await patchStatus(id, 'pending'), 200);
     expect(await statusOf(id)).toBe('pending');
   });
 

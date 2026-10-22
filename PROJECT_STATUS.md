@@ -9,10 +9,22 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 6: optimistic locking (PLS-21.1 to 21.7, PLS-8.4 edit; defect `lost-update`). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 7: account management (PLS-22.1 to 22.6). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 6, optimistic locking (PLS-21.1 to 21.7, PLS-8.4 edit; fixes finding A5).
+  - `PUT`/`PATCH /products/{id}` and `PATCH /orders/{id}/status` need `If-Match`: 428 when missing, 412 when stale,
+    `*` matches any version. The check and the write share a locked transaction, so two writes with the same ETag
+    can't both pass. Product ETags are the existing body hash; order ETags come from a new `version` column
+    (migration 005) bumped on every status change. `GET /orders/{id}` sends `ETag`; orders carry `etag`, in lists too.
+  - Web: the product modal now loads the product (and its ETag) when opened, and says "This product was changed by
+    someone else" on 412. The orders grid sends the row's ETag; on 412 it says so and reloads that order.
+  - New defect `lost-update` (PLS-21.2, 21.3, 21.5, 21.7): 35 built, 12 planned.
+  - This changes behaviour for API clients: product edits and order-status changes without `If-Match` now get 428,
+    as the plan says. Existing tests were updated to read the ETag first, as a real client must.
+  - Tests: 13 integration tests (including the PLS-21.4 race of 20 orders for 1 item, and with `stock-oversell` on),
+    99 in total, stable over 2 runs; 2 two-admin e2e tests (10 in total). Probe diff: only the new `etag` on orders.
 - 2026-10-22: Phase 1 task 5, order lifecycle (PLS-20.1 to 20.6, 24.1 for cancelling; fixes finding A2).
   - One transition map for admin changes, bulk changes and customer cancellation: `pending → paid → processing →
     shipped → delivered`, plus cancel from `pending`, `paid` or `processing`. Setting the current status is a

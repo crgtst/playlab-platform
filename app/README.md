@@ -175,6 +175,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   - Default page size is 12, maximum 48.
   - Sorts always end with a tie-breaker on `id`.
 - **Conditional reads**: `GET /products/{id}` sends an `ETag` and returns 304 on a matching `If-None-Match`.
+- **Optimistic locking** (PLS-21): `PUT` and `PATCH /products/{id}` and `PATCH /orders/{id}/status` need `If-Match` with the `ETag` from the matching `GET` (orders also carry it as `etag`, including in the list). A stale one returns 412 `PRECONDITION_FAILED`; a missing one returns 428 `PRECONDITION_REQUIRED`. `If-Match: *` matches any version. Bulk status changes and customer cancellation don't need it.
 - **Idempotency**: repeating `POST /orders` with the same `Idempotency-Key` returns the original order with status 200 and `Idempotent-Replayed: true`. Concurrent submits without a key are serialised, so only one order is created.
 - **Price changes**: if a product's price changed after it was added to the cart, `POST /orders` returns 409 `PRICE_CHANGED` unless the body includes `acceptPriceChanges: true`. The checkout shows a warning and an "Accept new prices" button.
 - **Order access**: customers can read only their own orders; another customer's order id returns 404. Admin and support users can read every order.
@@ -350,6 +351,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `button-moves` | PLS-6.8 | Payment frame | A banner pushes the Pay button down 500 ms after the frame loads |
 | `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
 | `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
+| `lost-update` | PLS-21.2, 21.3, 21.5, 21.7 | API | `If-Match` is ignored, so a stale or missing one still overwrites the latest version |
 | `status-any-transition` | PLS-20.2, 20.3, 20.4 | API | An admin can set any status, singly or in bulk, such as delivered back to pending |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
 | `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
@@ -360,7 +362,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 34 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 35 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 

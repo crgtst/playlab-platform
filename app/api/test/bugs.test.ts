@@ -8,7 +8,6 @@ const testHooks = config.testHooks;
 
 // Defects that planned stories (PLS-20 to PLS-29) already name. Move each one into bugs.ts when it is built.
 const PLANNED_DEFECTS = [
-  'lost-update',
   'jwt-alg-none',
   'user-enumeration',
   'mass-assignment-role',

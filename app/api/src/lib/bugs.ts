@@ -35,6 +35,11 @@ export const BUGS = {
   'button-moves': { ac: 'PLS-6.8', side: 'payment frame', description: 'The Pay button shifts position after 500 ms' },
   'missing-label': { ac: 'PLS-2.6, PLS-11.1', side: 'web', description: 'The email field loses its accessible label' },
   'stale-stock': { ac: 'PLS-8.6', side: 'api', description: 'The SSE stock counter stops updating' },
+  'lost-update': {
+    ac: 'PLS-21.2, PLS-21.3, PLS-21.5, PLS-21.7',
+    side: 'api',
+    description: 'If-Match is ignored, so a stale edit silently overwrites a newer one',
+  },
   'status-any-transition': {
     ac: 'PLS-20.2, PLS-20.3, PLS-20.4',
     side: 'api',

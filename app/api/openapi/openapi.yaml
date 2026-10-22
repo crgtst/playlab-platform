@@ -295,7 +295,10 @@ paths:
     put:
       tags: [Products]
       summary: Replace a product (admin)
+      description: Needs `If-Match` with the `ETag` from `GET /products/{id}` (PLS-21). Any change, stock included, gives a new ETag.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -304,6 +307,8 @@ paths:
       responses:
         '200':
           description: Updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ProductEnvelope' }
@@ -311,11 +316,16 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
     patch:
       tags: [Products]
       summary: Update some fields of a product (admin)
+      description: Needs `If-Match` with the `ETag` from `GET /products/{id}` (PLS-21). Any change, stock included, gives a new ETag.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -324,6 +334,8 @@ paths:
       responses:
         '200':
           description: Updated
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ProductEnvelope' }
@@ -331,7 +343,9 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
     delete:
       tags: [Products]
       summary: Delete a product (admin)
@@ -704,7 +718,9 @@ paths:
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       responses:
         '200':
-          description: The order
+          description: The order. Its `ETag` (also `data.etag`) changes with every status change.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/OrderEnvelope' }
@@ -834,6 +850,8 @@ paths:
         `processing`, which puts the items back in stock. Setting the status an order already has is a no-op.
         Anything else returns 409 `INVALID_TRANSITION` with `details: { from, to, allowed }`.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
       requestBody:
         required: true
         content:
@@ -846,6 +864,8 @@ paths:
       responses:
         '200':
           description: Updated order
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/OrderEnvelope' }
@@ -853,7 +873,9 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/InvalidTransition' }
+        '412': { $ref: '#/components/responses/PreconditionFailed' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '428': { $ref: '#/components/responses/PreconditionRequired' }
   /orders/{id}/cancel:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
@@ -1553,6 +1575,12 @@ components:
       name: session
 
   parameters:
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: The `ETag` from the last `GET`. A stale one is 412; leaving it out is 428. `*` matches any version.
+      schema: { type: string, example: '"order-12-v3"' }
     OrderStatusFilter:
       name: status
       in: query
@@ -1567,7 +1595,22 @@ components:
       in: query
       schema: { type: string, enum: [newest, oldest, total_desc, total_asc], default: newest }
 
+  headers:
+    ETag:
+      description: Version of the resource, for `If-Match` (and `If-None-Match` on product reads)
+      schema: { type: string }
+
   responses:
+    PreconditionFailed:
+      description: '`If-Match` is stale: someone else changed it first (`PRECONDITION_FAILED`)'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PreconditionRequired:
+      description: '`If-Match` is missing (`PRECONDITION_REQUIRED`)'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     BadRequest:
       description: Bad request
       content:
@@ -1886,10 +1929,14 @@ components:
             nameOnCard: { type: string }
     Order:
       type: object
-      required: [id, number, userId, customer, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
+      required: [id, number, etag, userId, customer, status, createdAt, items, totals, discount, currency, shipping, deliveryDate, instructions, cardLast4]
       properties:
         id: { type: integer }
         number: { type: string, example: PL-000001 }
+        etag:
+          type: string
+          description: The order's ETag, as on `GET /orders/{id}`. Send it as `If-Match` to change the status.
+          example: '"order-12-v3"'
         userId: { type: integer }
         customer:
           type: object
