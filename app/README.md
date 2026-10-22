@@ -350,6 +350,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `button-moves` | PLS-6.8 | Payment frame | A banner pushes the Pay button down 500 ms after the frame loads |
 | `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
 | `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
+| `status-any-transition` | PLS-20.2, 20.3, 20.4 | API | An admin can set any status, singly or in bulk, such as delivered back to pending |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
 | `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
 | `permission-denied-crash` | PLS-13.2 | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
@@ -359,7 +360,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 33 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 34 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 
@@ -471,7 +472,7 @@ Two edge-case scenarios from the spec's checklist, which aren't in any phase, ar
 15. Log out now lives inside the account hover menu (`account-menu-button` → `logout-button`).
 16. Support users can see the admin grid but not export CSV: the spec lists the export as admin only.
 17. The leave-checkout warning also covers navigation inside the app (with a `confirm()`), not only `beforeunload`. It never fires between checkout steps, on the way to the confirmation, or on a redirect to login.
-18. Order status changes have no transition rules yet: an admin can set any status, including moving a delivered order back to paid.
+18. Order status changes follow transition rules (PLS-20): `pending → paid → processing → shipped → delivered`, and cancellation from `pending`, `paid` or `processing`, which restocks. Anything else is 409 `INVALID_TRANSITION`; bulk changes are all or nothing. Customers can cancel their own order while it is `pending` or `paid` (`POST /orders/{id}/cancel`).
 19. **GBP is display-only.** The API is EUR throughout, and the web converts each amount on its own at a fixed 0.85. In GBP the converted lines can therefore differ from the converted subtotal by a penny, so test PLS-4.4 in EUR.
 20. The Irish translations cover navigation, the cart and checkout (PLS-11.5). They are best-effort, not a professional translation, and other pages stay in English.
 21. Language, currency and theme default to the browser's `locale` and `colorScheme`, and a choice made in the header overrides them. Switching language or currency re-renders the page.

@@ -35,6 +35,11 @@ export const BUGS = {
   'button-moves': { ac: 'PLS-6.8', side: 'payment frame', description: 'The Pay button shifts position after 500 ms' },
   'missing-label': { ac: 'PLS-2.6, PLS-11.1', side: 'web', description: 'The email field loses its accessible label' },
   'stale-stock': { ac: 'PLS-8.6', side: 'api', description: 'The SSE stock counter stops updating' },
+  'status-any-transition': {
+    ac: 'PLS-20.2, PLS-20.3, PLS-20.4',
+    side: 'api',
+    description: 'An admin can move an order to any status, such as delivered back to pending',
+  },
   'wrong-status-code': { ac: 'PLS-2.4, PLS-10.2', side: 'api', description: 'A validation error returns 500 instead of 422' },
   // Phase 4: browser APIs
   'geolocation-ignored': {

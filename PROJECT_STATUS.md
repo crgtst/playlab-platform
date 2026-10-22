@@ -9,10 +9,21 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 5: order lifecycle (PLS-20.1 to 20.6, 24.1 cancel, PLS-8.2 and 8.3 edits; defect `status-any-transition`). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 6: optimistic locking (PLS-21.1 to 21.7, PLS-8.4 edit; defect `lost-update`). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 5, order lifecycle (PLS-20.1 to 20.6, 24.1 for cancelling; fixes finding A2).
+  - One transition map for admin changes, bulk changes and customer cancellation: `pending → paid → processing →
+    shipped → delivered`, plus cancel from `pending`, `paid` or `processing`. Setting the current status is a
+    no-op, so saving the grid without a change still works. Anything else: 409 `INVALID_TRANSITION` with
+    `{ from, to, allowed }`; bulk is all or nothing and lists every refused order.
+  - Cancelling restocks each item (once) and publishes the stock change. New `POST /orders/{id}/cancel` for
+    customers while `pending` or `paid`; another customer's order is a 404 (`order-leak` lets it through).
+  - New defect `status-any-transition` (PLS-20.2 to 20.4): 34 built, 13 planned.
+  - PLS-8.2 and 8.3 reworded as planned. The grid already shows API errors in a toast, so the UI didn't change.
+  - Tests: 48 integration tests (every from/to pair, bulk, restock, customer cancel, defect on and off; 86 in total)
+    and 2 e2e tests for the grid's messages (8 in total). Gate 1 screenshots unchanged.
 - 2026-10-22: Phase 1 task 4, metrics (PLS-25.4, 25.5). `GET /metrics` (prom-client 15.1.3, own registry):
   `http_request_duration_seconds` by method, matched route and status (`route="unmatched"` for 404s with no
   route), `playlab_orders_created_total` (replays not counted), `playlab_payments_declined_total` (counted at the

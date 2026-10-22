@@ -784,6 +784,10 @@ paths:
     post:
       tags: [Admin]
       summary: Change the status of several orders at once (admin)
+      description: |
+        All or nothing: if any selected order can't make the change, none change and the 409 lists every one that can't
+        (`details: { to, orders: [{ id, number, from, allowed }] }`). Allowed changes: `pending → paid → processing → shipped → delivered`, and cancellation from `pending`, `paid` or
+        `processing`, which puts the items back in stock. Setting the status an order already has is a no-op.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       requestBody:
         required: true
@@ -817,6 +821,7 @@ paths:
                       updated: { type: integer }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/InvalidTransition' }
         '422': { $ref: '#/components/responses/ValidationError' }
   /orders/{id}/status:
     parameters:
@@ -824,7 +829,10 @@ paths:
     patch:
       tags: [Admin]
       summary: Change an order's status (admin)
-      description: Emits an `orderStatusChanged` event (delivered over WebSocket from Phase 3).
+      description: |
+        Emits an `orderStatusChanged` event (delivered over WebSocket). Allowed changes: `pending → paid → processing → shipped → delivered`, and cancellation from `pending`, `paid` or
+        `processing`, which puts the items back in stock. Setting the status an order already has is a no-op.
+        Anything else returns 409 `INVALID_TRANSITION` with `details: { from, to, allowed }`.
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
       requestBody:
         required: true
@@ -844,7 +852,27 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/InvalidTransition' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /orders/{id}/cancel:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      tags: [Orders]
+      summary: Cancel your own order
+      description: |
+        Allowed while the order is `pending` or `paid`; the items go back in stock and an `orderStatusChanged` event is
+        sent. Once it is `processing` or later this returns 409 `INVALID_TRANSITION`. Another customer's order is a 404.
+      security: [{ bearerAuth: [] }, { sessionCookie: [] }]
+      responses:
+        '200':
+          description: Cancelled order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrderEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/InvalidTransition' }
   /orders/{id}/tracking:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
@@ -1562,6 +1590,11 @@ components:
           schema: { $ref: '#/components/schemas/Error' }
     Conflict:
       description: Conflict (e.g. email in use, insufficient stock, one code per order, price changed)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    InvalidTransition:
+      description: The order can't move to that status (`INVALID_TRANSITION`)
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }

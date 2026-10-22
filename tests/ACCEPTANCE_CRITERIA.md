@@ -109,8 +109,8 @@ As an admin, I want to manage orders and products, so that I can run the shop.
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
 | PLS-8.1 | Given the admin orders grid, when filtered by status, then only orders with that status show |  |  |
-| PLS-8.2 | Given an order, when its status is edited inline, then it saves and a WebSocket event is sent |  |  |
-| PLS-8.3 | Given several selected orders, when a bulk status change is applied, then all selected orders update |  |  |
+| PLS-8.2 | Given an order, when its status is edited inline to an allowed next status, then it saves and a WebSocket event is sent; a status that isn't allowed is refused with the reason shown |  |  |
+| PLS-8.3 | Given several selected orders, when a bulk status change is applied, then all of them update if every one can make the transition; otherwise none change and the ones that can't are listed |  |  |
 | PLS-8.4 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue |  |  |
 | PLS-8.5 | Given a support user, when they try to edit an order, then the controls are disabled and the API returns 403 |  |  |
 | PLS-8.6 | Given a product page is open, when stock changes, then the stock counter updates within 5 seconds |  | `stale-stock` |
@@ -235,11 +235,11 @@ As a screen-reader user, I want a predictable page structure, so that I can navi
 | PLS-19.2 | Given the order summary, when its headings are read, then no heading level is skipped |  | `aria-heading-skip` |
 | PLS-19.3 | Given the site header, when its accessibility tree is captured, then it matches the approved aria snapshot on desktop and mobile |  |  |
 
-## PLS-20 Order lifecycle (planned: Phase 1)
+## PLS-20 Order lifecycle (Phase 1)
 
 As an admin, I want orders to move only through valid statuses, so that an order's history always makes sense.
 
-Not built yet: these ACs fail until Phase 1 adds the transition rules ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API addition 4).
+Built in Phase 1 ([`docs/REVIEW_AND_PLAN.md`](../docs/REVIEW_AND_PLAN.md), API addition 4).
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -299,7 +299,7 @@ Not built yet: `/admin/users` arrives in Phase 1 (API addition 6).
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
