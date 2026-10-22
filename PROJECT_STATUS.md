@@ -9,10 +9,20 @@ Phase 1: Platform core (branch `phase-1-platform-core`). Phase 0 merged to `main
 
 ## Next task
 
-Phase 1, task 9: production guard (PLS-28.5) and the rate-limit fix with the `rate-limit-bypass` defect (PLS-24.6, finding A7). The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
+Phase 1, task 10: Gate 1 check (every Phase 1 AC passes, existing UI unchanged), then PR #16 leaves draft. The Phase 1 task list is in `docs/REVIEW_AND_PLAN.md` under "Phase 1 tasks".
 
 ## Done
 
+- 2026-10-22: Phase 1 task 9 (PLS-28.5, 24.6; fixes findings R3 and A7).
+  - Production guard: the API refuses to start with `TEST_HOOKS=true` and `NODE_ENV=production` unless
+    `PLAYLAB_ALLOW_UNSAFE=true` (then it warns). The image stays `production`; Compose now sets `NODE_ENV=development`
+    for the API, since it's a development stack. Checked on the container: refused (exit 1), hooks off starts,
+    override starts with the warning.
+  - Rate limit: `X-Forwarded-For` is believed only from `TRUSTED_PROXIES` (default the `WEB_URL` host, re-resolved every
+    5 s). From the host, rotating it after the limit now still gets 429; through the web proxy each browser keeps
+    its own limit. New defect `rate-limit-bypass` brings the bypass back: 36 built, 11 planned.
+  - Tests: 5 unit (31 in total) and 3 integration (121 in total); putting back the old trust rule fails PLS-24.6.
+    API probe unchanged; Gate 1 screenshots unchanged.
 - 2026-10-22: Phase 1 task 8, user administration (PLS-23.1 to 23.5, 24.8; completes finding A6).
   - `GET /api/v1/admin/users` for admin and support: filters `role` and `q` (name or email), `page` and `limit`,
     `X-Total-Count`; each user shows `failedLogins`, `locked`, `lockedUntil` and `deletedAt`, never the hash.
@@ -197,8 +207,6 @@ Phase 1, task 9: production guard (PLS-28.5) and the rate-limit fix with the `ra
   connected until it closes.
 - WebSocket connections (`/ws/orders`) are not part of any test session, so they use the global clock when
   checking tokens. A token issued in a session whose clock was moved far ahead could be refused there.
-- Finding A7 confirmed on 2026-10-21: after a guest's 429, a request with a new `X-Forwarded-For` gets 200.
-  The fix is in Phase 1 (trust only the web proxy; keep the bypass as the `rate-limit-bypass` defect).
 
 ## Local environment notes
 

@@ -14,6 +14,7 @@ info:
     * Access tokens expire after 15 minutes; use `/auth/refresh` to get a new one.
     * Deleting an account (`DELETE /users/me`) ends all its sessions: its access tokens then return 401 `TOKEN_REVOKED`.
     * Rate limit: 100 requests a minute per user (or per IP for guests). Over the limit returns 429 with `Retry-After`.
+      A guest's IP comes from `X-Forwarded-For` only when the web proxy sends it.
     * Test hooks under `/test/*` exist only when the API runs with `TEST_HOOKS=true`.
     * Test sessions: `POST /test/sessions` returns an id. Requests that send it as `X-Test-Session` (or the
       `test_session` cookie) get that session's own defects, clock, latency and chaos rules and rate-limit counters;

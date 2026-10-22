@@ -35,6 +35,11 @@ export const BUGS = {
   'button-moves': { ac: 'PLS-6.8', side: 'payment frame', description: 'The Pay button shifts position after 500 ms' },
   'missing-label': { ac: 'PLS-2.6, PLS-11.1', side: 'web', description: 'The email field loses its accessible label' },
   'stale-stock': { ac: 'PLS-8.6', side: 'api', description: 'The SSE stock counter stops updating' },
+  'rate-limit-bypass': {
+    ac: 'PLS-24.6',
+    side: 'api',
+    description: 'X-Forwarded-For is trusted from anyone, so a client can rotate it to dodge the rate limit',
+  },
   'lost-update': {
     ac: 'PLS-21.2, PLS-21.3, PLS-21.5, PLS-21.7',
     side: 'api',

@@ -28,6 +28,8 @@ export default defineConfig({
             DATABASE_URL: process.env.TEST_DATABASE_URL,
             TEST_HOOKS: 'true',
             LOG_LEVEL: 'silent',
+            // A documentation-only address, so supertest's loopback requests count as untrusted clients (A7).
+            TRUSTED_PROXIES: '192.0.2.1',
             // Nothing listens here, so readiness reports the web app as down.
             WEB_URL: 'http://127.0.0.1:9',
           },

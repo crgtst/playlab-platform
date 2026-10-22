@@ -173,7 +173,7 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
 - **User administration** (PLS-23): `GET /admin/users` (filters `role` and `q`, paged with `page` and `limit`) for admin and support; `PATCH /admin/users/{id}` with `role` and/or `unlock: true` for admin only. A new role applies from the user's next login. API only, no admin page yet.
 - **Your account** (PLS-22): `GET /users/me`; `PATCH /users/me` with `name`, or `email` plus `currentPassword` (other fields are ignored); `DELETE /users/me` anonymises the account (its orders stay, as "Deleted user") and removes the avatar, cart, wishlist and emails. There is no account page for these yet; they are API only.
 - **Guest carts** live in an httpOnly `cart_id` cookie. On login they merge into the account cart. If a product is in both carts it keeps the larger quantity, so quantities are never doubled.
-- **Rate limit**: 100 requests a minute per user (or per IP for guests) on `/api/v1/*`, except `/health`. Over the limit returns 429 with `Retry-After`. Configure it with `RATE_LIMIT_PER_MIN`.
+- **Rate limit**: 100 requests a minute per user (or per IP for guests) on `/api/v1/*`, except `/health`. Over the limit returns 429 with `Retry-After`. Configure it with `RATE_LIMIT_PER_MIN`. A guest's IP is taken from `X-Forwarded-For` only when the web proxy sends it (`TRUSTED_PROXIES`), so rotating that header from a test doesn't reset the limit; use a [test session](#test-sessions) or `POST /test/reset` instead.
 - **Pagination**: `GET /products` returns `meta: { page, limit, total, totalPages }` plus `Link` (`first`/`prev`/`next`/`last`) and `X-Total-Count` headers.
   - Default page size is 12, maximum 48.
   - Sorts always end with a tie-breaker on `id`.
@@ -354,6 +354,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `button-moves` | PLS-6.8 | Payment frame | A banner pushes the Pay button down 500 ms after the frame loads |
 | `missing-label` | PLS-2.6, 11.1 | Web | The login and register email fields lose their label |
 | `stale-stock` | PLS-8.6 | API | The SSE stream stops sending stock updates |
+| `rate-limit-bypass` | PLS-24.6 | API | `X-Forwarded-For` is believed from anyone, so a guest can rotate it to dodge the rate limit |
 | `lost-update` | PLS-21.2, 21.3, 21.5, 21.7 | API | `If-Match` is ignored, so a stale or missing one still overwrites the latest version |
 | `status-any-transition` | PLS-20.2, 20.3, 20.4 | API | An admin can set any status, singly or in bulk, such as delivered back to pending |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
@@ -365,7 +366,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 35 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 36 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 
@@ -436,6 +437,9 @@ These check the app itself. They are not the training suites, which live in [`..
 | `RATE_LIMIT_PER_MIN` | `100` | API rate limit |
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
+| `NODE_ENV` | `development` in Compose (`production` in the image) | With `production`, the API refuses to start while `TEST_HOOKS=true` |
+| `PLAYLAB_ALLOW_UNSAFE` | `false` | `true` lets the API start with test hooks on in production, with a warning |
+| `TRUSTED_PROXIES` | the `WEB_URL` host | Comma-separated hosts whose `X-Forwarded-For` is believed |
 | `TEST_SESSION_IDLE_MS` | `3600000` | How long an unused test session lasts |
 | `LOG_LEVEL` | `info` | Request logs on stdout: `info`, `warn`, `error` or `silent` (`GET /test/logs` keeps them either way) |
 | `WEB_PORT` / `API_PORT` / `DB_PORT` | `5173` / `3000` / `5432` | Host ports |

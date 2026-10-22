@@ -8,10 +8,17 @@ function int(v: string | undefined, fallback: number): number {
   return Number.isFinite(n) && v !== undefined && v !== '' ? n : fallback;
 }
 
+const webUrl = process.env.WEB_URL ?? 'http://localhost:5173';
+
 export const config = {
   port: int(process.env.PORT, 3000),
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://playlab:playlab@localhost:5432/playlab',
-  webUrl: process.env.WEB_URL ?? 'http://localhost:5173',
+  webUrl,
+  // Hosts whose X-Forwarded-For is believed: only the web proxy by default (finding A7).
+  trustedProxies: (process.env.TRUSTED_PROXIES ?? new URL(webUrl).hostname)
+    .split(',')
+    .map((h) => h.trim())
+    .filter(Boolean),
   publicWebUrl: process.env.PUBLIC_WEB_URL ?? 'http://localhost:5173',
   testHooks: bool(process.env.TEST_HOOKS, false),
   jwtSecret: process.env.JWT_SECRET ?? 'dev-access-secret-change-me',

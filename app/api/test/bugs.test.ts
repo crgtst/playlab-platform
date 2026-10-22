@@ -12,7 +12,6 @@ const PLANNED_DEFECTS = [
   'user-enumeration',
   'mass-assignment-role',
   'excessive-data-exposure',
-  'rate-limit-bypass',
   'no-page-limit',
   'bfla-admin-users',
   'ssrf-avatar-url',

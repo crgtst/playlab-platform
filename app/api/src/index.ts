@@ -4,6 +4,7 @@ import { migrate } from './db/migrate';
 import { pool } from './db/pool';
 import { getSeedPasswordHash, seedIfEmpty } from './db/seed/base';
 import { logger } from './lib/logger';
+import { runningUnsafe, startupProblem } from './lib/startupGuard';
 import { attachOrderSocket } from './realtime/ws';
 
 async function waitForDatabase(attempts = 30) {
@@ -19,6 +20,11 @@ async function waitForDatabase(attempts = 30) {
 }
 
 async function main() {
+  const problem = startupProblem(process.env, config.testHooks);
+  if (problem) throw new Error(problem);
+  if (runningUnsafe(process.env, config.testHooks)) {
+    logger.warn('PLAYLAB_ALLOW_UNSAFE=true: test hooks are on in production. Never expose this API to a network.');
+  }
   await waitForDatabase();
   await migrate();
   getSeedPasswordHash();

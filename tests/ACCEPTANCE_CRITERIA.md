@@ -299,7 +299,7 @@ Built in Phase 1 (API addition 6).
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 fails today (finding A7), and so does 24.11 until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 fails until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -364,7 +364,7 @@ Not built yet: these run against the `perf` Compose profile with generated data 
 
 As a tester, I want isolated test sessions and repeatable data, so that parallel runs don't interfere and the app can't be deployed unsafely.
 
-Partly built: test sessions (28.1, 28.2, 28.6 to 28.10) are built. The production guard (28.5) arrives later in Phase 1, and bulk data (28.3, 28.4) with the perf profile in Phase 3.
+Partly built: test sessions (28.1, 28.2, 28.6 to 28.10) and the production guard (28.5) are built in Phase 1. Bulk data (28.3, 28.4) arrives with the perf profile in Phase 3.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

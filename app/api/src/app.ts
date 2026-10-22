@@ -8,6 +8,7 @@ import { config } from './config';
 import { registry } from './lib/metrics';
 import { correlation } from './lib/requestContext';
 import { resolveTestSession } from './lib/testSessions';
+import { trustedProxies, trustProxy } from './lib/trustedProxy';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimit } from './middleware/rateLimit';
 import { requestLog } from './middleware/requestLog';
@@ -37,7 +38,9 @@ export function loadOpenApi(): Record<string, unknown> {
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+  // Only the web proxy's X-Forwarded-For is believed, so clients can't pick their own IP for the rate limit (A7).
+  trustedProxies.start();
+  app.set('trust proxy', trustProxy);
   app.set('etag', false); // product reads set their own ETag
   // Keep Express 4's qs parsing (Express 5 defaults to 'simple'), so nested and array query params behave as before.
   app.set('query parser', 'extended');

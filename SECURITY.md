@@ -24,7 +24,7 @@ None of the following should be reported as a vulnerability:
 - **Development defaults.** A fixed `JWT_SECRET`, the Postgres credentials `playlab` / `playlab`, plain HTTP, and
   seeded accounts with a published password.
 
-## The guard that exists today
+## The guards
 
 Start the stack with `TEST_HOOKS=false` and:
 
@@ -34,8 +34,14 @@ Start the stack with `TEST_HOOKS=false` and:
 This guard is covered by the API unit tests in [`app/api/test/`](app/api/test/). It switches off the training features;
 it does **not** make the app safe to deploy. The development defaults above still apply.
 
-A stronger guard is planned: refusing to start with test hooks or defects enabled when `NODE_ENV=production`, unless
-explicitly overridden (finding R3 in [`docs/REVIEW_AND_PLAN.md`](docs/REVIEW_AND_PLAN.md)).
+The API also refuses to start with `TEST_HOOKS=true` when `NODE_ENV=production`, unless `PLAYLAB_ALLOW_UNSAFE=true` is
+set (it then logs a warning). The image defaults to `NODE_ENV=production`; the local `docker-compose.yml` sets
+`development`, because it is a development stack. This stops the API image being run in production with test hooks on
+by mistake. It does not protect a copy of the local Compose stack started on a server, so the advice above still
+stands.
+
+The rate limit believes `X-Forwarded-For` only from the web proxy (`TRUSTED_PROXIES`, by default the `WEB_URL` host), so
+a client can't dodge it by sending a different address with each request.
 
 ## What to report
 
