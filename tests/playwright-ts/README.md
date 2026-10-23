@@ -51,4 +51,6 @@ turn a defect on for one test, call `POST /test/bugs` through the `request` fixt
 `specs/auth/login.spec.ts` covers PLS-1.1 through PLS-1.6: successful and failed login, account lockout, logout,
 access-token expiry and refresh. `specs/auth/session.spec.ts` covers PLS-1.7 and PLS-1.8: checkout recovery after an
 expired session, and guest-cart fallback when both session tokens have expired. The remaining acceptance criteria are
-not yet covered by this suite.
+not yet covered by this suite. `specs/registration/registration.spec.ts` covers PLS-2.1 through PLS-2.4 and PLS-2.6,
+including the mapped `fada-rejected`, `wrong-status-code` and `missing-label` defects.
+`specs/registration/password-reset.spec.ts` covers PLS-2.5, including mailbox delivery and expiry of the reset link.

@@ -27,6 +27,13 @@ Postman/Newman, Karate, REST Assured and traceability work.
   - PLS-1.3 also verifies the lockout expires after 15 minutes by logging in successfully after advancing the isolated
     test clock.
   - Checked: all 8 Playwright tests pass in parallel; typecheck passes; `git diff --check` passes.
+- 2026-10-23: Added the Playwright registration and password-reset feature suite for PLS-2.
+  - Added PLS-2.1–2.6 coverage under `specs/registration/`, with page objects for registration, forgot password and
+    reset password. Registration checks the confirmation mailbox; reset checks the mailbox link and its one-hour
+    expiry; PLS-2.6 uses axe on the registration email label.
+  - Added defect-mode cases for `fada-rejected` (PLS-2.3) and `wrong-status-code` (PLS-2.4), and added
+    `@axe-core/playwright` for the accessibility check.
+  - Checked: all 10 PLS-2 tests pass in parallel; TypeScript typecheck passes.
 
 - 2026-10-23: Shop restyle on `ui/antigravity-restyle`: Antigravity's new look (`styles.css`, plus
   `<meta name="color-scheme">`), finished and fixed after it ran out of credits part way. CSS only: no test IDs, text or

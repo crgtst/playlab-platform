@@ -9,6 +9,16 @@ export interface TestUser {
   password: string;
 }
 
+export interface MailboxMessage {
+  id: number;
+  to: string;
+  type: string;
+  subject: string;
+  body: string;
+  link: string | null;
+  createdAt: string;
+}
+
 /**
  * The API's test hooks (/test/*). Calls go through the test's request context, which carries its X-Test-Session
  * header, so a clock change or defect affects only this test (see fixtures.ts).
@@ -35,5 +45,12 @@ export class TestHooks {
   async advanceClock(ms: number): Promise<void> {
     const res = await this.request.post(`${API_URL}/test/clock`, { data: { advanceMs: ms } });
     expect(res.status(), 'POST /test/clock').toBe(200);
+  }
+
+  async mailbox(email: string): Promise<MailboxMessage[]> {
+    const res = await this.request.get(`${API_URL}/test/mailbox/${encodeURIComponent(email)}`);
+    expect(res.status(), `GET /test/mailbox/${email}`).toBe(200);
+    const body = (await res.json()) as { data: MailboxMessage[] };
+    return body.data;
   }
 }
