@@ -13,8 +13,9 @@ function readDotEnv(): Record<string, string> {
       return m ? [[m[1], m[2]] as const] : [];
     });
     return Object.fromEntries(entries);
-  } catch {
-    return {};
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return {};
+    throw error;
   }
 }
 

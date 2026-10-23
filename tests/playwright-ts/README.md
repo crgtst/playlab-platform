@@ -46,8 +46,9 @@ never collide.
 Don't call `POST /test/reset` from a test: it ends every session, including those of tests running beside it. To
 turn a defect on for one test, call `POST /test/bugs` through the `request` fixture, which carries the session header.
 
-## First test: PLS-1.8
+## Current coverage
 
-`specs/session.spec.ts` logs in, moves the session's clock 8 days forward (past both the 15-minute access token and
-the 7-day refresh token), adds an item, and checks it lands in a guest cart with no error. It failed before the
-PLS-1.8 fix and passes after it, and it passed 160 times in a row across 8 parallel workers.
+`specs/auth.spec.ts` covers PLS-1.1 through PLS-1.6: successful and failed login, account lockout, logout, access-token
+expiry and refresh. `specs/session.spec.ts` covers PLS-1.8: it advances the session clock 8 days (past both the
+15-minute access token and 7-day refresh token), adds an item, and checks it lands in a guest cart with no error.
+PLS-1.7 and the rest of the acceptance criteria remain to be covered.
