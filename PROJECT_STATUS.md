@@ -14,6 +14,12 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-23: Extended PLS-5 scenarios to cover fixed-amount discounts alongside percentage discounts.
+  - Added PLS-5.11 for a fixed discount smaller than the cart subtotal; application, `discount-not-applied`,
+    normalization, case-sensitivity, VAT, exact totals, confirmation, and CSV export now exercise both `SAVE10`
+    and `FIXED20`.
+  - Checked: all 25 PLS-5 tests and all 62 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
 - 2026-10-23: Added the Playwright discount-code suite for PLS-5 and a new total-accuracy AC.
   - Added PLS-5.10 to `docs/ACCEPTANCE_CRITERIA.md` to make the displayed grand-total arithmetic explicit; coverage
     will assert the discounted subtotal, VAT and delivery compose to the exact amount displayed.

@@ -28,6 +28,7 @@ const codes = {
   used10: fixtureDiscount('USED10'),
   min50: fixtureDiscount('MIN50'),
 };
+const standardCodes = [codes.save10, codes.fixed20];
 
 async function seedDiscountFixture(request: APIRequestContext, code: string) {
   const { fixture } = fixtureDiscount(code);
@@ -92,37 +93,118 @@ function parseCsvRow(line: string): string[] {
   return fields;
 }
 
+function expectedTotals(subtotal: number, code: (typeof standardCodes)[number]) {
+  const goodsSaving = code.type === 'percent' ? Math.round((subtotal * code.value) / 100) : Math.min(subtotal, code.value);
+  const deliverySaving = code.type === 'fixed' ? Math.min(Math.max(code.value - subtotal, 0), DELIVERY_CENTS) : 0;
+  const discountedSubtotal = subtotal - goodsSaving;
+  const delivery = DELIVERY_CENTS - deliverySaving;
+  return {
+    saving: goodsSaving + deliverySaving,
+    vat: Math.round(discountedSubtotal * VAT_RATE),
+    total: discountedSubtotal + Math.round(discountedSubtotal * VAT_RATE) + delivery,
+  };
+}
+
+async function verifyDiscountedOrder(
+  page: Page,
+  request: APIRequestContext,
+  customerToken: string,
+  adminToken: string,
+  scenario: { code: (typeof standardCodes)[number]; product: typeof discountProduct },
+) {
+  const { code, product: item } = scenario;
+  const headers = { Authorization: `Bearer ${adminToken}` };
+  const originalProductResponse = await request.get(`${API_URL}/api/v1/products/${item.id}`);
+  expect(originalProductResponse.status()).toBe(200);
+  const originalProduct: { data: { stock: number } } = await originalProductResponse.json();
+
+  try {
+    const cart = new CartPage(page);
+    await addProduct(cart, item.id);
+    expect((await cart.applyCode(code.code)).status()).toBe(200);
+    await continueToReview(page, cart);
+    await page.getByTestId('review-continue-button').click();
+
+    const payment = page.frameLocator('[data-testid="payment-frame"]');
+    await payment.getByTestId('frame-card-name').fill(cards.defaults.nameOnCard);
+    await payment.getByTestId('frame-card-number').fill(cards.success.number);
+    await payment.getByTestId('frame-card-expiry').fill(cards.defaults.expiry);
+    await payment.getByTestId('frame-card-cvc').fill(cards.defaults.cvc);
+    await payment.getByTestId('frame-pay-button').click();
+    await expect(page.getByTestId('order-confirmation')).toBeVisible();
+    await expect(page.getByTestId('order-discount-code')).toHaveText(code.code);
+
+    const orderNumber = await page.getByTestId('order-number').innerText();
+    const orderId = await page.getByTestId('order-summary').getAttribute('data-order-id');
+    if (!orderId) throw new Error('The order confirmation is missing its order ID');
+    const orderSummary = await request.get(`${API_URL}/api/v1/orders/${orderId}`, {
+      headers: { Authorization: `Bearer ${customerToken}` },
+    });
+    expect(orderSummary.status()).toBe(200);
+    const savedOrder: {
+      data: { discount: { code: string; amountCents: number }; totals: { totalCents: number } };
+    } = await orderSummary.json();
+    const expected = expectedTotals(item.priceCents, code);
+    expect(savedOrder.data.discount).toEqual({ code: code.code, amountCents: expected.saving });
+    expect(savedOrder.data.totals.totalCents).toBe(expected.total);
+    await expect(page.getByTestId('order-discount-saving')).toContainText(`€${(expected.saving / 100).toFixed(2)}`);
+    await expect(page.getByTestId('totals-total')).toHaveAttribute('data-cents', String(expected.total));
+
+    const exportResponse = await request.get(`${API_URL}/api/v1/orders/export.csv?q=${encodeURIComponent(orderNumber)}`, {
+      headers,
+    });
+    expect(exportResponse.status()).toBe(200);
+    expect(exportResponse.headers()['content-type']).toContain('text/csv');
+    const rows = (await exportResponse.text()).trim().split(/\r?\n/).map(parseCsvRow);
+    const header = rows[0];
+    const order = rows.find((row) => row[header.indexOf('number')] === orderNumber);
+    expect(order).toBeDefined();
+    expect(order?.[header.indexOf('discount_code')]).toBe(code.code);
+    expect(order?.[header.indexOf('discount')]).toBe((expected.saving / 100).toFixed(2));
+    expect(order?.[header.indexOf('total')]).toBe((expected.total / 100).toFixed(2));
+  } finally {
+    const currentProductResponse = await request.get(`${API_URL}/api/v1/products/${item.id}`);
+    expect(currentProductResponse.status()).toBe(200);
+    const etag = currentProductResponse.headers().etag;
+    if (!etag) throw new Error('The product response did not include an ETag for stock cleanup');
+    const restoredProduct = await request.patch(`${API_URL}/api/v1/products/${item.id}`, {
+      headers: { ...headers, 'If-Match': etag },
+      data: { stock: originalProduct.data.stock },
+    });
+    expect(restoredProduct.status()).toBe(200);
+  }
+}
+
 test.describe('PLS-5 Discount codes', () => {
-  test('PLS-5.1 applying SAVE10 shows the correct saving and reduces the cart total', async ({ page }) => {
-    const cart = new CartPage(page);
-    await addProduct(cart, discountProduct.id);
-    const originalTotal = await cents(cart.grandTotal);
-    const save10 = codes.save10;
+  for (const code of standardCodes) {
+    const ac = code.type === 'percent' ? 'PLS-5.1' : 'PLS-5.11';
+    test(`${ac} applying ${code.code} shows the correct saving and recalculated total`, async ({ page }) => {
+      const cart = new CartPage(page);
+      await addProduct(cart, discountProduct.id);
+      const originalTotal = await cents(cart.grandTotal);
 
-    expect((await cart.applyCode(save10.code)).status()).toBe(200);
+      expect((await cart.applyCode(code.code)).status()).toBe(200);
 
-    const subtotal = await cents(cart.subtotal);
-    const expectedSaving = Math.round((subtotal * save10.value) / 100);
-    await expect(cart.discountAppliedCode).toHaveText(save10.code);
-    await expect(cart.discountSaving).toHaveAttribute('data-cents', String(expectedSaving));
-    const discountedSubtotal = subtotal - expectedSaving;
-    const expectedTotal = discountedSubtotal + Math.round(discountedSubtotal * VAT_RATE) + DELIVERY_CENTS;
-    expect(await cents(cart.grandTotal)).toBe(expectedTotal);
-    expect(expectedTotal).toBeLessThan(originalTotal);
-  });
+      const expected = expectedTotals(await cents(cart.subtotal), code);
+      await expect(cart.discountAppliedCode).toHaveText(code.code);
+      await expect(cart.discountSaving).toHaveAttribute('data-cents', String(expected.saving));
+      expect(await cents(cart.grandTotal)).toBe(expected.total);
+      expect(expected.total).toBeLessThan(originalTotal);
+    });
 
-  test('PLS-5.1 detects the discount-not-applied defect', async ({ page, request }) => {
-    await setBug(request, 'discount-not-applied', true);
-    const cart = new CartPage(page);
-    await addProduct(cart, discountProduct.id);
-    const originalTotal = await cents(cart.grandTotal);
+    test(`${ac} detects the discount-not-applied defect for ${code.code}`, async ({ page, request }) => {
+      await setBug(request, 'discount-not-applied', true);
+      const cart = new CartPage(page);
+      await addProduct(cart, discountProduct.id);
+      const originalTotal = await cents(cart.grandTotal);
 
-    expect((await cart.applyCode(codes.save10.code)).status()).toBe(200);
+      expect((await cart.applyCode(code.code)).status()).toBe(200);
 
-    await expect(cart.discountAppliedCode).toHaveText(codes.save10.code);
-    await expect(cart.discountSaving).toHaveCount(0);
-    expect(await cents(cart.grandTotal)).toBe(originalTotal);
-  });
+      await expect(cart.discountAppliedCode).toHaveText(code.code);
+      await expect(cart.discountSaving).toHaveCount(0);
+      expect(await cents(cart.grandTotal)).toBe(originalTotal);
+    });
+  }
 
   test('PLS-5.2 an expired code shows its error and leaves the total unchanged', async ({ page, request }) => {
     await seedDiscountFixture(request, codes.expired10.code);
@@ -266,49 +348,54 @@ test.describe('PLS-5 Discount codes', () => {
     expect(await cents(cart.grandTotal)).toBeLessThan(0);
   });
 
-  test('PLS-5.7 accepts lowercase and spaced discount codes', async ({ page }) => {
+  test('PLS-5.7 accepts lowercase and spaced percentage and fixed-amount codes', async ({ page }) => {
     const cart = new CartPage(page);
     await addProduct(cart, discountProduct.id);
 
-    expect((await cart.applyCode(' save10 ')).status()).toBe(200);
-    await expect(cart.discountAppliedCode).toHaveText(codes.save10.code);
-    const removing = page.waitForResponse(
-      (response) => response.url().includes('/api/v1/cart/discount') && response.request().method() === 'DELETE',
-    );
-    await page.getByTestId('discount-remove-button').click();
-    expect((await removing).status()).toBe(200);
-
-    expect((await cart.applyCode('S A V E 1 0')).status()).toBe(200);
-    await expect(cart.discountAppliedCode).toHaveText(codes.save10.code);
+    for (const code of standardCodes) {
+      const spacedLowercase = ` ${code.code.toLowerCase().split('').join(' ')} `;
+      expect((await cart.applyCode(spacedLowercase)).status()).toBe(200);
+      await expect(cart.discountAppliedCode).toHaveText(code.code);
+      const removing = page.waitForResponse(
+        (response) => response.url().includes('/api/v1/cart/discount') && response.request().method() === 'DELETE',
+      );
+      await page.getByTestId('discount-remove-button').click();
+      expect((await removing).status()).toBe(200);
+    }
   });
 
-  test('PLS-5.7 detects the discount-case-sensitive defect', async ({ page, request }) => {
-    await setBug(request, 'discount-case-sensitive', true);
-    const cart = new CartPage(page);
-    await addProduct(cart, discountProduct.id);
+  for (const code of standardCodes) {
+    test(`PLS-5.7 detects the discount-case-sensitive defect for ${code.code}`, async ({ page, request }) => {
+      await setBug(request, 'discount-case-sensitive', true);
+      const cart = new CartPage(page);
+      await addProduct(cart, discountProduct.id);
 
-    expect((await cart.applyCode('save10')).status()).toBe(422);
+      expect((await cart.applyCode(code.code.toLowerCase())).status()).toBe(422);
 
-    await expect(cart.discountError).toHaveText("We don't recognise that code");
-  });
+      await expect(cart.discountError).toHaveText("We don't recognise that code");
+    });
+  }
 
-  test('PLS-5.8 calculates VAT on the discounted subtotal', async ({ page }) => {
-    const cart = new CartPage(page);
-    await addProduct(cart, discountProduct.id);
-    expect((await cart.applyCode(codes.save10.code)).status()).toBe(200);
+  for (const code of standardCodes) {
+    test(`PLS-5.8 calculates VAT on the ${code.type} discount`, async ({ page }) => {
+      const cart = new CartPage(page);
+      await addProduct(cart, discountProduct.id);
+      expect((await cart.applyCode(code.code)).status()).toBe(200);
 
-    const discountedSubtotal = (await cents(cart.subtotal)) - (await cents(cart.discountSaving));
-    expect(await cents(cart.vat)).toBe(Math.round(discountedSubtotal * VAT_RATE));
-  });
+      const expected = expectedTotals(await cents(cart.subtotal), code);
+      expect(await cents(cart.discountSaving)).toBe(expected.saving);
+      expect(await cents(cart.vat)).toBe(expected.vat);
+    });
 
-  test('PLS-5.8 detects the vat-before-discount defect', async ({ page, request }) => {
-    await setBug(request, 'vat-before-discount', true);
-    const cart = new CartPage(page);
-    await addProduct(cart, discountProduct.id);
-    expect((await cart.applyCode(codes.save10.code)).status()).toBe(200);
+    test(`PLS-5.8 detects vat-before-discount for the ${code.type} discount`, async ({ page, request }) => {
+      await setBug(request, 'vat-before-discount', true);
+      const cart = new CartPage(page);
+      await addProduct(cart, discountProduct.id);
+      expect((await cart.applyCode(code.code)).status()).toBe(200);
 
-    expect(await cents(cart.vat)).toBe(Math.round(discountProduct.priceCents * VAT_RATE));
-  });
+      expect(await cents(cart.vat)).toBe(Math.round(discountProduct.priceCents * VAT_RATE));
+    });
+  }
 
   test('PLS-5.9 discounted confirmation and CSV export show the code and saving', async ({
     page,
@@ -387,6 +474,25 @@ test.describe('PLS-5 Discount codes', () => {
     }
   });
 
+  test('PLS-5.9 fixed-discount confirmation and CSV export show the code and exact saving', async ({
+    page,
+    request,
+    customer,
+    hooks,
+  }) => {
+    const admin = await hooks.createUser('admin');
+    await page.goto('/login');
+    await page.getByTestId('login-email').fill(customer.email);
+    await page.getByTestId('login-password').fill(customer.password);
+    await page.getByTestId('login-submit').click();
+    await page.waitForURL((url) => !url.pathname.startsWith('/login'));
+
+    await verifyDiscountedOrder(page, request, customer.accessToken, admin.accessToken, {
+      code: codes.fixed20,
+      product: product('EL-002'),
+    });
+  });
+
   test('PLS-5.10 the displayed checkout total equals discounted subtotal, VAT and delivery to the cent', async ({
     page,
     customer,
@@ -404,5 +510,23 @@ test.describe('PLS-5 Discount codes', () => {
     const discountedSubtotal = (await cents(cart.subtotal)) - (await cents(cart.discountSaving));
     const expectedTotal = discountedSubtotal + Math.round(discountedSubtotal * VAT_RATE) + DELIVERY_CENTS;
     expect(await cents(cart.grandTotal)).toBe(expectedTotal);
+  });
+
+  test('PLS-5.11 the displayed checkout total for a fixed discount is exact', async ({ page, customer }) => {
+    const cart = new CartPage(page);
+    await page.goto('/login');
+    await page.getByTestId('login-email').fill(customer.email);
+    await page.getByTestId('login-password').fill(customer.password);
+    await page.getByTestId('login-submit').click();
+    await page.waitForURL((url) => !url.pathname.startsWith('/login'));
+    await addProduct(cart, discountProduct.id);
+    expect((await cart.applyCode(codes.fixed20.code)).status()).toBe(200);
+    await continueToReview(page, cart);
+
+    const expected = expectedTotals(await cents(cart.subtotal), codes.fixed20);
+    expect(await cents(cart.discountSaving)).toBe(expected.saving);
+    expect(await cents(cart.vat)).toBe(expected.vat);
+    expect(await cents(cart.delivery)).toBe(DELIVERY_CENTS);
+    expect(await cents(cart.grandTotal)).toBe(expected.total);
   });
 });
