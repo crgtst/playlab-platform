@@ -74,6 +74,7 @@ As a shopper, I want to apply a discount code, so that I pay the promoted price.
 | PLS-5.7 | Given a code typed in lowercase or with spaces, when applied, then it is accepted |  | `discount-case-sensitive` |
 | PLS-5.8 | Given a discount is applied, when VAT is calculated, then VAT is based on the discounted price |  | `vat-before-discount` |
 | PLS-5.9 | Given a discounted order is placed, when the confirmation and CSV export are viewed, then both show the code and saving |  |  |
+| PLS-5.10 | Given a 10% discount code is applied, when the order summary is displayed, then the grand total equals the discounted subtotal plus VAT on the discounted subtotal and delivery, to the cent |  | `discount-not-applied` |
 
 ## PLS-6 Checkout and payment
 

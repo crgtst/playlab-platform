@@ -14,6 +14,14 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-23: Added the Playwright discount-code suite for PLS-5 and a new total-accuracy AC.
+  - Added PLS-5.10 to `docs/ACCEPTANCE_CRITERIA.md` to make the displayed grand-total arithmetic explicit; coverage
+    will assert the discounted subtotal, VAT and delivery compose to the exact amount displayed.
+  - Added PLS-5.1–5.10 coverage for valid and rejected codes, stacking, minimum spend, capped fixed discounts,
+    normalization, VAT, order confirmation and CSV export, with defect-mode checks for all mapped discount defects.
+  - Extended `CartPage` with discount controls and documented the suite.
+  - Checked: all 18 PLS-5 tests and all 55 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
 - 2026-10-23: Added the Playwright shopping-cart suite for PLS-4 under `tests/playwright-ts/specs/cart/`.
   - Covered PLS-4.1–4.7: cart count and subtotal, zero/negative quantity rejection, 409 stock handling, cent-accurate
     subtotals, non-duplicating guest-cart merge, GBP display, and the price-change warning through payment.

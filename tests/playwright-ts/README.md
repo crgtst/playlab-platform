@@ -58,4 +58,8 @@ expired session, and guest-cart fallback when both session tokens have expired.
 and defect-mode checks for `search-apostrophe` and `pagination-duplicate`. `specs/cart/cart.spec.ts` covers PLS-4.1
 through PLS-4.7, including invalid quantities, stock limits, exact cent totals, account-cart merging, currency
 switching and price-change warnings. Its defect-mode checks exercise `quantity-negative`, `stock-oversell`,
-`cart-total-rounding` and `currency-switch-stale`. `pages/CartPage.ts` provides the cart page object.
+`cart-total-rounding` and `currency-switch-stale`. `specs/discounts/codes.spec.ts` covers PLS-5.1 through PLS-5.10,
+including discount validation, exact discounted order totals, VAT, confirmation and CSV export. Its defect-mode
+checks exercise `discount-not-applied`, `expired-discount-accepted`, `single-use-reused`, `discount-stacking`,
+`discount-survives-cart-change`, `discount-negative-total`, `discount-case-sensitive` and `vat-before-discount`.
+`pages/CartPage.ts` provides the cart page object and discount-code helper.
