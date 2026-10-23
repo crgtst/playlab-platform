@@ -14,6 +14,15 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-23: Added the Playwright shopping-cart suite for PLS-4 under `tests/playwright-ts/specs/cart/`.
+  - Covered PLS-4.1–4.7: cart count and subtotal, zero/negative quantity rejection, 409 stock handling, cent-accurate
+    subtotals, non-duplicating guest-cart merge, GBP display, and the price-change warning through payment.
+  - Added defect-mode checks for `quantity-negative`, `stock-oversell`, `cart-total-rounding` and
+    `currency-switch-stale`; PLS-4.7 uses an ETag-protected one-cent price change to a shared seeded product and
+    restores the original price in teardown, without changing catalogue contents.
+  - Added `CartPage` and exposed the test user's access token from `TestHooks.createUser` for authenticated test setup.
+  - Checked: all 11 PLS-4 tests pass; the full Playwright suite passes (37 tests); TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
 - 2026-10-23: Started Phase 2 with Playwright TypeScript authentication coverage.
   - Initial increment added PLS-1.1 to PLS-1.6 alongside the existing PLS-1.8 baseline. The follow-up below adds
     PLS-1.7 and organizes the specs by feature.

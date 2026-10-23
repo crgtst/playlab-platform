@@ -7,6 +7,7 @@ export interface TestUser {
   name: string;
   role: 'customer' | 'admin' | 'support';
   password: string;
+  accessToken: string;
 }
 
 export interface MailboxMessage {
@@ -38,7 +39,7 @@ export class TestHooks {
     const res = await this.request.post(`${API_URL}/test/users`, { data: { role } });
     expect(res.status(), 'POST /test/users').toBe(201);
     const body = await res.json();
-    return { ...body.user, password: body.password };
+    return { ...body.user, password: body.password, accessToken: body.accessToken };
   }
 
   /** Moves this session's clock forward. */
