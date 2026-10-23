@@ -54,3 +54,5 @@ expired session, and guest-cart fallback when both session tokens have expired. 
 not yet covered by this suite. `specs/registration/registration.spec.ts` covers PLS-2.1 through PLS-2.4 and PLS-2.6,
 including the mapped `fada-rejected`, `wrong-status-code` and `missing-label` defects.
 `specs/registration/password-reset.spec.ts` covers PLS-2.5, including mailbox delivery and expiry of the reset link.
+`specs/catalogue/browse.spec.ts` covers PLS-3.1 through PLS-3.6, including full-catalogue sort and pagination checks
+and defect-mode checks for `search-apostrophe` and `pagination-duplicate`.

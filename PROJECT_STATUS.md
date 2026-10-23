@@ -34,6 +34,11 @@ Postman/Newman, Karate, REST Assured and traceability work.
   - Added defect-mode cases for `fada-rejected` (PLS-2.3) and `wrong-status-code` (PLS-2.4), and added
     `@axe-core/playwright` for the accessibility check.
   - Checked: all 10 PLS-2 tests pass in parallel; TypeScript typecheck passes.
+- 2026-10-23: Added product search and browse coverage for PLS-3 under `specs/catalogue/`.
+  - Covered search/count, apostrophe queries, combined category and price filtering, ascending price sort across all
+    pages, complete no-duplicate pagination, and the empty state with filter clearing.
+  - Added defect-mode checks for `search-apostrophe` and `pagination-duplicate`.
+  - Checked: all 8 PLS-3 tests pass in parallel; TypeScript typecheck passes.
 
 - 2026-10-23: Shop restyle on `ui/antigravity-restyle`: Antigravity's new look (`styles.css`, plus
   `<meta name="color-scheme">`), finished and fixed after it ran out of credits part way. CSS only: no test IDs, text or
