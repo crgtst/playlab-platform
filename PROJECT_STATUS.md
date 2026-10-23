@@ -14,6 +14,13 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-23: Added the Playwright TypeScript checkout and payment suite for PLS-6.
+  - Covered PLS-6.1–6.9, including confirmation, declined and timed-out payment behavior, double-submit safety,
+    back-navigation, both leave-checkout warnings, API price integrity, payment-button stability, and keyboard-only
+    completion. Added defect-mode checks for `double-submit`, `price-tamper` and `button-moves`.
+  - Added a `CheckoutPage` page object; successful test orders are cancelled during cleanup to restore shared stock.
+  - Checked: all 13 PLS-6 tests and all 75 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
 - 2026-10-23: Extended PLS-5 scenarios to cover fixed-amount discounts alongside percentage discounts.
   - Added PLS-5.11 for a fixed discount smaller than the cart subtotal; application, `discount-not-applied`,
     normalization, case-sensitivity, VAT, exact totals, confirmation, and CSV export now exercise both `SAVE10`

@@ -64,4 +64,8 @@ checks exercise `discount-not-applied`, `expired-discount-accepted`, `single-use
 `discount-survives-cart-change`, `discount-negative-total`, `discount-case-sensitive` and `vat-before-discount`. The
 percentage (`SAVE10`) and fixed-amount (`FIXED20`) codes share application, defect, normalization, VAT, exact-total, and
 order-confirmation/CSV-export coverage; PLS-5.11 explicitly checks the fixed discount's exact saving and checkout total.
-`pages/CartPage.ts` provides the cart page object and discount-code helper.
+`specs/checkout/checkout.spec.ts` covers PLS-6.1 through PLS-6.9: the three checkout steps, success, decline and timeout
+cards, one-order double-click handling, browser-back safety, in-app and browser leave warnings, server-side price
+integrity, payment-button stability, and keyboard-only completion. Defect-mode checks exercise `double-submit`,
+`price-tamper` and `button-moves`. `pages/CartPage.ts` and `pages/CheckoutPage.ts` provide the cart and checkout page
+objects.
