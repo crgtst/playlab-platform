@@ -15,6 +15,20 @@ work before it is done once PRs #20 and the `tests/` scaffold are merged.
 
 ## Done
 
+- 2026-10-23: Shop restyle on `ui/antigravity-restyle`: Antigravity's new look (`styles.css`, plus
+  `<meta name="color-scheme">`), finished and fixed after it ran out of credits part way. CSS only: no test IDs, text or
+  components changed, and no AC behaviour changed.
+  - Fixed before committing: PLS-11.1 failed in light mode (cart table headers 4.34:1, below 4.5:1), so `--muted` is
+    now `#475569`; the hover colour was lighter than the base (white text 3.74:1), now `#115e59`; the CSS ⚡ brand
+    mark was read out ("⚡ PlayLab Shop", PLS-19.3) and is now decorative; reduced motion now also stops the new
+    transitions, hover lifts, card zoom, toast and menu animations; light mode sets `color-scheme: light`; an unused
+    `backdrop-filter` block removed; form fields get a `--border-input` of at least 3:1.
+  - Layout bugs found in the new screenshots and fixed: the shop filter buttons were squashed into one column ("Appl y
+    filter s"); table header styling also hit row headers (product names and order numbers in grey capitals on a
+    shaded strip).
+  - Checked: axe finds no serious or critical violations on the PLS-11.1 pages in light or dark; e2e (13), PLS-1.8 and
+    lint pass. The 14 Gate 1 screenshots are regenerated for the new look (every page changed, intentionally).
+
 - 2026-10-22: `tests/playwright-ts/` baseline, written at Craig's request as a starting point for Phase 2, on
   `tests/playwright-ts-baseline`. Playwright 1.64.1 (same as `app/e2e`), Chromium only for now, HTML and JUnit
   (`results/junit.xml`) reports. Fixtures give every test its own test session (an `X-Test-Session` header on every
