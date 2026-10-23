@@ -29,7 +29,7 @@ go to `playwright-report/` (HTML) and `results/junit.xml` (for the traceability 
 
 | Path | What it holds |
 | --- | --- |
-| `specs/` | Tests, one file per story area. Each test name starts with its AC ID: `PLS-1.8 an expired session ...` |
+| `specs/<feature>/*.spec.ts` | Tests grouped by feature/story area. Each test name starts with its AC ID: `PLS-1.8 an expired session ...` |
 | `pages/` | Page objects (`LoginPage`, `ProductPage`, `Header`). Keep the names and methods the same in every language |
 | `support/fixtures.ts` | The `test` to import. Gives every test its own test session and a throwaway `customer` |
 | `support/hooks.ts` | The API's test hooks: sessions, throwaway users, the clock |
@@ -48,7 +48,7 @@ turn a defect on for one test, call `POST /test/bugs` through the `request` fixt
 
 ## Current coverage
 
-`specs/auth.spec.ts` covers PLS-1.1 through PLS-1.6: successful and failed login, account lockout, logout, access-token
-expiry and refresh. `specs/session.spec.ts` covers PLS-1.8: it advances the session clock 8 days (past both the
-15-minute access token and 7-day refresh token), adds an item, and checks it lands in a guest cart with no error.
-PLS-1.7 and the rest of the acceptance criteria remain to be covered.
+`specs/auth/login.spec.ts` covers PLS-1.1 through PLS-1.6: successful and failed login, account lockout, logout,
+access-token expiry and refresh. `specs/auth/session.spec.ts` covers PLS-1.7 and PLS-1.8: checkout recovery after an
+expired session, and guest-cart fallback when both session tokens have expired. The remaining acceptance criteria are
+not yet covered by this suite.

@@ -9,18 +9,24 @@ Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #1
 
 ## Next task
 
-Continue the Playwright TypeScript suite with PLS-1.7, then proceed through the planned Phase 2 functional suites and
-traceability work.
+Continue the Playwright TypeScript suite through the remaining acceptance criteria, then proceed through the planned
+Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
 - 2026-10-23: Started Phase 2 with Playwright TypeScript authentication coverage.
-  - Added PLS-1.1 to PLS-1.6 tests alongside the existing PLS-1.8 baseline. PLS-1.7 (returning to the same checkout
-    step after re-login) remains for the next task.
+  - Initial increment added PLS-1.1 to PLS-1.6 alongside the existing PLS-1.8 baseline. The follow-up below adds
+    PLS-1.7 and organizes the specs by feature.
   - Review of the Playwright starter found that `support/env.ts` silently treated every file-read failure as a missing
     `.env`; it now falls back only when the file does not exist and surfaces other errors.
-  - Checked: all 7 Playwright tests pass in parallel; TypeScript typecheck passes; the seeded-customer checkout smoke
+  - Initial check: all 7 Playwright tests passed in parallel; TypeScript typecheck passed; the seeded-customer checkout smoke
     test (PLS-6.1) passes through order confirmation.
+- 2026-10-23: Follow-up: completed PLS-1.7 and corrected the Playwright spec layout.
+  - The PLS-1 story now has tests for all current ACs PLS-1.1–1.8. Login cases live in `specs/auth/login.spec.ts`;
+    checkout expiry and guest fallback live in `specs/auth/session.spec.ts`. Updated the suite guide accordingly.
+  - PLS-1.3 also verifies the lockout expires after 15 minutes by logging in successfully after advancing the isolated
+    test clock.
+  - Checked: all 8 Playwright tests pass in parallel; typecheck passes; `git diff --check` passes.
 
 - 2026-10-23: Shop restyle on `ui/antigravity-restyle`: Antigravity's new look (`styles.css`, plus
   `<meta name="color-scheme">`), finished and fixed after it ran out of credits part way. CSS only: no test IDs, text or

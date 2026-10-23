@@ -1,6 +1,6 @@
-import { Header } from '../pages/Header';
-import { LoginPage } from '../pages/LoginPage';
-import { expect, test, API_URL } from '../support/fixtures';
+import { Header } from '../../pages/Header';
+import { LoginPage } from '../../pages/LoginPage';
+import { API_URL, expect, test } from '../../support/fixtures';
 
 const AUTH_URL = `${API_URL}/api/v1/auth`;
 
@@ -39,7 +39,7 @@ test.describe('PLS-1 Login and session', () => {
     expect(cookieNames).not.toContain('refresh_token');
   });
 
-  test('PLS-1.3 the sixth failed login attempt is refused with 423', async ({ request, customer }) => {
+  test('PLS-1.3 the sixth failed login attempt is refused with 423', async ({ request, customer, hooks }) => {
     for (let attempt = 0; attempt < 5; attempt++) {
       const response = await request.post(`${AUTH_URL}/login`, {
         data: { email: customer.email, password: 'incorrect-password' },
@@ -52,6 +52,12 @@ test.describe('PLS-1 Login and session', () => {
     });
     expect(response.status()).toBe(423);
     expect((await response.json()).error.code).toBe('ACCOUNT_LOCKED');
+
+    await hooks.advanceClock(15 * 60 * 1000);
+    const unlockedResponse = await request.post(`${AUTH_URL}/login`, {
+      data: { email: customer.email, password: customer.password },
+    });
+    expect(unlockedResponse.status()).toBe(200);
   });
 
   test('PLS-1.4 logging out clears the session and prevents the account page appearing on back navigation', async ({
