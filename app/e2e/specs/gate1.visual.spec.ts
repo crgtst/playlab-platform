@@ -19,6 +19,11 @@ test.beforeEach(async ({ page, request }) => {
   await page.clock.setFixedTime(NOW);
 });
 
+// The pinned API clock is global state; put it back so suites run afterwards don't see a moved clock.
+test.afterEach(async ({ request }) => {
+  await request.post(`${API_URL}/test/reset`);
+});
+
 /** `ready` shows the page has its data; live streams keep the network busy, so networkidle never comes. */
 async function snap(page: Page, name: string, ready: Locator) {
   await expect(ready.first()).toBeVisible();

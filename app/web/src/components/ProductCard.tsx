@@ -58,7 +58,7 @@ export function ProductCard({ product }: { product: Product }) {
           onClick={onAdd}
           disabled={busy || !product.inStock}
           data-testid="add-to-cart-button"
-          aria-label={`Add ${product.name} to cart`}
+          aria-label={`Add to cart: ${product.name}`}
         >
           {busy ? 'Adding…' : 'Add to cart'}
         </button>

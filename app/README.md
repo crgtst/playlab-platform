@@ -329,7 +329,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 
 | Defect | AC it breaks | Where | Behaviour when on |
 | --- | --- | --- | --- |
-| `discount-not-applied` | PLS-5.1 | API | The code shows as applied, but the totals ignore it |
+| `discount-not-applied` | PLS-5.1, PLS-5.10, PLS-5.11 | API | The code shows as applied, but the totals ignore it |
 | `expired-discount-accepted` | PLS-5.2 | API | Expired codes are accepted |
 | `discount-stacking` | PLS-5.4 | API | A second code is accepted and both apply (the cart's `discounts` lists both) |
 | `discount-survives-cart-change` | PLS-5.5 | API | The minimum spend is not re-checked when the cart changes |
@@ -419,7 +419,9 @@ These check the app itself. They are not the training suites, which live in [`..
 - **API unit tests**, in [`api/test/`](api/test/): `cd api && npm test`. They need no database.
 - **API integration tests**, in [`api/test/integration/`](api/test/integration/): `cd api && npm run test:int`, with the
   `db` container running. They create their own `playlab_test` database on each run (on `DB_PORT`, or
-  `TEST_DATABASE_URL`), so the stack's data is never touched.
+  `TEST_DATABASE_URL`), so the stack's data is never touched. `environment.int.test.ts` covers PLS-12.1–12.3:
+  reset timing and seed restoration, disabled test-hook routes, and the isolation of an enabled defect. PLS-12.4's
+  live readiness check is in `e2e/specs/health.spec.ts`.
 - **Smoke tests in a browser**, in [`e2e/`](e2e/): `cd e2e && npm ci && npx playwright install chromium && npm test`, with
   the stack running. The suite reads `API_PORT` and `WEB_PORT` from `app/.env` (or the environment), resets the stack
   before each test, and names each test after the AC it checks. CI runs it on a stack configured from `.env.example`

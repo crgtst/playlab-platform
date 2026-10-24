@@ -7,6 +7,17 @@ export interface TestUser {
   name: string;
   role: 'customer' | 'admin' | 'support';
   password: string;
+  accessToken: string;
+}
+
+export interface MailboxMessage {
+  id: number;
+  to: string;
+  type: string;
+  subject: string;
+  body: string;
+  link: string | null;
+  createdAt: string;
 }
 
 /**
@@ -24,16 +35,23 @@ export class TestHooks {
   }
 
   /** A throwaway user, so tests running in parallel never share a cart, wishlist or orders. */
-  async createUser(role: TestUser['role'] = 'customer'): Promise<TestUser> {
-    const res = await this.request.post(`${API_URL}/test/users`, { data: { role } });
+  async createUser(role: TestUser['role'] = 'customer', name?: string): Promise<TestUser> {
+    const res = await this.request.post(`${API_URL}/test/users`, { data: { role, name } });
     expect(res.status(), 'POST /test/users').toBe(201);
     const body = await res.json();
-    return { ...body.user, password: body.password };
+    return { ...body.user, password: body.password, accessToken: body.accessToken };
   }
 
   /** Moves this session's clock forward. */
   async advanceClock(ms: number): Promise<void> {
     const res = await this.request.post(`${API_URL}/test/clock`, { data: { advanceMs: ms } });
     expect(res.status(), 'POST /test/clock').toBe(200);
+  }
+
+  async mailbox(email: string): Promise<MailboxMessage[]> {
+    const res = await this.request.get(`${API_URL}/test/mailbox/${encodeURIComponent(email)}`);
+    expect(res.status(), `GET /test/mailbox/${email}`).toBe(200);
+    const body = (await res.json()) as { data: MailboxMessage[] };
+    return body.data;
   }
 }

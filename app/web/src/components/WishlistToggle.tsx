@@ -40,7 +40,7 @@ export function WishlistToggle({ productId, name }: { productId: number; name: s
       type="button"
       className={saved ? 'wishlist-toggle saved' : 'wishlist-toggle'}
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}
+      aria-label={saved ? `Saved: remove ${name} from wishlist` : `Save: add ${name} to wishlist`}
       disabled={busy}
       onClick={onClick}
       data-testid="wishlist-toggle"

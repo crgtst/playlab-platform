@@ -1,19 +1,141 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-22
+Last updated: 2026-10-24
 
 ## Current phase
 
-Between Phase 1 and Phase 2: dependency upgrades and housekeeping. Phase 1 merged to `main` in PR #16 on 2026-10-22
-(Gate 1 passed).
+Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #16 on 2026-10-22 (Gate 1 passed).
 
 ## Next task
 
-Phase 2: your functional suites (Playwright TS, Postman/Newman, Karate, REST Assured, traceability). The platform
-work before it is done once PRs #20 and the `tests/` scaffold are merged.
+Continue the Playwright TypeScript suite through the remaining acceptance criteria, then proceed through the planned
+Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
+
+- 2026-10-25: Fix: CI's API unit test (`bugs.test.ts`) failed on PR #25 because PLS-5.10 and PLS-5.11, added earlier on
+  this branch, name `discount-not-applied` in the ACs but `bugs.ts` and the `app/README.md` defect table still listed
+  only PLS-5.1. Both now list PLS-5.1, PLS-5.10 and PLS-5.11. Checked: 58 unit and 137 integration tests pass.
+- 2026-10-25: Fourth UI pass, CSS only: headings at the top of cards (`.panel`) have no extra top margin, which tightens
+  the checkout review and order pages. Reviewed the rest: checkout review and payment, order confirmation, order
+  detail, wishlist, dark theme. Left alone on purpose: the wishlist hint's low contrast is a planted defect (PLS-11).
+  Checked: 17 e2e, 103 Playwright TypeScript tests and Prettier pass; Gate 1 screenshots regenerated.
+- 2026-10-25: Third UI pass, CSS only: admin toolbar (status filter, search, buttons) now aligned with equal-height
+  controls and a wide search box. Reviewed checkout shipping, home and both admin tabs: no other changes needed.
+  Checked: 17 e2e, all 103 Playwright TypeScript tests (straight after the Gate 1 run, no manual reset) and Prettier
+  pass; Gate 1 screenshots regenerated.
+- 2026-10-25: Second UI pass, CSS only (no test IDs, text or AC behaviour changed).
+  - The header is now two rows from 768px up: brand, search and account actions on row one, the main nav on row two.
+    The single-row version from the previous entry broke once a user was logged in (nav labels wrapped, search
+    squashed), so it was replaced.
+  - `main` also carries the `container` class, and `.container`'s padding shorthand beat the `main` rule, so pages had
+    no top or bottom padding. It is now `main.container` (2rem top, 4rem bottom).
+  - Login, register and password pages are centred cards (`.narrow`); the first heading in a panel has no top margin.
+  - Checked: 13 e2e smoke tests, all 101 Playwright TypeScript tests and 8 PLS-11 axe tests pass; Prettier passes;
+    Gate 1 screenshots regenerated. Running `npm run test:gate1` leaves a clock offset on the global test state, which
+    fails the WebSocket tests (PLS-7.4, PLS-8.2) until `POST /test/reset`. Fixed: the Gate 1 spec now resets the stack
+    after each test; the clock is back to real time afterwards and PLS-7 and PLS-8 pass straight after it.
+- 2026-10-24: Tidied the shop header and catalogue filters (CSS only; no test IDs, text or AC behaviour changed).
+  - The screenshot that prompted this was from a stale build (squashed filter buttons were already fixed in source).
+    Remaining problems fixed: the header wrapped onto two uneven rows and now stays on one row from 1200px up (container
+    1280px); the filter bar is one row on desktop with aligned labels and equal-height fields, two columns under
+    1200px, one under 600px.
+  - Checked: 13 e2e smoke tests and 8 PLS-11 Playwright tests pass; Prettier passes. The 14 Gate 1 screenshots are
+    regenerated (header and layout width changed on every page, intentionally).
+- 2026-10-24: Completed the missing API integration coverage for PLS-12 Test environment.
+  - Added PLS-12.2 checks that the test-hook root, reset and bug endpoints return 404 when hooks are disabled. Added
+    PLS-12.3 coverage proving only `search-apostrophe` is enabled and unrelated product search/detail behavior remains
+    available. Existing isolated-database tests cover PLS-12.1 and API readiness; the live-stack smoke covers PLS-12.4.
+  - Documented the PLS-12 coverage locations in the app guide.
+  - Checked: all 5 environment integration tests pass against the dedicated `playlab_test` database; API typecheck,
+    targeted ESLint, Prettier and `git diff --check` pass.
+- 2026-10-24: Added the Playwright accessibility, security and display suite for PLS-11.
+  - Covered PLS-11.1–11.6: axe scans of home, product, cart and checkout in light/dark themes; review-script escaping;
+    long, emoji and right-to-left customer names; mobile navigation; Irish translations; and offline recovery.
+  - Axe scans emulate reduced motion so theme-transition colors do not cause transient contrast failures. Updated
+    product-card and wishlist accessible names to include their visible button text, and allowed test users to specify
+    display names for the layout cases.
+  - Checked: all 8 focused tests and all 103 Playwright TypeScript tests pass; TypeScript typecheck, targeted frontend
+    lint, Prettier and `git diff --check` pass; seeded-customer checkout reaches confirmation and its order is cancelled.
+- 2026-10-24: Added API-standards coverage for PLS-10.
+  - Added Playwright API checks for the standard error envelope and correlation ID, 422 validation errors and the
+    `wrong-status-code` defect, the 101st-request rate limit, idempotent order replay, and conditional product reads.
+    Tagged the existing OpenAPI response-schema journey as PLS-10.4; it validates more than 80 documented API responses.
+  - Test orders are cancelled during cleanup to restore stock.
+  - Checked: all 6 focused Playwright tests pass; the full 95-test Playwright TypeScript suite, typecheck, formatting,
+    lint and checkout smoke pass; `git diff --check` passes. The existing PLS-10.4 schema journey was tagged but not
+    rerun because its setup resets shared stack data.
+- 2026-10-24: Added the Playwright TypeScript admin-management suite for PLS-8.
+  - Covered PLS-8.1–8.6: status filtering, inline status changes with customer WebSocket updates, bulk status changes,
+    admin product create/edit/delete, support-user read-only controls and API 403, and live stock updates within five
+    seconds. Added a defect-mode check for `stale-stock`.
+  - Added the `AdminPage` page object and isolated admin order coverage from the products used by other checkout tests;
+    test orders are cancelled to restore stock.
+  - Checked: all 7 PLS-8 tests pass in parallel; all 89 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; seeded-customer checkout reaches confirmation and its test order is cancelled afterward.
+- 2026-10-24: Added the Playwright TypeScript order-history and access-control suite for PLS-7.
+  - Covered PLS-7.1–7.5: customer-only order history in newest-first order, cross-customer 404 responses, local-time
+    order dates, live status updates without refresh, and the customer-facing 403 page. Added defect-mode checks for
+    `order-leak` and `timezone-off-by-one`.
+  - Added an `OrdersPage` page object; test orders are cancelled during cleanup to restore shared product stock.
+  - Checked: all 7 PLS-7 tests and all 82 Playwright TypeScript tests pass; TypeScript typecheck, Prettier check and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
+- 2026-10-23: Added the Playwright TypeScript checkout and payment suite for PLS-6.
+  - Covered PLS-6.1–6.9, including confirmation, declined and timed-out payment behavior, double-submit safety,
+    back-navigation, both leave-checkout warnings, API price integrity, payment-button stability, and keyboard-only
+    completion. Added defect-mode checks for `double-submit`, `price-tamper` and `button-moves`.
+  - Added a `CheckoutPage` page object; successful test orders are cancelled during cleanup to restore shared stock.
+  - Checked: all 13 PLS-6 tests and all 75 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
+- 2026-10-23: Extended PLS-5 scenarios to cover fixed-amount discounts alongside percentage discounts.
+  - Added PLS-5.11 for a fixed discount smaller than the cart subtotal; application, `discount-not-applied`,
+    normalization, case-sensitivity, VAT, exact totals, confirmation, and CSV export now exercise both `SAVE10`
+    and `FIXED20`.
+  - Checked: all 25 PLS-5 tests and all 62 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
+- 2026-10-23: Added the Playwright discount-code suite for PLS-5 and a new total-accuracy AC.
+  - Added PLS-5.10 to `docs/ACCEPTANCE_CRITERIA.md` to make the displayed grand-total arithmetic explicit; coverage
+    will assert the discounted subtotal, VAT and delivery compose to the exact amount displayed.
+  - Added PLS-5.1–5.10 coverage for valid and rejected codes, stacking, minimum spend, capped fixed discounts,
+    normalization, VAT, order confirmation and CSV export, with defect-mode checks for all mapped discount defects.
+  - Extended `CartPage` with discount controls and documented the suite.
+  - Checked: all 18 PLS-5 tests and all 55 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
+- 2026-10-23: Added the Playwright shopping-cart suite for PLS-4 under `tests/playwright-ts/specs/cart/`.
+  - Covered PLS-4.1–4.7: cart count and subtotal, zero/negative quantity rejection, 409 stock handling, cent-accurate
+    subtotals, non-duplicating guest-cart merge, GBP display, and the price-change warning through payment.
+  - Added defect-mode checks for `quantity-negative`, `stock-oversell`, `cart-total-rounding` and
+    `currency-switch-stale`; PLS-4.7 uses an ETag-protected one-cent price change to a shared seeded product and
+    restores the original price in teardown, without changing catalogue contents.
+  - Added `CartPage` and exposed the test user's access token from `TestHooks.createUser` for authenticated test setup.
+  - Checked: all 11 PLS-4 tests pass; the full Playwright suite passes (37 tests); TypeScript typecheck and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
+- 2026-10-23: Started Phase 2 with Playwright TypeScript authentication coverage.
+  - Initial increment added PLS-1.1 to PLS-1.6 alongside the existing PLS-1.8 baseline. The follow-up below adds
+    PLS-1.7 and organizes the specs by feature.
+  - Review of the Playwright starter found that `support/env.ts` silently treated every file-read failure as a missing
+    `.env`; it now falls back only when the file does not exist and surfaces other errors.
+  - Initial check: all 7 Playwright tests passed in parallel; TypeScript typecheck passed; the seeded-customer checkout smoke
+    test (PLS-6.1) passes through order confirmation.
+- 2026-10-23: Follow-up: completed PLS-1.7 and corrected the Playwright spec layout.
+  - The PLS-1 story now has tests for all current ACs PLS-1.1–1.8. Login cases live in `specs/auth/login.spec.ts`;
+    checkout expiry and guest fallback live in `specs/auth/session.spec.ts`. Updated the suite guide accordingly.
+  - PLS-1.3 also verifies the lockout expires after 15 minutes by logging in successfully after advancing the isolated
+    test clock.
+  - Checked: all 8 Playwright tests pass in parallel; typecheck passes; `git diff --check` passes.
+- 2026-10-23: Added the Playwright registration and password-reset feature suite for PLS-2.
+  - Added PLS-2.1–2.6 coverage under `specs/registration/`, with page objects for registration, forgot password and
+    reset password. Registration checks the confirmation mailbox; reset checks the mailbox link and its one-hour
+    expiry; PLS-2.6 uses axe on the registration email label.
+  - Added defect-mode cases for `fada-rejected` (PLS-2.3) and `wrong-status-code` (PLS-2.4), and added
+    `@axe-core/playwright` for the accessibility check.
+  - Checked: all 10 PLS-2 tests pass in parallel; TypeScript typecheck passes.
+- 2026-10-23: Added product search and browse coverage for PLS-3 under `specs/catalogue/`.
+  - Covered search/count, apostrophe queries, combined category and price filtering, ascending price sort across all
+    pages, complete no-duplicate pagination, and the empty state with filter clearing.
+  - Added defect-mode checks for `search-apostrophe` and `pagination-duplicate`.
+  - Checked: all 8 PLS-3 tests pass in parallel; TypeScript typecheck passes.
 
 - 2026-10-23: Shop restyle on `ui/antigravity-restyle`: Antigravity's new look (`styles.css`, plus
   `<meta name="color-scheme">`), finished and fixed after it ran out of credits part way. CSS only: no test IDs, text or

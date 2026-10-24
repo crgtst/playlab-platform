@@ -29,7 +29,7 @@ go to `playwright-report/` (HTML) and `results/junit.xml` (for the traceability 
 
 | Path | What it holds |
 | --- | --- |
-| `specs/` | Tests, one file per story area. Each test name starts with its AC ID: `PLS-1.8 an expired session ...` |
+| `specs/<feature>/*.spec.ts` | Tests grouped by feature/story area. Each test name starts with its AC ID: `PLS-1.8 an expired session ...` |
 | `pages/` | Page objects (`LoginPage`, `ProductPage`, `Header`). Keep the names and methods the same in every language |
 | `support/fixtures.ts` | The `test` to import. Gives every test its own test session and a throwaway `customer` |
 | `support/hooks.ts` | The API's test hooks: sessions, throwaway users, the clock |
@@ -46,8 +46,39 @@ never collide.
 Don't call `POST /test/reset` from a test: it ends every session, including those of tests running beside it. To
 turn a defect on for one test, call `POST /test/bugs` through the `request` fixture, which carries the session header.
 
-## First test: PLS-1.8
+## Current coverage
 
-`specs/session.spec.ts` logs in, moves the session's clock 8 days forward (past both the 15-minute access token and
-the 7-day refresh token), adds an item, and checks it lands in a guest cart with no error. It failed before the
-PLS-1.8 fix and passes after it, and it passed 160 times in a row across 8 parallel workers.
+`specs/auth/login.spec.ts` covers PLS-1.1 through PLS-1.6: successful and failed login, account lockout, logout,
+access-token expiry and refresh. `specs/auth/session.spec.ts` covers PLS-1.7 and PLS-1.8: checkout recovery after an
+expired session, and guest-cart fallback when both session tokens have expired.
+`specs/registration/registration.spec.ts` covers PLS-2.1 through PLS-2.4 and PLS-2.6, including the mapped
+`fada-rejected`, `wrong-status-code` and `missing-label` defects.
+`specs/registration/password-reset.spec.ts` covers PLS-2.5, including mailbox delivery and expiry of the reset link.
+`specs/catalogue/browse.spec.ts` covers PLS-3.1 through PLS-3.6, including full-catalogue sort and pagination checks
+and defect-mode checks for `search-apostrophe` and `pagination-duplicate`. `specs/cart/cart.spec.ts` covers PLS-4.1
+through PLS-4.7, including invalid quantities, stock limits, exact cent totals, account-cart merging, currency
+switching and price-change warnings. Its defect-mode checks exercise `quantity-negative`, `stock-oversell`,
+`cart-total-rounding` and `currency-switch-stale`. `specs/discounts/codes.spec.ts` covers PLS-5.1 through PLS-5.11,
+including discount validation, exact discounted order totals, VAT, confirmation and CSV export. Its defect-mode
+checks exercise `discount-not-applied`, `expired-discount-accepted`, `single-use-reused`, `discount-stacking`,
+`discount-survives-cart-change`, `discount-negative-total`, `discount-case-sensitive` and `vat-before-discount`. The
+percentage (`SAVE10`) and fixed-amount (`FIXED20`) codes share application, defect, normalization, VAT, exact-total, and
+order-confirmation/CSV-export coverage; PLS-5.11 explicitly checks the fixed discount's exact saving and checkout total.
+`specs/checkout/checkout.spec.ts` covers PLS-6.1 through PLS-6.9: the three checkout steps, success, decline and timeout
+cards, one-order double-click handling, browser-back safety, in-app and browser leave warnings, server-side price
+integrity, payment-button stability, and keyboard-only completion. Defect-mode checks exercise `double-submit`,
+`price-tamper` and `button-moves`. `pages/CartPage.ts` and `pages/CheckoutPage.ts` provide the cart and checkout page
+objects. `specs/orders/orders.spec.ts` covers PLS-7.1 through PLS-7.5: customer-only history in newest-first order,
+cross-customer 404 access control, browser-local order dates, live status updates, and the customer-facing 403 page.
+Defect-mode checks exercise `order-leak` and `timezone-off-by-one`; `pages/OrdersPage.ts` provides order-history
+locators. `specs/admin/admin.spec.ts` covers PLS-8.1 through PLS-8.6: status filtering, inline and bulk status changes,
+live order updates, product CRUD, support-user restrictions, and live stock updates. Its defect-mode check exercises
+`stale-stock`; `pages/AdminPage.ts` provides admin navigation and grid locators.
+`specs/api/standards.spec.ts` covers PLS-10.1–10.3 and PLS-10.5–10.6: consistent error envelopes and correlation IDs,
+validation status, rate limiting, order idempotency, and conditional product reads. The `wrong-status-code` defect is
+checked explicitly. PLS-10.4 is covered by the API integration schema journey in `app/api/test/integration/schemas.int.test.ts`,
+which validates more than 80 responses against the documented OpenAPI status and schema.
+`specs/accessibility/accessibility.spec.ts` covers PLS-11.1–11.6: axe scans on the home, product, cart and checkout
+pages in both themes; escaped review content; long, emoji and right-to-left customer names; mobile navigation; Irish
+translations; and offline recovery. Axe scans emulate reduced motion so theme transitions cannot produce transient
+colors during contrast checks.
