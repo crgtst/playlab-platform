@@ -14,6 +14,9 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-25: Fix: CI's API unit test (`bugs.test.ts`) failed on PR #25 because PLS-5.10 and PLS-5.11, added earlier on
+  this branch, name `discount-not-applied` in the ACs but `bugs.ts` and the `app/README.md` defect table still listed
+  only PLS-5.1. Both now list PLS-5.1, PLS-5.10 and PLS-5.11. Checked: 58 unit and 137 integration tests pass.
 - 2026-10-25: Fourth UI pass, CSS only: headings at the top of cards (`.panel`) have no extra top margin, which tightens
   the checkout review and order pages. Reviewed the rest: checkout review and payment, order confirmation, order
   detail, wishlist, dark theme. Left alone on purpose: the wishlist hint's low contrast is a planted defect (PLS-11).

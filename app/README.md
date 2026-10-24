@@ -329,7 +329,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 
 | Defect | AC it breaks | Where | Behaviour when on |
 | --- | --- | --- | --- |
-| `discount-not-applied` | PLS-5.1 | API | The code shows as applied, but the totals ignore it |
+| `discount-not-applied` | PLS-5.1, PLS-5.10, PLS-5.11 | API | The code shows as applied, but the totals ignore it |
 | `expired-discount-accepted` | PLS-5.2 | API | Expired codes are accepted |
 | `discount-stacking` | PLS-5.4 | API | A second code is accepted and both apply (the cart's `discounts` lists both) |
 | `discount-survives-cart-change` | PLS-5.5 | API | The minimum spend is not re-checked when the cart changes |

@@ -6,7 +6,11 @@ import { sessionScoped } from './testSessions';
  * Each one changes only its own behaviour. They are always off unless TEST_HOOKS=true.
  */
 export const BUGS = {
-  'discount-not-applied': { ac: 'PLS-5.1', side: 'api', description: 'A valid code shows as applied but the total is unchanged' },
+  'discount-not-applied': {
+    ac: 'PLS-5.1, PLS-5.10, PLS-5.11',
+    side: 'api',
+    description: 'A valid code shows as applied but the total is unchanged',
+  },
   'expired-discount-accepted': { ac: 'PLS-5.2', side: 'api', description: 'An expired code is applied with no error' },
   'discount-stacking': { ac: 'PLS-5.4', side: 'api', description: 'Two discount codes can be applied together' },
   'discount-survives-cart-change': { ac: 'PLS-5.5', side: 'api', description: 'Dropping below the minimum spend keeps the discount' },
