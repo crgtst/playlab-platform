@@ -14,6 +14,10 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-25: Third UI pass, CSS only: admin toolbar (status filter, search, buttons) now aligned with equal-height
+  controls and a wide search box. Reviewed checkout shipping, home and both admin tabs: no other changes needed.
+  Checked: 17 e2e, all 103 Playwright TypeScript tests (straight after the Gate 1 run, no manual reset) and Prettier
+  pass; Gate 1 screenshots regenerated.
 - 2026-10-25: Second UI pass, CSS only (no test IDs, text or AC behaviour changed).
   - The header is now two rows from 768px up: brand, search and account actions on row one, the main nav on row two.
     The single-row version from the previous entry broke once a user was logged in (nav labels wrapped, search

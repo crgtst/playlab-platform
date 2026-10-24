@@ -1301,6 +1301,7 @@ address {
   font-weight: 600;
 }
 .admin-toolbar {
+  margin-top: 0.75rem;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -1309,6 +1310,19 @@ address {
 }
 .admin-toolbar .field {
   margin-bottom: 0;
+}
+.admin-toolbar .field select,
+.admin-toolbar .inline-form input,
+.admin-toolbar button {
+  height: 2.5rem;
+}
+.admin-toolbar .inline-form {
+  flex: 1 1 22rem;
+  max-width: 34rem;
+}
+.admin-toolbar .inline-form input {
+  flex: 1;
+  min-width: 12rem;
 }
 .bulk-bar {
   display: flex;
