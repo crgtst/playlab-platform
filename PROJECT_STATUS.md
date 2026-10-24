@@ -14,6 +14,10 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-25: Fourth UI pass, CSS only: headings at the top of cards (`.panel`) have no extra top margin, which tightens
+  the checkout review and order pages. Reviewed the rest: checkout review and payment, order confirmation, order
+  detail, wishlist, dark theme. Left alone on purpose: the wishlist hint's low contrast is a planted defect (PLS-11).
+  Checked: 17 e2e, 103 Playwright TypeScript tests and Prettier pass; Gate 1 screenshots regenerated.
 - 2026-10-25: Third UI pass, CSS only: admin toolbar (status filter, search, buttons) now aligned with equal-height
   controls and a wide search box. Reviewed checkout shipping, home and both admin tabs: no other changes needed.
   Checked: 17 e2e, all 103 Playwright TypeScript tests (straight after the Gate 1 run, no manual reset) and Prettier
