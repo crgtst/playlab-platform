@@ -1,7 +1,7 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-23
+Last updated: 2026-10-24
 
 ## Current phase
 
@@ -14,6 +14,14 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-24: Added the Playwright TypeScript admin-management suite for PLS-8.
+  - Covered PLS-8.1–8.6: status filtering, inline status changes with customer WebSocket updates, bulk status changes,
+    admin product create/edit/delete, support-user read-only controls and API 403, and live stock updates within five
+    seconds. Added a defect-mode check for `stale-stock`.
+  - Added the `AdminPage` page object and isolated admin order coverage from the products used by other checkout tests;
+    test orders are cancelled to restore stock.
+  - Checked: all 7 PLS-8 tests pass in parallel; all 89 Playwright TypeScript tests pass; TypeScript typecheck and
+    `git diff --check` pass; seeded-customer checkout reaches confirmation and its test order is cancelled afterward.
 - 2026-10-24: Added the Playwright TypeScript order-history and access-control suite for PLS-7.
   - Covered PLS-7.1–7.5: customer-only order history in newest-first order, cross-customer 404 responses, local-time
     order dates, live status updates without refresh, and the customer-facing 403 page. Added defect-mode checks for

@@ -71,4 +71,6 @@ integrity, payment-button stability, and keyboard-only completion. Defect-mode c
 objects. `specs/orders/orders.spec.ts` covers PLS-7.1 through PLS-7.5: customer-only history in newest-first order,
 cross-customer 404 access control, browser-local order dates, live status updates, and the customer-facing 403 page.
 Defect-mode checks exercise `order-leak` and `timezone-off-by-one`; `pages/OrdersPage.ts` provides order-history
-locators.
+locators. `specs/admin/admin.spec.ts` covers PLS-8.1 through PLS-8.6: status filtering, inline and bulk status changes,
+live order updates, product CRUD, support-user restrictions, and live stock updates. Its defect-mode check exercises
+`stale-stock`; `pages/AdminPage.ts` provides admin navigation and grid locators.
