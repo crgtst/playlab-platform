@@ -1,5 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { createApp } from '../../src/app';
+import { config } from '../../src/config';
 import { query } from '../../src/db/pool';
 import { app, resetStack } from './app';
 
@@ -30,6 +32,43 @@ describe('test environment', () => {
       'SELECT (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM orders) AS orders',
     );
     expect({ users, orders }).toEqual({ users: 3, orders: 0 });
+  });
+
+  it('PLS-12.2 test endpoints return 404 when test hooks are disabled', async () => {
+    const testHooks = config.testHooks;
+    config.testHooks = false;
+    try {
+      const appWithoutHooks = createApp();
+      const responses = await Promise.all([
+        request(appWithoutHooks).get('/test'),
+        request(appWithoutHooks).post('/test/reset'),
+        request(appWithoutHooks).get('/test/bugs'),
+        request(appWithoutHooks)
+          .post('/test/bugs')
+          .send({ enable: ['search-apostrophe'] }),
+      ]);
+
+      expect(responses.map((response) => response.status)).toEqual([404, 404, 404, 404]);
+    } finally {
+      config.testHooks = testHooks;
+    }
+  });
+
+  it('PLS-12.3 enabling one named defect changes only its targeted behavior', async () => {
+    await request(app).get('/api/v1/products').query({ q: "O'Neill" }).expect(200);
+
+    await request(app)
+      .post('/test/bugs')
+      .send({ enable: ['search-apostrophe'] })
+      .expect(200);
+    const activeBugs = await request(app).get('/test/bugs').expect(200);
+    expect(activeBugs.body.data.filter((bug: { enabled: boolean }) => bug.enabled).map((bug: { name: string }) => bug.name)).toEqual([
+      'search-apostrophe',
+    ]);
+
+    await request(app).get('/api/v1/products').query({ q: "O'Neill" }).expect(500);
+    await request(app).get('/api/v1/products').query({ q: 'earbuds' }).expect(200);
+    await request(app).get('/api/v1/products/1').expect(200);
   });
 
   it('PLS-12.4 readiness needs the web app, liveness only the database', async () => {

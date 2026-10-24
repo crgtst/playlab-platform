@@ -14,6 +14,13 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-24: Completed the missing API integration coverage for PLS-12 Test environment.
+  - Added PLS-12.2 checks that the test-hook root, reset and bug endpoints return 404 when hooks are disabled. Added
+    PLS-12.3 coverage proving only `search-apostrophe` is enabled and unrelated product search/detail behavior remains
+    available. Existing isolated-database tests cover PLS-12.1 and API readiness; the live-stack smoke covers PLS-12.4.
+  - Documented the PLS-12 coverage locations in the app guide.
+  - Checked: all 5 environment integration tests pass against the dedicated `playlab_test` database; API typecheck,
+    targeted ESLint, Prettier and `git diff --check` pass.
 - 2026-10-24: Added the Playwright accessibility, security and display suite for PLS-11.
   - Covered PLS-11.1–11.6: axe scans of home, product, cart and checkout in light/dark themes; review-script escaping;
     long, emoji and right-to-left customer names; mobile navigation; Irish translations; and offline recovery.
