@@ -86,7 +86,7 @@ a:hover {
   color: var(--primary-hover);
 }
 .container {
-  max-width: 1160px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -148,9 +148,14 @@ main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1.5rem;
+  gap: 0.75rem 1.25rem;
   padding-top: 0.85rem;
   padding-bottom: 0.85rem;
+}
+@media (min-width: 768px) {
+  .header-inner {
+    flex-wrap: nowrap;
+  }
 }
 .brand {
   font-weight: 800;
@@ -207,8 +212,9 @@ main {
 .header-search {
   display: flex;
   gap: 0.35rem;
-  flex: 1 1 220px;
-  max-width: 380px;
+  flex: 1 1 150px;
+  min-width: 150px;
+  max-width: 320px;
 }
 .header-search input {
   flex: 1;
@@ -596,22 +602,41 @@ textarea[aria-invalid='true'] {
 /* Catalogue */
 .filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 0.75rem 1rem;
+  grid-template-columns: 1.4fr 1.2fr 0.8fr 0.8fr 1.2fr auto;
+  gap: 0 1rem;
   align-items: end;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.25rem 0.5rem;
+  padding: 1.25rem 1.25rem 0.1rem;
   margin-bottom: 1.5rem;
   box-shadow: var(--shadow-xs);
+}
+.filters .field input,
+.filters .field select {
+  height: 2.75rem;
 }
 .filter-actions {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-  /* Its own row: the buttons don't fit in one 160px column. */
-  grid-column: 1 / -1;
+  margin-bottom: 1.15rem;
+  white-space: nowrap;
+}
+.filter-actions button {
+  height: 2.75rem;
+}
+@media (max-width: 1199px) {
+  .filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .filter-actions {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 599px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
 }
 .product-grid {
   display: grid;
@@ -1031,8 +1056,18 @@ address {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1.5rem;
+  gap: 0.75rem 1.25rem;
   flex: 1;
+  min-width: 0;
+}
+@media (min-width: 1200px) {
+  .main-menu {
+    flex-wrap: nowrap;
+  }
+  .header-actions {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
 }
 .menu-toggle,
 .cart-link-compact {

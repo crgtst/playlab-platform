@@ -14,6 +14,13 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-24: Tidied the shop header and catalogue filters (CSS only; no test IDs, text or AC behaviour changed).
+  - The screenshot that prompted this was from a stale build (squashed filter buttons were already fixed in source).
+    Remaining problems fixed: the header wrapped onto two uneven rows and now stays on one row from 1200px up (container
+    1280px); the filter bar is one row on desktop with aligned labels and equal-height fields, two columns under
+    1200px, one under 600px.
+  - Checked: 13 e2e smoke tests and 8 PLS-11 Playwright tests pass; Prettier passes. The 14 Gate 1 screenshots are
+    regenerated (header and layout width changed on every page, intentionally).
 - 2026-10-24: Completed the missing API integration coverage for PLS-12 Test environment.
   - Added PLS-12.2 checks that the test-hook root, reset and bug endpoints return 404 when hooks are disabled. Added
     PLS-12.3 coverage proving only `search-apostrophe` is enabled and unrelated product search/detail behavior remains
