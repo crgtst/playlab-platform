@@ -68,4 +68,7 @@ order-confirmation/CSV-export coverage; PLS-5.11 explicitly checks the fixed dis
 cards, one-order double-click handling, browser-back safety, in-app and browser leave warnings, server-side price
 integrity, payment-button stability, and keyboard-only completion. Defect-mode checks exercise `double-submit`,
 `price-tamper` and `button-moves`. `pages/CartPage.ts` and `pages/CheckoutPage.ts` provide the cart and checkout page
-objects.
+objects. `specs/orders/orders.spec.ts` covers PLS-7.1 through PLS-7.5: customer-only history in newest-first order,
+cross-customer 404 access control, browser-local order dates, live status updates, and the customer-facing 403 page.
+Defect-mode checks exercise `order-leak` and `timezone-off-by-one`; `pages/OrdersPage.ts` provides order-history
+locators.

@@ -14,6 +14,13 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-24: Added the Playwright TypeScript order-history and access-control suite for PLS-7.
+  - Covered PLS-7.1–7.5: customer-only order history in newest-first order, cross-customer 404 responses, local-time
+    order dates, live status updates without refresh, and the customer-facing 403 page. Added defect-mode checks for
+    `order-leak` and `timezone-off-by-one`.
+  - Added an `OrdersPage` page object; test orders are cancelled during cleanup to restore shared product stock.
+  - Checked: all 7 PLS-7 tests and all 82 Playwright TypeScript tests pass; TypeScript typecheck, Prettier check and
+    `git diff --check` pass; the PLS-6.1 checkout smoke reaches order confirmation.
 - 2026-10-23: Added the Playwright TypeScript checkout and payment suite for PLS-6.
   - Covered PLS-6.1–6.9, including confirmation, declined and timed-out payment behavior, double-submit safety,
     back-navigation, both leave-checkout warnings, API price integrity, payment-button stability, and keyboard-only
