@@ -23,7 +23,8 @@ Postman/Newman, Karate, REST Assured and traceability work.
   - Login, register and password pages are centred cards (`.narrow`); the first heading in a panel has no top margin.
   - Checked: 13 e2e smoke tests, all 101 Playwright TypeScript tests and 8 PLS-11 axe tests pass; Prettier passes;
     Gate 1 screenshots regenerated. Running `npm run test:gate1` leaves a clock offset on the global test state, which
-    fails the WebSocket tests (PLS-7.4, PLS-8.2) until `POST /test/reset`: reset before running the other suites.
+    fails the WebSocket tests (PLS-7.4, PLS-8.2) until `POST /test/reset`. Fixed: the Gate 1 spec now resets the stack
+    after each test; the clock is back to real time afterwards and PLS-7 and PLS-8 pass straight after it.
 - 2026-10-24: Tidied the shop header and catalogue filters (CSS only; no test IDs, text or AC behaviour changed).
   - The screenshot that prompted this was from a stale build (squashed filter buttons were already fixed in source).
     Remaining problems fixed: the header wrapped onto two uneven rows and now stays on one row from 1200px up (container
