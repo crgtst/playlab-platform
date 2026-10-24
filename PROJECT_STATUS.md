@@ -14,6 +14,14 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-24: Added the Playwright accessibility, security and display suite for PLS-11.
+  - Covered PLS-11.1–11.6: axe scans of home, product, cart and checkout in light/dark themes; review-script escaping;
+    long, emoji and right-to-left customer names; mobile navigation; Irish translations; and offline recovery.
+  - Axe scans emulate reduced motion so theme-transition colors do not cause transient contrast failures. Updated
+    product-card and wishlist accessible names to include their visible button text, and allowed test users to specify
+    display names for the layout cases.
+  - Checked: all 8 focused tests and all 103 Playwright TypeScript tests pass; TypeScript typecheck, targeted frontend
+    lint, Prettier and `git diff --check` pass; seeded-customer checkout reaches confirmation and its order is cancelled.
 - 2026-10-24: Added API-standards coverage for PLS-10.
   - Added Playwright API checks for the standard error envelope and correlation ID, 422 validation errors and the
     `wrong-status-code` defect, the 101st-request rate limit, idempotent order replay, and conditional product reads.

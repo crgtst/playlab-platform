@@ -35,8 +35,8 @@ export class TestHooks {
   }
 
   /** A throwaway user, so tests running in parallel never share a cart, wishlist or orders. */
-  async createUser(role: TestUser['role'] = 'customer'): Promise<TestUser> {
-    const res = await this.request.post(`${API_URL}/test/users`, { data: { role } });
+  async createUser(role: TestUser['role'] = 'customer', name?: string): Promise<TestUser> {
+    const res = await this.request.post(`${API_URL}/test/users`, { data: { role, name } });
     expect(res.status(), 'POST /test/users').toBe(201);
     const body = await res.json();
     return { ...body.user, password: body.password, accessToken: body.accessToken };

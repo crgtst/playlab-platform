@@ -78,3 +78,7 @@ live order updates, product CRUD, support-user restrictions, and live stock upda
 validation status, rate limiting, order idempotency, and conditional product reads. The `wrong-status-code` defect is
 checked explicitly. PLS-10.4 is covered by the API integration schema journey in `app/api/test/integration/schemas.int.test.ts`,
 which validates more than 80 responses against the documented OpenAPI status and schema.
+`specs/accessibility/accessibility.spec.ts` covers PLS-11.1–11.6: axe scans on the home, product, cart and checkout
+pages in both themes; escaped review content; long, emoji and right-to-left customer names; mobile navigation; Irish
+translations; and offline recovery. Axe scans emulate reduced motion so theme transitions cannot produce transient
+colors during contrast checks.
