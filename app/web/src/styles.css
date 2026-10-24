@@ -90,8 +90,9 @@ a:hover {
   margin: 0 auto;
   padding: 0 20px;
 }
-main {
-  padding-top: 1.5rem;
+/* main.container: a bare `main` rule loses to .container's padding shorthand. */
+main.container {
+  padding-top: 2rem;
   padding-bottom: 4rem;
   min-height: 75vh;
   outline: none;
@@ -104,6 +105,20 @@ main {
 }
 .narrow {
   max-width: 440px;
+  margin: 1rem auto 0;
+  padding: 1.75rem 2rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+.narrow > h1:first-child {
+  margin-top: 0;
+}
+@media (max-width: 599px) {
+  .narrow {
+    padding: 1.25rem 1rem 0.75rem;
+  }
 }
 
 .visually-hidden {
@@ -153,8 +168,40 @@ main {
   padding-bottom: 0.85rem;
 }
 @media (min-width: 768px) {
+  /* Row 1: brand, search, actions. Row 2: main navigation. */
   .header-inner {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: auto minmax(160px, 1fr) auto;
+    grid-template-areas:
+      'brand search actions'
+      'nav nav nav';
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .brand {
+    grid-area: brand;
+  }
+  .header-inner .main-menu {
+    display: contents;
+  }
+  .header-search {
+    grid-area: search;
+    max-width: 480px;
+    width: 100%;
+  }
+  .header-inner .header-actions {
+    grid-area: actions;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+  .main-nav {
+    grid-area: nav;
+    flex-wrap: wrap;
+    margin-left: -0.75rem;
+  }
+  .main-nav a {
+    white-space: nowrap;
   }
 }
 .brand {
@@ -477,6 +524,9 @@ textarea[aria-invalid='true'] {
   background: var(--success-bg);
   color: var(--success);
   border-color: color-mix(in srgb, var(--success) 30%, transparent);
+}
+.panel > h2:first-child {
+  margin-top: 0;
 }
 .panel {
   background: var(--surface);
@@ -1060,15 +1110,7 @@ address {
   flex: 1;
   min-width: 0;
 }
-@media (min-width: 1200px) {
-  .main-menu {
-    flex-wrap: nowrap;
-  }
-  .header-actions {
-    flex-wrap: nowrap;
-    white-space: nowrap;
-  }
-}
+
 .menu-toggle,
 .cart-link-compact {
   display: none;
