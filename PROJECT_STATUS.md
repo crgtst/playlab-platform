@@ -14,6 +14,14 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-24: Added API-standards coverage for PLS-10.
+  - Added Playwright API checks for the standard error envelope and correlation ID, 422 validation errors and the
+    `wrong-status-code` defect, the 101st-request rate limit, idempotent order replay, and conditional product reads.
+    Tagged the existing OpenAPI response-schema journey as PLS-10.4; it validates more than 80 documented API responses.
+  - Test orders are cancelled during cleanup to restore stock.
+  - Checked: all 6 focused Playwright tests pass; the full 95-test Playwright TypeScript suite, typecheck, formatting,
+    lint and checkout smoke pass; `git diff --check` passes. The existing PLS-10.4 schema journey was tagged but not
+    rerun because its setup resets shared stack data.
 - 2026-10-24: Added the Playwright TypeScript admin-management suite for PLS-8.
   - Covered PLS-8.1–8.6: status filtering, inline status changes with customer WebSocket updates, bulk status changes,
     admin product create/edit/delete, support-user read-only controls and API 403, and live stock updates within five

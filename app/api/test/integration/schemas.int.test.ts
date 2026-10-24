@@ -78,7 +78,7 @@ const login = async (who: 'customer' | 'admin') =>
 
 beforeAll(resetStack);
 
-it('every response in a journey through the API matches its documented status and schema', async () => {
+it('PLS-10.4 every response in a journey through the API matches its documented status and schema', async () => {
   // Health, config and test hooks
   await call('GET', '/api/v1/health/live');
   await call('GET', '/api/v1/config');

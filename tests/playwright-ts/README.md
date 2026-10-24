@@ -74,3 +74,7 @@ Defect-mode checks exercise `order-leak` and `timezone-off-by-one`; `pages/Order
 locators. `specs/admin/admin.spec.ts` covers PLS-8.1 through PLS-8.6: status filtering, inline and bulk status changes,
 live order updates, product CRUD, support-user restrictions, and live stock updates. Its defect-mode check exercises
 `stale-stock`; `pages/AdminPage.ts` provides admin navigation and grid locators.
+`specs/api/standards.spec.ts` covers PLS-10.1–10.3 and PLS-10.5–10.6: consistent error envelopes and correlation IDs,
+validation status, rate limiting, order idempotency, and conditional product reads. The `wrong-status-code` defect is
+checked explicitly. PLS-10.4 is covered by the API integration schema journey in `app/api/test/integration/schemas.int.test.ts`,
+which validates more than 80 responses against the documented OpenAPI status and schema.
