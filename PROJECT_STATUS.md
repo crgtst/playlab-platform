@@ -5,15 +5,22 @@ Last updated: 2026-10-24
 
 ## Current phase
 
-Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #16 on 2026-10-22 (Gate 1 passed).
+Phase 2's four functional suites are written and Gate 2 is met by the traceability report (PRs #25 to #27 merged; Karate, REST Assured and Playwright CI are in review). Phase 3 is planned: see "Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`.
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria (done for what the platform builds; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
-Postman/Newman, Karate, REST Assured and traceability work.
+Phase 3 task 0: close Phase 2 by getting the playwright, newman, karate and rest-assured workflows green on `main`
+together (PR #29 for Karate is green and waiting to merge; the REST Assured and Playwright workflow branches are local).
+Then Phase 3 task 1, security headers and error bodies.
 
 ## Done
 
+- 2026-10-26: Phase 3 planned. "Phase 3 tasks" added to `docs/REVIEW_AND_PLAN.md`: 17 tasks, each with its ACs, defects
+  and tests, platform tasks (1 to 8) before the suites that need them (9 to 15) and Gate 3 last. The 11 security-lab
+  defects (47 in all), the SSRF import feature, the perf profile, bulk data and provider states are tasks 1 to 7. One new
+  AC (PLS-9.5, the positive path of the avatar import) is added in task 4. Karate CI: the first run hung for 15 minutes
+  (cause not seen, because a cancelled job keeps no log); the Java helpers now have timeouts and the workflow prints a
+  thread dump if it runs over 5 minutes, and the next run passed in 2 minutes.
 - 2026-10-26: Added the Postman/Newman suite (Phase 2), on `tests/postman-suite` (built on `chore/traceability`), at
   Craig's request.
   - `tests/postman/`: 8 collections (auth, registration, a 50-row data-driven registration run, catalogue, cart and
@@ -506,6 +513,7 @@ Postman/Newman, Karate, REST Assured and traceability work.
 | 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Agreed | 2026-10-22 |
 | 10 | Compose ports stay published on all interfaces (not bound to `127.0.0.1`), so another machine on the network can reach the stack, e.g. to generate JMeter load. The README and `SECURITY.md` say local, trusted networks only | Agreed | 2026-10-22 |
 | 11 | `SECURITY.md` keeps "an acknowledgement within a week" as written | Agreed | 2026-10-22 |
+| 12 | How the avatar import's positive case reaches an image (Phase 3 task 4): recommended is a small `fixtures` container in Compose (nginx serving one PNG) that the import allow-lists by name through an environment variable, with every other address checked against the blocked ranges. The alternative is a public URL, which makes the test depend on the internet | Open | 2026-10-26 |
 
 ## Known issues
 
