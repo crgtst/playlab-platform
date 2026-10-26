@@ -82,3 +82,7 @@ which validates more than 80 responses against the documented OpenAPI status and
 pages in both themes; escaped review content; long, emoji and right-to-left customer names; mobile navigation; Irish
 translations; and offline recovery. Axe scans emulate reduced motion so theme transitions cannot produce transient
 colors during contrast checks.
+`specs/account/avatar.spec.ts` covers PLS-9.1–9.4: PNG and JPG avatar upload (checked against the bytes served back),
+the 2 MB limit (413 and "File too large"), content-based rejection of a renamed non-image (415), and the admin order
+CSV export (header row plus one row per order, following the admin search filter). A defect-mode check exercises
+`upload-extension-only`; `pages/AccountPage.ts` provides the avatar locators.

@@ -9,11 +9,18 @@ Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #1
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria, then proceed through the planned
+Continue the Playwright TypeScript suite through the remaining acceptance criteria (PLS-13 to PLS-29 are left), then proceed through the planned
 Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Playwright TypeScript files suite for PLS-9, on `tests/pls-9-avatar`, at Craig's request.
+  - Covered PLS-9.1–9.4 in `specs/account/avatar.spec.ts`: PNG and JPG avatars (the bytes served back match the upload),
+    the 2 MB limit (413, "File too large"), a renamed non-image refused (415), and the admin order CSV export (header
+    row, one row per order, following the admin search filter). Added a defect-mode check for `upload-extension-only`
+    and an `AccountPage` page object.
+  - Checked: 5 new tests pass, stable over 5 repeats; all 108 Playwright TypeScript tests pass.
+  - Next: PLS-13 to PLS-19 (browser capabilities), then PLS-20 to PLS-29 (the Phase 1 API stories).
 - 2026-10-25: Fix: CI's API unit test (`bugs.test.ts`) failed on PR #25 because PLS-5.10 and PLS-5.11, added earlier on
   this branch, name `discount-not-applied` in the ACs but `bugs.ts` and the `app/README.md` defect table still listed
   only PLS-5.1. Both now list PLS-5.1, PLS-5.10 and PLS-5.11. Checked: 58 unit and 137 integration tests pass.
