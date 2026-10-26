@@ -105,3 +105,13 @@ ETags, the 20-customer race for the last item and the two-admin stale grid messa
 put their stock back in `afterAll`, because a shipped or delivered order cannot be cancelled. A product that has been
 ordered cannot be deleted, so these specs never create products to order; `support/products.ts` holds the helpers for
 products a test creates and deletes itself.
+`specs/account/profile.spec.ts` covers PLS-22.1–22.6: renaming (checked in the header), changing the email with the
+current password, a wrong password, deleting the account on two devices, anonymised orders and an email already in use.
+`specs/admin/users.spec.ts` covers PLS-23.1–23.5: user list filters and paging (each test finds its own users by a
+unique name), role changes from the next login, unlocking, and the support and customer limits.
+`specs/security/api-security.spec.ts` covers the PLS-24 criteria that hold today: object level authorisation (24.1),
+forged and expired access tokens (24.2), identical responses for known and unknown emails (24.3), a registration
+`role` field being ignored (24.4), the rate limit against `X-Forwarded-For` (24.6), the page limit (24.7), the admin
+user routes (24.8), a single-use code raced by two orders (24.9) and the retired v0 route (24.13). Defect checks:
+`order-leak`, `token-never-expires`, `rate-limit-bypass` and `single-use-reused`. PLS-24.5, 24.10, 24.11, 24.12 and
+24.14 are not built yet, so they have no tests here.

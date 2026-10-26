@@ -9,11 +9,25 @@ Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #1
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria (PLS-22 to PLS-29 are left; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
+Continue the Playwright TypeScript suite through the remaining acceptance criteria (PLS-25 and PLS-28 are left; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
 Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Playwright TypeScript account, user-administration and API-security suites for PLS-22, PLS-23
+  and PLS-24, on `tests/pls-20-29-api`, at Craig's request. Second of three tasks for PLS-20 to 29.
+  - `specs/account/profile.spec.ts` (22.1–22.6), `specs/admin/users.spec.ts` (23.1–23.5) and
+    `specs/security/api-security.spec.ts` (24.1, 24.2, 24.3, 24.4, 24.6, 24.7, 24.8, 24.9, 24.13), with defect-mode
+    checks for `order-leak`, `token-never-expires`, `rate-limit-bypass` and `single-use-reused`.
+  - Not covered, because the platform does not build them yet: PLS-24.5, 24.10, 24.11, 24.12 and 24.14, and the defects
+    `jwt-alg-none`, `user-enumeration`, `mass-assignment-role`, `bfla-admin-users` and the others in the plan's security lab.
+    PLS-24.2's unsigned-token check and PLS-24.3 and 24.4 test that the API already behaves correctly.
+  - PLS-23.1 and 23.2 find their own users by a unique name, so other tests' accounts never change the counts.
+  - Checked: the 24 new tests pass and are stable over 5 repeats; the full suite (184 tests) passed twice in a row; the
+    catalogue still has 40 products and the stock of every product they order is back to its seeded level.
+  - Lesson: `prettier --write` on a folder reformats existing specs too (it changed `admin.spec.ts`; reverted). Format
+    only the files you wrote.
+  - Next: PLS-25 and PLS-28 (observability and test sessions).
 - 2026-10-26: Added the Playwright TypeScript order-lifecycle and locking suites for PLS-20 and PLS-21, on
   `tests/pls-20-29-api` (built on `tests/pls-13-19-browser`), at Craig's request. First of three tasks for PLS-20 to 29.
   - `specs/orders/lifecycle.spec.ts` (PLS-20.1–20.6) and `locking.spec.ts` (PLS-21.1–21.7), with defect-mode checks
