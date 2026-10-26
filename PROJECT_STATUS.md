@@ -14,6 +14,22 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Postman/Newman suite (Phase 2), on `tests/postman-suite` (built on `chore/traceability`), at
+  Craig's request.
+  - `tests/postman/`: 8 collections (auth, registration, a 50-row data-driven registration run, catalogue, cart and
+    discounts, orders, admin and accounts, API standards), about 660 assertions, written as small sources in `src/` and built
+    into the committed collection JSON. Environments `local`, `ci`, `perf`; a test session and throwaway users per run;
+    ajv schema checks against `tests/shared/schemas/`; an HTML and JUnit report per collection (`npm test`).
+  - The runner takes `--defect a,b` to switch defects on for one run; `npm run test:defects` runs every API-side defect
+    in turn and writes a matrix: 25 of 26 caught (`stale-stock` is a server-sent event stream Newman cannot read).
+  - New workflow `postman.yml` runs Newman against a fresh stack and uploads the reports; Dependabot watches the folder.
+  - The traceability report now reads 765 tests across 9 reports. **Gate 2 is met**: all 140 in-scope ACs and all 36 built
+    defects have a passing test, including PLS-10.4 (every readable response matches its schema), which only Postman checks.
+  - Found while building it: an async assertion that failed crashed Newman instead of failing a test (fixed in the
+    helper), and a run with a defect on can leave orders behind, so `npm run test:defects` resets the stack between runs.
+    FIXED20 on a €9 cart reports a discount of €13.95 with VAT and delivery zeroed, so the totals do not add up
+    (subtotal minus discount is negative); PLS-5.6 only requires a total that is not negative, so the suite asserts that.
+  - Not done: the Karate and REST Assured suites, and running the Playwright suite and the Postman suite in CI together.
 - 2026-10-26: Added the traceability report (Phase 2), on `chore/traceability`, at Craig's request. First of the tasks
   to finish Phase 2 (then Postman/Newman, Karate, REST Assured, and the Gate 2 check).
   - `tools/traceability/trace.mjs` (no dependencies) reads every `junit*.xml` under `tests/` and writes
