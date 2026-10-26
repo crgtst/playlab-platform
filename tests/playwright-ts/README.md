@@ -115,3 +115,20 @@ forged and expired access tokens (24.2), identical responses for known and unkno
 user routes (24.8), a single-use code raced by two orders (24.9) and the retired v0 route (24.13). Defect checks:
 `order-leak`, `token-never-expires`, `rate-limit-bypass` and `single-use-reused`. PLS-24.5, 24.10, 24.11, 24.12 and
 24.14 are not built yet, so they have no tests here.
+`specs/observability/observability.spec.ts` covers PLS-25.1–25.5: correlation IDs, the log line and its fields, redaction
+of passwords, tokens, cookies and card details, and the metrics (counters are shared by every test, so these check "at
+least", and the defects gauge follows the scraping session). `specs/environment/sessions.spec.ts` covers PLS-28.1,
+28.6, 28.7 and 28.10: sessions kept apart (defects, chaos rules, clocks), the session id and cookie, per-session latency
+and rate limits, and the payment frame following the shop's session. Not tested from here: PLS-28.3 and 28.4 (bulk
+data) and 28.5 (the start-up guard) are not built or need a restarted API, and PLS-28.8 needs an hour of real time.
+
+## Tests that need the stack to themselves
+
+`specs/exclusive/` has its own Playwright project, `exclusive`. A reset ends every session and wipes the data, and
+exact counter checks and no-session global defects are broken by (and break) tests running beside them. The project
+runs after `chromium` in a normal `npm test`, and is skipped if that has failures; run it alone with
+`npm run test:exclusive`. It holds PLS-25.5 (exact counters), PLS-28.2 (global state with no session) and PLS-28.9
+(reset). A new test goes there only if it needs the whole stack; everything else should use its own test session.
+
+`browser.newContext()` copies the test's `X-Test-Session` header into the new context. A second browser that should
+have no session needs `extraHTTPHeaders: {}`.

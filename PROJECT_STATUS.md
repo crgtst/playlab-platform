@@ -9,11 +9,25 @@ Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #1
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria (PLS-25 and PLS-28 are left; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
+Continue the Playwright TypeScript suite through the remaining acceptance criteria (done for what the platform builds; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
 Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Playwright TypeScript observability and test-session suites for PLS-25 and PLS-28, on
+  `tests/pls-25-28-env` (built on `tests/pls-20-29-api`), at Craig's request. Last of three tasks for PLS-20 to 29.
+  - `specs/observability/` (PLS-25.1–25.5) and `specs/environment/sessions.spec.ts` (PLS-28.1, 28.6, 28.7, 28.10).
+  - New Playwright project `exclusive` (`specs/exclusive/`, `npm run test:exclusive`) for the three criteria that need
+    the whole stack: exact metric counters (25.5), global defects with no session (28.2) and reset ending every
+    session (28.9). It runs after `chromium`, and is skipped when that has failures.
+  - Not tested: PLS-28.3 and 28.4 (not built), 28.5 (start-up guard, needs a restart) and 28.8 (an hour of real time).
+    PLS-26, 27 and 29 belong to Spectral/Schemathesis/Pact, k6/JMeter and CI.
+  - Found: `browser.newContext()` inherits the test's `X-Test-Session` header, so a "no session" browser needs
+    `extraHTTPHeaders: {}`. The first version of PLS-28.10 failed because of it.
+  - Checked: 15 new tests (12 in the main project, 3 exclusive) pass, stable over 4 repeats; full suite 203 tests passed
+    twice. PLS-5.11 still fails now and then under full load only (never alone in 18 runs), and that run skips the
+    exclusive project.
+  - Playwright TypeScript now covers PLS-1 to 25 and 28 where the platform builds them. Left: PLS-12 and 26 to 29 (other tools).
 - 2026-10-26: Added the Playwright TypeScript account, user-administration and API-security suites for PLS-22, PLS-23
   and PLS-24, on `tests/pls-20-29-api`, at Craig's request. Second of three tasks for PLS-20 to 29.
   - `specs/account/profile.spec.ts` (22.1–22.6), `specs/admin/users.spec.ts` (23.1–23.5) and
