@@ -1,0 +1,51 @@
+note,name,email,password,omit,expectedStatus,expectedField
+name: 1 character,A,UNIQUE8X@example.com,Password123!,,201,
+name: 2 characters,Al,UNIQUE8X@example.com,Password123!,,201,
+name: 499 characters,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,UNIQUE8X@example.com,Password123!,,201,
+name: 500 characters,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,UNIQUE8X@example.com,Password123!,,201,
+name: 501 characters,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,UNIQUE8X@example.com,Password123!,,422,name
+name: empty,,UNIQUE8X@example.com,Password123!,,422,name
+name: only spaces,<SP><SP><SP><SP><SP>,UNIQUE8X@example.com,Password123!,,422,name
+name: left out,Casey Tester,UNIQUE8X@example.com,Password123!,name,422,name
+name: padded with spaces is trimmed,<SP><SP><SP>Padded Name<SP><SP><SP>,UNIQUE8X@example.com,Password123!,,201,
+name: fadas (PLS-2.3),Seán Ó Briain,UNIQUE8X@example.com,Password123!,,201,
+name: double-barrelled with a fada (PLS-2.3),Aoife Ní Bhriain-Ó Súilleabháin,UNIQUE8X@example.com,Password123!,,201,
+name: apostrophe and full stop,D'Arcy O'Neill Jr.,UNIQUE8X@example.com,Password123!,,201,
+name: emoji,Zoë 😀 Ó,UNIQUE8X@example.com,Password123!,,201,
+name: Arabic (right to left),محمد علي,UNIQUE8X@example.com,Password123!,,201,
+name: Japanese,山田 太郎,UNIQUE8X@example.com,Password123!,,201,
+name: a script tag is stored as text,<script>alert(1)</script>,UNIQUE8X@example.com,Password123!,,201,
+name: quotes and a comma,"Smith, ""Jo"" J.",UNIQUE8X@example.com,Password123!,,201,
+email: lower case,Casey Tester,lower-UNIQUE8X@example.com,Password123!,,201,
+email: upper case is lower-cased,Casey Tester,UPPER-UNIQUE8X@EXAMPLE.COM,Password123!,,201,
+email: padded with spaces is trimmed,Casey Tester,<SP><SP>padded-UNIQUE8X@example.com<SP><SP>,Password123!,,201,
+email: plus tag,Casey Tester,jo+shop-UNIQUE8X@example.com,Password123!,,201,
+email: subdomain,Casey Tester,UNIQUE8X@mail.dept.example.com,Password123!,,201,
+email: two-letter top-level domain,Casey Tester,UNIQUE8X@example.ie,Password123!,,201,
+email: digits and hyphens,Casey Tester,123-UNIQUE8X@my-company.com,Password123!,,201,
+email: 254 characters,Casey Tester,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaUNIQUE8X@x.ie,Password123!,,201,
+email: 255 characters,Casey Tester,aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaUNIQUE8X@x.ie,Password123!,,422,email
+email: empty,Casey Tester,,Password123!,,422,email
+email: left out,Casey Tester,UNIQUE8X@example.com,Password123!,email,422,email
+email: no @,Casey Tester,no-at-sign-example.com,Password123!,,422,email
+email: two @,Casey Tester,two@@example.com,Password123!,,422,email
+email: nothing before the @,Casey Tester,@example.com,Password123!,,422,email
+email: nothing after the @,Casey Tester,user@,Password123!,,422,email
+email: domain starts with a dot,Casey Tester,user@.example.com,Password123!,,422,email
+email: two dots in the domain,Casey Tester,user@example..com,Password123!,,422,email
+email: no top-level domain,Casey Tester,user@example,Password123!,,422,email
+email: one-letter top-level domain,Casey Tester,user@example.c,Password123!,,422,email
+email: space in the local part,Casey Tester,us er@example.com,Password123!,,422,email
+email: space in the domain,Casey Tester,user@exam ple.com,Password123!,,422,email
+email: accented letter in the local part,Casey Tester,né@example.com,Password123!,,422,email
+password: 8 characters,Casey Tester,UNIQUE8X@example.com,Passw0rd,,201,
+password: 128 characters,Casey Tester,UNIQUE8X@example.com,pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp,,201,
+password: 129 characters,Casey Tester,UNIQUE8X@example.com,ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp,,422,password
+password: 7 characters,Casey Tester,UNIQUE8X@example.com,Passw0r,,422,password
+password: 1 character,Casey Tester,UNIQUE8X@example.com,p,,422,password
+password: empty,Casey Tester,UNIQUE8X@example.com,,,422,password
+password: left out,Casey Tester,UNIQUE8X@example.com,Password123!,password,422,password
+password: 8 spaces count as 8 characters,Casey Tester,UNIQUE8X@example.com,<SP><SP><SP><SP><SP><SP><SP><SP>,,201,
+password: accents and symbols,Casey Tester,UNIQUE8X@example.com,pässwörd-€-123,,201,
+password: the same as the email address,Casey Tester,same-UNIQUE8X@example.com,same-UNIQUE8X@example.com,,201,
+everything wrong: reports the email,,nope,x,,422,email

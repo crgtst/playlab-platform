@@ -1,0 +1,74 @@
+# Postman collections run with Newman (tests/postman) against a fresh Compose stack, with an HTML report per collection.
+name: postman
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  newman:
+    name: Newman
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tests/postman/package-lock.json
+
+      - name: Configure the stack from .env.example on non-default ports
+        working-directory: app
+        run: sed -e 's/^API_PORT=.*/API_PORT=3002/' -e 's/^WEB_PORT=.*/WEB_PORT=5174/' .env.example > .env
+
+      - name: Start the stack
+        working-directory: app
+        run: docker compose up --build --detach --wait --wait-timeout 300
+
+      - name: Install Newman
+        working-directory: tests/postman
+        run: npm ci
+
+      - name: Check the collections are built from their sources
+        working-directory: tests/postman
+        run: |
+          npm run build
+          git diff --exit-code -- collections data
+
+      - name: Run the collections
+        working-directory: tests/postman
+        run: npm test -- --env ci
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: newman-reports
+          path: tests/postman/results/
+          retention-days: 14
+
+      - name: Save Compose logs
+        if: failure()
+        working-directory: app
+        run: docker compose logs --no-color > compose.log
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: compose-log
+          path: app/compose.log
+          retention-days: 7
+
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose down -v

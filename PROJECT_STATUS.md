@@ -14,6 +14,36 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Postman/Newman suite (Phase 2), on `tests/postman-suite` (built on `chore/traceability`), at
+  Craig's request.
+  - `tests/postman/`: 8 collections (auth, registration, a 50-row data-driven registration run, catalogue, cart and
+    discounts, orders, admin and accounts, API standards), about 660 assertions, written as small sources in `src/` and built
+    into the committed collection JSON. Environments `local`, `ci`, `perf`; a test session and throwaway users per run;
+    ajv schema checks against `tests/shared/schemas/`; an HTML and JUnit report per collection (`npm test`).
+  - The runner takes `--defect a,b` to switch defects on for one run; `npm run test:defects` runs every API-side defect
+    in turn and writes a matrix: 25 of 26 caught (`stale-stock` is a server-sent event stream Newman cannot read).
+  - New workflow `postman.yml` runs Newman against a fresh stack and uploads the reports; Dependabot watches the folder.
+  - The traceability report now reads 765 tests across 9 reports. **Gate 2 is met**: all 140 in-scope ACs and all 36 built
+    defects have a passing test, including PLS-10.4 (every readable response matches its schema), which only Postman checks.
+  - Found while building it: an async assertion that failed crashed Newman instead of failing a test (fixed in the
+    helper), and a run with a defect on can leave orders behind, so `npm run test:defects` resets the stack between runs.
+    FIXED20 on a €9 cart reports a discount of €13.95 with VAT and delivery zeroed, so the totals do not add up
+    (subtotal minus discount is negative); PLS-5.6 only requires a total that is not negative, so the suite asserts that.
+  - Not done: the Karate and REST Assured suites, and running the Playwright suite and the Postman suite in CI together.
+- 2026-10-26: Added the traceability report (Phase 2), on `chore/traceability`, at Craig's request. First of the tasks
+  to finish Phase 2 (then Postman/Newman, Karate, REST Assured, and the Gate 2 check).
+  - `tools/traceability/trace.mjs` (no dependencies) reads every `junit*.xml` under `tests/` and writes
+    `docs/traceability.md`: AC x tool x result, a per-story summary, the gaps, and a defect matrix. `--check` fails on a
+    test that names an AC that does not exist; `--gate2` tests the Gate 2 conditions. 6 unit tests (`npm run test:tools`,
+    also run in the quality workflow). `scope.json` holds what is not a gap.
+  - First real run on the 204 Playwright tests: 139 of 140 in-scope ACs covered; 29 ACs are out of scope (not built,
+    or another tool). It found two gaps in earlier work: no test caught `logout-incomplete` (added a defect-mode check
+    to PLS-1.4 in `login.spec.ts`), and PLS-10.4 (every response matches the OpenAPI schema) has no test in a suite the
+    report reads, because only the API integration tests cover it. PLS-10.4 is what Postman, Karate and REST Assured
+    will cover.
+  - Gate 2 status now: all 33 original defects caught; PLS-10.4 is the one criterion in PLS-1 to 19 without a test.
+  - Not done: the "Covered by" column of `ACCEPTANCE_CRITERIA.md` is not filled by the script (the unit test that checks
+    the defect column reads that file); the app's own API integration tests are not in the report.
 - 2026-10-26: Added the Playwright TypeScript observability and test-session suites for PLS-25 and PLS-28, on
   `tests/pls-25-28-env` (built on `tests/pls-20-29-api`), at Craig's request. Last of three tasks for PLS-20 to 29.
   - `specs/observability/` (PLS-25.1–25.5) and `specs/environment/sessions.spec.ts` (PLS-28.1, 28.6, 28.7, 28.10).

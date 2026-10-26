@@ -35,6 +35,7 @@ jobs:
           HUSKY: 0 # no git hooks in CI
       - run: npm run lint
       - run: npm run format:check
+      - run: npm run test:tools # the traceability script's own tests
 
   typecheck:
     name: Typecheck (${{ matrix.app }})

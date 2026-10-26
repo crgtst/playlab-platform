@@ -85,6 +85,26 @@ test.describe('PLS-1 Login and session', () => {
     await expect(page).not.toHaveURL(/\/account(?:\/|$)/);
   });
 
+  test('PLS-1.4 detects the logout-incomplete defect', async ({ page, context, request, customer }) => {
+    const bug = await request.post(`${API_URL}/test/bugs`, { data: { enable: ['logout-incomplete'] } });
+    expect(bug.status()).toBe(200);
+    const login = new LoginPage(page);
+    const header = new Header(page);
+
+    await login.goto();
+    await login.logIn(customer);
+    await page.goto('/account');
+    await header.accountMenuButton.press('ArrowDown');
+    await header.logoutButton.click();
+
+    // Logout reports success but the session cookies are still there, so the account page is still reachable.
+    const cookieNames = (await context.cookies()).map((cookie) => cookie.name);
+    expect(cookieNames).toContain('session');
+    expect(cookieNames).toContain('refresh_token');
+    await page.goto('/account');
+    await expect(page).toHaveURL(/\/account(?:\/|$)/);
+  });
+
   test('PLS-1.5 an access token older than 15 minutes is refused', async ({ request, customer, hooks }) => {
     const loginResponse = await request.post(`${AUTH_URL}/login`, {
       data: { email: customer.email, password: customer.password },

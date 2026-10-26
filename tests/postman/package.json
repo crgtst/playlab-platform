@@ -1,0 +1,17 @@
+{
+  "name": "playlab-postman",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Postman collections for PlayLab, run with Newman.",
+  "scripts": {
+    "build": "node src/build.mjs",
+    "test": "node run.mjs",
+    "test:data": "node run.mjs --only registration-data",
+    "report": "open results/report.html",
+    "test:defects": "node defects.mjs"
+  },
+  "devDependencies": {
+    "newman": "6.2.3",
+    "newman-reporter-htmlextra": "1.23.1"
+  }
+}

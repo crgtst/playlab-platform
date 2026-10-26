@@ -56,6 +56,10 @@ export default defineConfig(
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   {
+    files: ['tools/**/*.mjs'],
+    languageOptions: { globals: globals.node },
+  },
+  {
     files: ['app/web/*.config.ts'],
     languageOptions: { globals: globals.node },
   },
