@@ -11,6 +11,10 @@
   <artifactId>playlab-karate</artifactId>
   <name>PlayLab Karate suite</name>
 
+  <properties>
+    <karate.env>local</karate.env>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>io.karatelabs</groupId>

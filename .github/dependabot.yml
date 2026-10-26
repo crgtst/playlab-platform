@@ -20,7 +20,7 @@ updates:
         update-types: [version-update:semver-major]
 
   - package-ecosystem: maven
-    directories: ["/tests", "/tests/karate"]
+    directories: ["/tests", "/tests/karate", "/tests/rest-assured"]
     schedule:
       interval: weekly
     groups:

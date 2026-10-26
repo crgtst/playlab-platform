@@ -14,6 +14,25 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the REST Assured suite (Phase 2), on `tests/rest-assured-suite` (built on the Karate branch), at
+  Craig's request. This completes the Phase 2 suites.
+  - `tests/rest-assured/`: 112 tests in 10 classes, with the AC ID first in each `@DisplayName` and as a `@Tag`.
+    `RequestSpecBuilder` specs with a test session per class, response classes **generated from the OpenAPI file**
+    (openapi-generator) and read with `.as(...)`, a JSON Schema matcher over `tests/shared/schemas/`, `@CsvFileSource`
+    and `@MethodSource` data, forged JWTs, and parallel classes. The showcase is `ConcurrencyTest`: 20 threads order the
+    last item at the same moment and exactly one succeeds.
+  - Checked with defects switched on (`-Ddefects=...`): stock-oversell (all 20 orders succeed), status-any-transition,
+    order-leak, lost-update, price-tamper, single-use-reused and rate-limit-bypass each fail tests. 112 of 112 pass on 3
+    runs in a row; the stack is left with 40 products and every stock level seeded.
+  - New workflow `rest-assured.yml`; Dependabot watches the folder. The parent POM now manages the REST Assured and
+    OpenAPI generator versions.
+  - The traceability report reads 26 reports (994 tests); Gate 2 is met.
+  - Details worth knowing (all in the README): subclass `@AfterEach` runs before the base class's; REST Assured sends no
+    cookies, unlike Karate; the REST Assured schema matcher is draft-04 only so the suite uses `networknt`; the OpenAPI
+    `error.details` `oneOf` cannot be generated, so the `Error` classes are skipped.
+  - Not done: Allure reports (the plan lists them; the JUnit XML feeds traceability instead).
+  - Phase 2 is now: Playwright TypeScript, Postman/Newman, Karate and REST Assured written, with traceability and the
+    Gate 2 check passing. What is left for the Phase 2 gate is review and a run of every suite in CI together.
 - 2026-10-26: Added the Karate suite (Phase 2), on `tests/karate-suite` (built on `main` after PR #27), at Craig's request.
   - `tests/karate/`: 7 features and 116 scenarios (auth, registration with a 22-row data-driven outline, catalogue, cart
     and discounts, orders, admin and accounts, standards with observability and sessions), run in parallel by one JUnit 5
