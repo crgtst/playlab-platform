@@ -97,3 +97,11 @@ blocks them by default), uses a product created for the test so its price can ch
 `structure.spec.ts` (PLS-19) holds the approved aria snapshots of the product card and the header, plus the heading
 levels of the order summary with an `aria-heading-skip` check. `support/orders.ts` creates, moves and cancels test
 orders through the API; `pages/StoresPage.ts` holds the store-finder locators.
+`specs/orders/lifecycle.spec.ts` covers PLS-20.1–20.6: one-step status moves, the 409 `INVALID_TRANSITION` body, the
+all-or-nothing bulk change, restocking on cancel and customer cancellation, with `status-any-transition` checks.
+`specs/orders/locking.spec.ts` covers PLS-21.1–21.7: `If-Match` on products and order status (200, 412, 428), order
+ETags, the 20-customer race for the last item and the two-admin stale grid message, with `lost-update` and
+`stock-oversell` checks. Both use seeded products no other spec orders (`HK-005`, `HK-006`, `HK-008`, `SP-004`) and
+put their stock back in `afterAll`, because a shipped or delivered order cannot be cancelled. A product that has been
+ordered cannot be deleted, so these specs never create products to order; `support/products.ts` holds the helpers for
+products a test creates and deletes itself.

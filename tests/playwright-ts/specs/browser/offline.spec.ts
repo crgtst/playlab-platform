@@ -1,38 +1,14 @@
 import { LoginPage } from '../../pages/LoginPage';
 import { API_URL, expect, test } from '../../support/fixtures';
+import { createProduct, deleteProduct, updateProduct, getProduct } from '../../support/products';
+import type { CatalogueProduct } from '../../support/products';
 import type { APIRequestContext, Page } from '@playwright/test';
 import type { TestUser } from '../../support/hooks';
 
-interface CatalogueProduct {
-  id: number;
-  name: string;
-  priceCents: number;
-}
-
-/** A product that only this test knows about, so changing its price cannot disturb another test. */
-async function createProduct(request: APIRequestContext, admin: TestUser, priceCents: number): Promise<CatalogueProduct> {
-  const unique = `Offline ${Date.now()}${Math.floor(Math.random() * 1000)}`;
-  const response = await request.post(`${API_URL}/api/v1/products`, {
-    headers: { Authorization: `Bearer ${admin.accessToken}` },
-    data: { sku: unique.replace(' ', '-'), name: unique, description: 'Offline catalogue test', category: 'books', priceCents, stock: 5 },
-  });
-  expect(response.status(), 'Create a product for the offline test').toBe(201);
-  return ((await response.json()) as { data: CatalogueProduct }).data;
-}
-
 async function setPrice(request: APIRequestContext, admin: TestUser, product: CatalogueProduct, priceCents: number) {
-  const response = await request.patch(`${API_URL}/api/v1/products/${product.id}`, {
-    headers: { Authorization: `Bearer ${admin.accessToken}`, 'If-Match': '*' },
-    data: { priceCents },
-  });
+  const { etag } = await getProduct(request, product.id);
+  const response = await updateProduct(request, admin, product.id, etag, { priceCents });
   expect(response.status(), 'Change the product price').toBe(200);
-}
-
-async function deleteProduct(request: APIRequestContext, admin: TestUser, product: CatalogueProduct) {
-  const response = await request.delete(`${API_URL}/api/v1/products/${product.id}`, {
-    headers: { Authorization: `Bearer ${admin.accessToken}`, 'If-Match': '*' },
-  });
-  expect(response.status(), 'Delete the offline test product').toBe(204);
 }
 
 const card = (page: Page, product: CatalogueProduct) => page.getByTestId('product-card').filter({ hasText: product.name });
@@ -60,7 +36,7 @@ test.describe('PLS-17 Offline catalogue', () => {
       hooks,
     }) => {
       const admin = await hooks.createUser('admin');
-      const product = await createProduct(request, admin, 1999);
+      const product = await createProduct(request, admin, { priceCents: 1999, stock: 5 });
       try {
         const url = await warmCache(page, product);
 
@@ -73,13 +49,13 @@ test.describe('PLS-17 Offline catalogue', () => {
         );
       } finally {
         await context.setOffline(false);
-        await deleteProduct(request, admin, product);
+        await deleteProduct(request, admin, product.id);
       }
     });
 
     test('PLS-17.3 back online, the catalogue reloads with current prices', async ({ page, context, request, hooks }) => {
       const admin = await hooks.createUser('admin');
-      const product = await createProduct(request, admin, 1999);
+      const product = await createProduct(request, admin, { priceCents: 1999, stock: 5 });
       try {
         const url = await warmCache(page, product);
         await setPrice(request, admin, product, 2499);
@@ -94,7 +70,7 @@ test.describe('PLS-17 Offline catalogue', () => {
         await expect(page.getByTestId('offline-catalogue-notice')).toHaveCount(0);
       } finally {
         await context.setOffline(false);
-        await deleteProduct(request, admin, product);
+        await deleteProduct(request, admin, product.id);
       }
     });
 
@@ -107,7 +83,7 @@ test.describe('PLS-17 Offline catalogue', () => {
       const bug = await request.post(`${API_URL}/test/bugs`, { data: { enable: ['offline-stale-prices'] } });
       expect(bug.status()).toBe(200);
       const admin = await hooks.createUser('admin');
-      const product = await createProduct(request, admin, 1999);
+      const product = await createProduct(request, admin, { priceCents: 1999, stock: 5 });
       try {
         const url = await warmCache(page, product);
         await setPrice(request, admin, product, 2499);
@@ -117,7 +93,7 @@ test.describe('PLS-17 Offline catalogue', () => {
         await expect(card(page, product)).toBeVisible();
         await expect(price(page, product)).toHaveAttribute('data-price-cents', '1999');
       } finally {
-        await deleteProduct(request, admin, product);
+        await deleteProduct(request, admin, product.id);
       }
     });
   });
