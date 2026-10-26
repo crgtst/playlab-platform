@@ -9,11 +9,75 @@ Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #1
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria, then proceed through the planned
+Continue the Playwright TypeScript suite through the remaining acceptance criteria (done for what the platform builds; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
 Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Playwright TypeScript observability and test-session suites for PLS-25 and PLS-28, on
+  `tests/pls-25-28-env` (built on `tests/pls-20-29-api`), at Craig's request. Last of three tasks for PLS-20 to 29.
+  - `specs/observability/` (PLS-25.1–25.5) and `specs/environment/sessions.spec.ts` (PLS-28.1, 28.6, 28.7, 28.10).
+  - New Playwright project `exclusive` (`specs/exclusive/`, `npm run test:exclusive`) for the three criteria that need
+    the whole stack: exact metric counters (25.5), global defects with no session (28.2) and reset ending every
+    session (28.9). It runs after `chromium`, and is skipped when that has failures.
+  - Not tested: PLS-28.3 and 28.4 (not built), 28.5 (start-up guard, needs a restart) and 28.8 (an hour of real time).
+    PLS-26, 27 and 29 belong to Spectral/Schemathesis/Pact, k6/JMeter and CI.
+  - Found: `browser.newContext()` inherits the test's `X-Test-Session` header, so a "no session" browser needs
+    `extraHTTPHeaders: {}`. The first version of PLS-28.10 failed because of it.
+  - Checked: 15 new tests (12 in the main project, 3 exclusive) pass, stable over 4 repeats; full suite 203 tests passed
+    twice. PLS-5.11 still fails now and then under full load only (never alone in 18 runs), and that run skips the
+    exclusive project.
+  - Playwright TypeScript now covers PLS-1 to 25 and 28 where the platform builds them. Left: PLS-12 and 26 to 29 (other tools).
+- 2026-10-26: Added the Playwright TypeScript account, user-administration and API-security suites for PLS-22, PLS-23
+  and PLS-24, on `tests/pls-20-29-api`, at Craig's request. Second of three tasks for PLS-20 to 29.
+  - `specs/account/profile.spec.ts` (22.1–22.6), `specs/admin/users.spec.ts` (23.1–23.5) and
+    `specs/security/api-security.spec.ts` (24.1, 24.2, 24.3, 24.4, 24.6, 24.7, 24.8, 24.9, 24.13), with defect-mode
+    checks for `order-leak`, `token-never-expires`, `rate-limit-bypass` and `single-use-reused`.
+  - Not covered, because the platform does not build them yet: PLS-24.5, 24.10, 24.11, 24.12 and 24.14, and the defects
+    `jwt-alg-none`, `user-enumeration`, `mass-assignment-role`, `bfla-admin-users` and the others in the plan's security lab.
+    PLS-24.2's unsigned-token check and PLS-24.3 and 24.4 test that the API already behaves correctly.
+  - PLS-23.1 and 23.2 find their own users by a unique name, so other tests' accounts never change the counts.
+  - Checked: the 24 new tests pass and are stable over 5 repeats; the full suite (184 tests) passed twice in a row; the
+    catalogue still has 40 products and the stock of every product they order is back to its seeded level.
+  - Lesson: `prettier --write` on a folder reformats existing specs too (it changed `admin.spec.ts`; reverted). Format
+    only the files you wrote.
+  - Next: PLS-25 and PLS-28 (observability and test sessions).
+- 2026-10-26: Added the Playwright TypeScript order-lifecycle and locking suites for PLS-20 and PLS-21, on
+  `tests/pls-20-29-api` (built on `tests/pls-13-19-browser`), at Craig's request. First of three tasks for PLS-20 to 29.
+  - `specs/orders/lifecycle.spec.ts` (PLS-20.1–20.6) and `locking.spec.ts` (PLS-21.1–21.7), with defect-mode checks
+    for `status-any-transition`, `lost-update` and `stock-oversell`. Helpers in `support/products.ts` and
+    `support/orders.ts`; the offline spec now uses the same product helpers.
+  - Deviations from the AC text: PLS-20.1's first step (pending to paid) cannot be set up through the API, because
+    every API-made order starts `paid`, so it stays covered by the platform integration tests; PLS-21.1 to 21.3 edit a
+    product created for the test instead of product 6, which other suites use; PLS-21.4 races for a seeded product
+    whose stock the test sets to 1 (SP-004) instead of the FX-LOW fixture, because seeding FX-LOW leaves a 41st
+    product in the catalogue and breaks PLS-3.
+  - Found while writing them: a product that has been ordered can't be deleted, so a test can't clean up a product
+    it ordered. Tests that use stock up for good restore it in `afterAll`; the race group does this in its own
+    `afterAll`, because a file-level one runs per worker and refilled the stock mid-race.
+  - Checked: the new tests pass and are stable over 4 repeats; the full suite is 160 tests. The full suite also fails
+    now and then on tests this task did not touch (PLS-5.11, PLS-8.1 and PLS-8.4 so far): one run in four failed
+    before these specs existed (PLS-5.11), and about one in four does now. Not fixed here.
+  - Next: PLS-22 to PLS-24 (accounts, user admin, API security), then PLS-25 and PLS-28 (observability, sessions).
+- 2026-10-26: Added the Playwright TypeScript browser-capability suite for PLS-13 to PLS-19, on
+  `tests/pls-13-19-browser` (built on `tests/pls-9-avatar`), at Craig's request.
+  - `specs/browser/`: store finder with geolocation (13), order notifications (14), clipboard (15), battery banner
+    (16), offline catalogue with the real service worker (17), swipe, tap and keyboard gallery (18), and aria snapshots
+    and heading levels (19). Defect-mode checks for `geolocation-ignored`, `permission-denied-crash`,
+    `notification-spam`, `clipboard-wrong-value`, `battery-banner-stuck`, `offline-stale-prices` and `aria-heading-skip`.
+  - New helpers: `support/browser.ts` (stand-ins for Notification and the Battery API, touch swipe),
+    `support/orders.ts` (create, move and cancel orders) and the `StoresPage` page object.
+  - Not asserted: PLS-16.3's console check ignores the guest session's 401 responses, which every logged-out page load
+    produces. PLS-18.2 taps the gallery stage, because the stage element receives the pointer events.
+  - Checked: 31 new tests pass, stable over 5 repeats (one race in PLS-17.2 found and fixed); full suite passes.
+  - Next: PLS-20 to PLS-29 (the Phase 1 API stories).
+- 2026-10-26: Added the Playwright TypeScript files suite for PLS-9, on `tests/pls-9-avatar`, at Craig's request.
+  - Covered PLS-9.1–9.4 in `specs/account/avatar.spec.ts`: PNG and JPG avatars (the bytes served back match the upload),
+    the 2 MB limit (413, "File too large"), a renamed non-image refused (415), and the admin order CSV export (header
+    row, one row per order, following the admin search filter). Added a defect-mode check for `upload-extension-only`
+    and an `AccountPage` page object.
+  - Checked: 5 new tests pass, stable over 5 repeats; all 108 Playwright TypeScript tests pass.
+  - Next: PLS-13 to PLS-19 (browser capabilities), then PLS-20 to PLS-29 (the Phase 1 API stories).
 - 2026-10-25: Fix: CI's API unit test (`bugs.test.ts`) failed on PR #25 because PLS-5.10 and PLS-5.11, added earlier on
   this branch, name `discount-not-applied` in the ACs but `bugs.ts` and the `app/README.md` defect table still listed
   only PLS-5.1. Both now list PLS-5.1, PLS-5.10 and PLS-5.11. Checked: 58 unit and 137 integration tests pass.

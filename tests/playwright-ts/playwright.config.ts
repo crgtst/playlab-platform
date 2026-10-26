@@ -25,5 +25,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   // One browser for now. The plan has four projects (Chromium, Firefox, WebKit, mobile); add them here.
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', testIgnore: '**/exclusive/**', use: { ...devices['Desktop Chrome'] } },
+    // Tests that need the whole stack to themselves (a reset ends every session). They run after the project above
+    // and are not run when it has failures; run them alone with `npm run test:exclusive`.
+    { name: 'exclusive', testMatch: '**/exclusive/**', dependencies: ['chromium'], use: { ...devices['Desktop Chrome'] } },
+  ],
 });

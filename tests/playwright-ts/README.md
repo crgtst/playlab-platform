@@ -82,3 +82,53 @@ which validates more than 80 responses against the documented OpenAPI status and
 pages in both themes; escaped review content; long, emoji and right-to-left customer names; mobile navigation; Irish
 translations; and offline recovery. Axe scans emulate reduced motion so theme transitions cannot produce transient
 colors during contrast checks.
+`specs/account/avatar.spec.ts` covers PLS-9.1–9.4: PNG and JPG avatar upload (checked against the bytes served back),
+the 2 MB limit (413 and "File too large"), content-based rejection of a renamed non-image (415), and the admin order
+CSV export (header row plus one row per order, following the admin search filter). A defect-mode check exercises
+`upload-extension-only`; `pages/AccountPage.ts` provides the avatar locators.
+`specs/browser/` covers the browser-capability stories PLS-13 to PLS-19, one file each. `stores.spec.ts` (PLS-13) drives
+the store finder with the context's geolocation and permissions, with `geolocation-ignored` and
+`permission-denied-crash` defect checks. `notifications.spec.ts` (PLS-14) and `battery.spec.ts` (PLS-16) use the
+stand-ins in `support/browser.ts`, which replace `Notification` and the Battery API; defect checks cover
+`notification-spam` and `battery-banner-stuck`. `clipboard.spec.ts` (PLS-15) reads the real clipboard, and
+checks `clipboard-wrong-value`. `offline.spec.ts` (PLS-17) turns service workers on for its offline tests (the suite
+blocks them by default), uses a product created for the test so its price can change, and checks
+`offline-stale-prices`. `gallery.spec.ts` (PLS-18) sends real touch input through the DevTools protocol (`swipe`) and
+`structure.spec.ts` (PLS-19) holds the approved aria snapshots of the product card and the header, plus the heading
+levels of the order summary with an `aria-heading-skip` check. `support/orders.ts` creates, moves and cancels test
+orders through the API; `pages/StoresPage.ts` holds the store-finder locators.
+`specs/orders/lifecycle.spec.ts` covers PLS-20.1–20.6: one-step status moves, the 409 `INVALID_TRANSITION` body, the
+all-or-nothing bulk change, restocking on cancel and customer cancellation, with `status-any-transition` checks.
+`specs/orders/locking.spec.ts` covers PLS-21.1–21.7: `If-Match` on products and order status (200, 412, 428), order
+ETags, the 20-customer race for the last item and the two-admin stale grid message, with `lost-update` and
+`stock-oversell` checks. Both use seeded products no other spec orders (`HK-005`, `HK-006`, `HK-008`, `SP-004`) and
+put their stock back in `afterAll`, because a shipped or delivered order cannot be cancelled. A product that has been
+ordered cannot be deleted, so these specs never create products to order; `support/products.ts` holds the helpers for
+products a test creates and deletes itself.
+`specs/account/profile.spec.ts` covers PLS-22.1–22.6: renaming (checked in the header), changing the email with the
+current password, a wrong password, deleting the account on two devices, anonymised orders and an email already in use.
+`specs/admin/users.spec.ts` covers PLS-23.1–23.5: user list filters and paging (each test finds its own users by a
+unique name), role changes from the next login, unlocking, and the support and customer limits.
+`specs/security/api-security.spec.ts` covers the PLS-24 criteria that hold today: object level authorisation (24.1),
+forged and expired access tokens (24.2), identical responses for known and unknown emails (24.3), a registration
+`role` field being ignored (24.4), the rate limit against `X-Forwarded-For` (24.6), the page limit (24.7), the admin
+user routes (24.8), a single-use code raced by two orders (24.9) and the retired v0 route (24.13). Defect checks:
+`order-leak`, `token-never-expires`, `rate-limit-bypass` and `single-use-reused`. PLS-24.5, 24.10, 24.11, 24.12 and
+24.14 are not built yet, so they have no tests here.
+`specs/observability/observability.spec.ts` covers PLS-25.1–25.5: correlation IDs, the log line and its fields, redaction
+of passwords, tokens, cookies and card details, and the metrics (counters are shared by every test, so these check "at
+least", and the defects gauge follows the scraping session). `specs/environment/sessions.spec.ts` covers PLS-28.1,
+28.6, 28.7 and 28.10: sessions kept apart (defects, chaos rules, clocks), the session id and cookie, per-session latency
+and rate limits, and the payment frame following the shop's session. Not tested from here: PLS-28.3 and 28.4 (bulk
+data) and 28.5 (the start-up guard) are not built or need a restarted API, and PLS-28.8 needs an hour of real time.
+
+## Tests that need the stack to themselves
+
+`specs/exclusive/` has its own Playwright project, `exclusive`. A reset ends every session and wipes the data, and
+exact counter checks and no-session global defects are broken by (and break) tests running beside them. The project
+runs after `chromium` in a normal `npm test`, and is skipped if that has failures; run it alone with
+`npm run test:exclusive`. It holds PLS-25.5 (exact counters), PLS-28.2 (global state with no session) and PLS-28.9
+(reset). A new test goes there only if it needs the whole stack; everything else should use its own test session.
+
+`browser.newContext()` copies the test's `X-Test-Session` header into the new context. A second browser that should
+have no session needs `extraHTTPHeaders: {}`.

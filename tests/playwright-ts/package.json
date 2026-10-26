@@ -5,6 +5,7 @@
   "description": "The canonical Playwright suite for PlayLab: every AC, every browser project.",
   "scripts": {
     "test": "playwright test",
+    "test:exclusive": "playwright test --project=exclusive --no-deps",
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
