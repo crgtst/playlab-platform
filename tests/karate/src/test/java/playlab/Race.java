@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -15,15 +16,24 @@ import java.util.concurrent.CompletableFuture;
 public final class Race {
     private Race() {}
 
+    /** HTTP/1.1 only (the default client offers an upgrade to HTTP/2, which the API's WebSocket handler answers with a 404). */
+    private static HttpClient client() {
+        return HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(10)).build();
+    }
+
+    /** No request waits forever: a stalled one fails with a message instead of hanging the whole run. */
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+
     public static List<Object> post(String url, String session, List<String> tokens, String jsonBody) {
         // HTTP/1.1 only: the default client offers an upgrade to HTTP/2, which the API's WebSocket handler answers with a 404.
-        HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+        HttpClient client = client();
         List<CompletableFuture<HttpResponse<String>>> sent = new ArrayList<>();
         for (String token : tokens) {
             HttpRequest request = HttpRequest.newBuilder(URI.create(url))
                     .header("Content-Type", "application/json")
                     .header("X-Test-Session", session)
                     .header("Authorization", "Bearer " + token)
+                    .timeout(REQUEST_TIMEOUT)
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
             sent.add(client.sendAsync(request, HttpResponse.BodyHandlers.ofString()));
@@ -41,10 +51,10 @@ public final class Race {
      * With {@code rotateForwardedFor} each request names a different X-Forwarded-For address.
      */
     public static List<Object> get(String url, String session, int count, boolean rotateForwardedFor) throws Exception {
-        HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+        HttpClient client = client();
         List<Object> statuses = new ArrayList<>();
         for (int i = 0; i < count; i++) {
-            HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(url)).header("X-Test-Session", session).GET();
+            HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(url)).header("X-Test-Session", session).timeout(REQUEST_TIMEOUT).GET();
             if (rotateForwardedFor) {
                 request.header("X-Forwarded-For", "198.51.100." + (i % 250));
             }
@@ -58,8 +68,9 @@ public final class Race {
      * API sets and send it on every later request (where it would win over the X-Test-Session header).
      */
     public static String createSession(String baseUrl) throws Exception {
-        HttpClient client = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+        HttpClient client = client();
         HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl + "/test/sessions"))
+                .timeout(REQUEST_TIMEOUT)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
         String body = client.send(request, HttpResponse.BodyHandlers.ofString()).body();

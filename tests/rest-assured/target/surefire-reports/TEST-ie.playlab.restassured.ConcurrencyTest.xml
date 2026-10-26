@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="ie.playlab.restassured.ConcurrencyTest" time="3.966" tests="3" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/test-classes:/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/classes:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured/5.5.7/rest-assured-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/Users/craigbennett/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/craigbennett/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/Users/craigbennett/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/craigbennett/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/Users/craigbennett/.m2/repository/io/rest-assured/json-path/5.5.7/json-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured-common/5.5.7/rest-assured-common-5.5.7.jar:/Users/craigbennett/.m2/repository/io/rest-assured/xml-path/5.5.7/xml-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar:/Users/craigbennett/.m2/repository/com/networknt/json-schema-validator/1.5.9/json-schema-validator-1.5.9.jar:/Users/craigbennett/.m2/repository/com/ethlo/time/itu/1.14.0/itu-1.14.0.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.18.3/jackson-dataformat-yaml-2.18.3.jar:/Users/craigbennett/.m2/repository/org/yaml/snakeyaml/2.3/snakeyaml-2.3.jar:/Users/craigbennett/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter/5.13.4/junit-jupiter-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.13.4/junit-jupiter-api-5.13.4.jar:/Users/craigbennett/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-commons/1.13.4/junit-platform-commons-1.13.4.jar:/Users/craigbennett/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.13.4/junit-jupiter-params-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.13.4/junit-jupiter-engine-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-engine/1.13.4/junit-platform-engine-1.13.4.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.19.2/jackson-databind-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.19.2/jackson-core-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.2/jackson-datatype-jsr310-2.19.2.jar:/Users/craigbennett/.m2/repository/org/openapitools/jackson-databind-nullable/0.2.13/jackson-databind-nullable-0.2.13.jar:/Users/craigbennett/.m2/repository/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar:"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="user.timezone" value="Europe/Dublin"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="sun.java.command" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire/surefirebooter-20261026224332648_3.jar /Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire 2026-10-26T22-43-32_594-jvmRun1 surefire-20261026224332648_1tmp surefire_0-20261026224332648_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/test-classes:/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/classes:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured/5.5.7/rest-assured-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/Users/craigbennett/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/craigbennett/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/Users/craigbennett/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/craigbennett/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/Users/craigbennett/.m2/repository/io/rest-assured/json-path/5.5.7/json-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured-common/5.5.7/rest-assured-common-5.5.7.jar:/Users/craigbennett/.m2/repository/io/rest-assured/xml-path/5.5.7/xml-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar:/Users/craigbennett/.m2/repository/com/networknt/json-schema-validator/1.5.9/json-schema-validator-1.5.9.jar:/Users/craigbennett/.m2/repository/com/ethlo/time/itu/1.14.0/itu-1.14.0.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.18.3/jackson-dataformat-yaml-2.18.3.jar:/Users/craigbennett/.m2/repository/org/yaml/snakeyaml/2.3/snakeyaml-2.3.jar:/Users/craigbennett/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter/5.13.4/junit-jupiter-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.13.4/junit-jupiter-api-5.13.4.jar:/Users/craigbennett/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-commons/1.13.4/junit-platform-commons-1.13.4.jar:/Users/craigbennett/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.13.4/junit-jupiter-params-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.13.4/junit-jupiter-engine-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-engine/1.13.4/junit-platform-engine-1.13.4.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.19.2/jackson-databind-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.19.2/jackson-core-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.2/jackson-datatype-jsr310-2.19.2.jar:/Users/craigbennett/.m2/repository/org/openapitools/jackson-databind-nullable/0.2.13/jackson-databind-nullable-0.2.13.jar:/Users/craigbennett/.m2/repository/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/Users/craigbennett"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-08-18"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured"/>
+    <property name="java.vm.compressedOopsMode" value="Non-zero disjoint base"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="defects" value=""/>
+    <property name="apple.awt.application.name" value="ForkedBooter"/>
+    <property name="surefire.real.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire/surefirebooter-20261026224332648_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12.1"/>
+    <property name="user.name" value="craigbennett"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="27.0.1"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="localRepository" value="/Users/craigbennett/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="java.io.tmpdir" value="/var/folders/4w/6p5t9vw13j913qkvv8xm27bm0000gn/T/"/>
+    <property name="java.version" value="21.0.12.1"/>
+    <property name="user.dir" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/craigbennett/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="java.vm.version" value="21.0.12.1"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="java.class.version" value="65.0"/>
+    <property name="restassured.env" value="local"/>
+  </properties>
+  <testcase name="PLS-21.4 of 20 customers ordering the last item at the same moment, exactly one succeeds and 19 get 409" classname="ie.playlab.restassured.ConcurrencyTest" time="2.898">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "support"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-6.4 two payments at the same moment create exactly one order" classname="ie.playlab.restassured.ConcurrencyTest" time="0.462">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "support"
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/products/34
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0yM2RkMTdkMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNSwiZXhwIjoxNzkzMDU1NTE1fQ.qmSpPTBerL9j0ENtT5j3itMAoaEhJ7WFZNxDptr0wL8
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "stock": 15
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-24.9 two orders using a single-use code at the same moment: only one gets the discount" classname="ie.playlab.restassured.ConcurrencyTest" time="0.48">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=d3b3214e-9e50-42d4-b35c-33a8670a099a
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/orders/12
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+</testsuite>
