@@ -14,6 +14,22 @@ Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Karate suite (Phase 2), on `tests/karate-suite` (built on `main` after PR #27), at Craig's request.
+  - `tests/karate/`: 7 features and 116 scenarios (auth, registration with a 22-row data-driven outline, catalogue, cart
+    and discounts, orders, admin and accounts, standards with observability and sessions), run in parallel by one JUnit 5
+    runner. Scenario names start with their AC ID; responses are checked against `tests/shared/schemas/` through a Java
+    helper; Java helpers also run simultaneous requests (a 20-customer race, paying twice, a single-use code) and forge
+    tokens (PLS-24.2). Karate uploads a real PNG, so it covers PLS-9.1 as well as the rejections.
+  - Maven: a parent POM and the Maven Wrapper in `tests/` (only Java is needed; `./mvnw -pl karate test`), shared with the
+    REST Assured and Playwright Java suites to come. New workflow `karate.yml`; Dependabot watches Maven.
+  - The traceability report now reads Karate's JUnit XML: 882 tests in 17 reports; Gate 2 still met.
+  - `-Ddefects=a,b` switches defects on for a run; checked with lost-update, status-any-transition, order-leak,
+    logout-incomplete and rate-limit-bypass, each of which fails scenarios.
+  - Hard-won details, all in the README: scenarios (not just features) run in parallel; `configure headers` beats a
+    per-request header and is inherited by called features; Karate's cookie jar keeps `test_session` and the cookie wins
+    over the header; `match` splits at the first `==`; Java's HTTP client needs HTTP/1.1 against this API.
+  - Checked: 116 of 116 pass on 4 runs in a row; the stack is left with 40 products and every stock level seeded.
+  - Not done: the Karate mock server and the Gatling load scenario (both belong with later phases), and REST Assured.
 - 2026-10-26: Added the Postman/Newman suite (Phase 2), on `tests/postman-suite` (built on `chore/traceability`), at
   Craig's request.
   - `tests/postman/`: 8 collections (auth, registration, a 50-row data-driven registration run, catalogue, cart and

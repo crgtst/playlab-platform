@@ -95,7 +95,7 @@ export function resultOf(tests) {
 
 // ---------------------------------------------------------------- reading the repo
 
-/** JUnit XML files written by the suites under tests/ (Playwright, Newman, Karate, Surefire, k6). */
+/** JUnit XML files written by the suites under tests/ (Playwright, Newman, Surefire, k6, and Karate's karate-reports). */
 export function findReports(root = ROOT) {
   const found = [];
   const walk = (dir, depth) => {
@@ -104,7 +104,7 @@ export function findReports(root = ROOT) {
       const path = join(dir, entry.name);
       if (entry.isDirectory()) {
         if (depth < 5) walk(path, depth + 1);
-      } else if (/^(junit.*|TEST-.*)\.xml$/.test(entry.name)) {
+      } else if (/^(junit.*|TEST-.*)\.xml$/.test(entry.name) || (/[\\/]karate-reports$/.test(dir) && entry.name.endsWith('.xml'))) {
         found.push(path);
       }
     }
