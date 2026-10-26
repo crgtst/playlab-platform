@@ -86,3 +86,14 @@ colors during contrast checks.
 the 2 MB limit (413 and "File too large"), content-based rejection of a renamed non-image (415), and the admin order
 CSV export (header row plus one row per order, following the admin search filter). A defect-mode check exercises
 `upload-extension-only`; `pages/AccountPage.ts` provides the avatar locators.
+`specs/browser/` covers the browser-capability stories PLS-13 to PLS-19, one file each. `stores.spec.ts` (PLS-13) drives
+the store finder with the context's geolocation and permissions, with `geolocation-ignored` and
+`permission-denied-crash` defect checks. `notifications.spec.ts` (PLS-14) and `battery.spec.ts` (PLS-16) use the
+stand-ins in `support/browser.ts`, which replace `Notification` and the Battery API; defect checks cover
+`notification-spam` and `battery-banner-stuck`. `clipboard.spec.ts` (PLS-15) reads the real clipboard, and
+checks `clipboard-wrong-value`. `offline.spec.ts` (PLS-17) turns service workers on for its offline tests (the suite
+blocks them by default), uses a product created for the test so its price can change, and checks
+`offline-stale-prices`. `gallery.spec.ts` (PLS-18) sends real touch input through the DevTools protocol (`swipe`) and
+`structure.spec.ts` (PLS-19) holds the approved aria snapshots of the product card and the header, plus the heading
+levels of the order summary with an `aria-heading-skip` check. `support/orders.ts` creates, moves and cancels test
+orders through the API; `pages/StoresPage.ts` holds the store-finder locators.

@@ -9,11 +9,23 @@ Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #1
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria (PLS-13 to PLS-29 are left), then proceed through the planned
+Continue the Playwright TypeScript suite through the remaining acceptance criteria (PLS-20 to PLS-29 are left), then proceed through the planned
 Postman/Newman, Karate, REST Assured and traceability work.
 
 ## Done
 
+- 2026-10-26: Added the Playwright TypeScript browser-capability suite for PLS-13 to PLS-19, on
+  `tests/pls-13-19-browser` (built on `tests/pls-9-avatar`), at Craig's request.
+  - `specs/browser/`: store finder with geolocation (13), order notifications (14), clipboard (15), battery banner
+    (16), offline catalogue with the real service worker (17), swipe, tap and keyboard gallery (18), and aria snapshots
+    and heading levels (19). Defect-mode checks for `geolocation-ignored`, `permission-denied-crash`,
+    `notification-spam`, `clipboard-wrong-value`, `battery-banner-stuck`, `offline-stale-prices` and `aria-heading-skip`.
+  - New helpers: `support/browser.ts` (stand-ins for Notification and the Battery API, touch swipe),
+    `support/orders.ts` (create, move and cancel orders) and the `StoresPage` page object.
+  - Not asserted: PLS-16.3's console check ignores the guest session's 401 responses, which every logged-out page load
+    produces. PLS-18.2 taps the gallery stage, because the stage element receives the pointer events.
+  - Checked: 31 new tests pass, stable over 5 repeats (one race in PLS-17.2 found and fixed); full suite passes.
+  - Next: PLS-20 to PLS-29 (the Phase 1 API stories).
 - 2026-10-26: Added the Playwright TypeScript files suite for PLS-9, on `tests/pls-9-avatar`, at Craig's request.
   - Covered PLS-9.1–9.4 in `specs/account/avatar.spec.ts`: PNG and JPG avatars (the bytes served back match the upload),
     the 2 MB limit (413, "File too large"), a renamed non-image refused (415), and the admin order CSV export (header
