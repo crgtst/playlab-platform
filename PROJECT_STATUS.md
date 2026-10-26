@@ -15,6 +15,20 @@ Then Phase 3 task 1, security headers and error bodies.
 
 ## Done
 
+- 2026-10-26: Phase 3 task 1, security headers and error bodies (PLS-24.11, 24.12), on `feat/security-headers`.
+  - API: every response (errors, `/metrics`, `/test/*` included) carries `X-Content-Type-Options`, `Referrer-Policy`,
+    `Content-Security-Policy` and `Permissions-Policy`. The policy allows an API nothing; `/api/docs` and the payment
+    frame get the inline script and style they use, and the frame may still be framed only by the shop.
+  - Web: the same four headers from Vite (`server` and `preview`), with a policy that lets the page load its own
+    scripts and styles, talk to its own origin and over WebSocket, run the service worker and frame the payment page.
+    Compose now passes `PAYMENT_FRAME_URL` to the web container so the policy knows the API's origin.
+  - New defects (38 built, 9 planned): `missing-security-headers` removes the API headers for a session;
+    `verbose-errors` puts the stack, SQL and file paths into a 500's `details`. The simulated SQL error behind
+    `search-apostrophe` now carries its query, so there is a real 500 to test.
+  - Tests: 14 integration tests (every route type, the policy text, the defect on and off per session, a 500's body with
+    and without the defect); 2 e2e tests: the web headers, and no CSP violation on the main pages with checkout still
+    paying. 58 unit tests, e2e 19, Gate 1 screenshots unchanged, Playwright TypeScript 204 and Postman all pass.
+  - Not covered by the headers: the web app's headers are static, so `missing-security-headers` affects the API only.
 - 2026-10-26: Phase 3 planned. "Phase 3 tasks" added to `docs/REVIEW_AND_PLAN.md`: 17 tasks, each with its ACs, defects
   and tests, platform tasks (1 to 8) before the suites that need them (9 to 15) and Gate 3 last. The 11 security-lab
   defects (47 in all), the SSRF import feature, the perf profile, bulk data and provider states are tasks 1 to 7. One new

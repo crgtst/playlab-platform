@@ -34,7 +34,9 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return sendError(res, new ApiError(413, 'PAYLOAD_TOO_LARGE', 'Request body is too large'));
   }
   logger.error({ correlationId: res.getHeader(CORRELATION_HEADER), err }, 'Unhandled error');
-  sendError(res, new ApiError(500, 'INTERNAL_ERROR', 'Something went wrong'));
+  // verbose-errors: the 500 shows what a developer would see, including the stack (file paths) and the SQL (PLS-24.12).
+  const leaked = isBugOn('verbose-errors') ? { name: err?.name, message: err?.message, stack: err?.stack, query: err?.query } : undefined;
+  sendError(res, new ApiError(500, 'INTERNAL_ERROR', 'Something went wrong', leaked));
 };
 
 export function zodDetails(err: ZodError) {

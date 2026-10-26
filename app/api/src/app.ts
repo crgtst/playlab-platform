@@ -12,6 +12,7 @@ import { trustedProxies, trustProxy } from './lib/trustedProxy';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimit } from './middleware/rateLimit';
 import { requestLog } from './middleware/requestLog';
+import { securityHeaders } from './middleware/securityHeaders';
 import { testFaults } from './middleware/testFaults';
 import { addressesRouter } from './routes/addresses';
 import { adminRouter } from './routes/admin';
@@ -50,6 +51,8 @@ export function createApp() {
   app.use(cookieParser());
   // Test sessions (header, cookie or payment-frame URL) exist only with test hooks on.
   if (config.testHooks) app.use(resolveTestSession);
+  // After the session is known: the missing-security-headers defect is per session. Every response gets these headers.
+  app.use(securityHeaders);
   app.use(express.json({ limit: '100kb' }));
   // Express 5 leaves req.body undefined when no body was parsed; Express 4 set {}, so validation reports each missing field.
   app.use((req, _res, next) => {

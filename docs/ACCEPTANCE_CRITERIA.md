@@ -302,7 +302,7 @@ Built in Phase 1 (API addition 6).
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 fails until security headers are added. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 and 24.12 hold since Phase 3 task 1 (security headers, and 500 bodies with only the standard fields). The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

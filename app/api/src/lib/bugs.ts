@@ -78,6 +78,9 @@ export const BUGS = {
     side: 'service worker',
     description: 'The offline cache keeps showing old prices after going back online',
   },
+  // Phase 3: the security lab
+  'missing-security-headers': { ac: 'PLS-24.11', side: 'api', description: 'API responses carry none of the security headers' },
+  'verbose-errors': { ac: 'PLS-24.12', side: 'api', description: 'An unexpected 500 includes the stack trace, the SQL and file paths' },
   'aria-heading-skip': { ac: 'PLS-19.2', side: 'web', description: 'The order summary jumps from h2 to h4' },
 } as const;
 

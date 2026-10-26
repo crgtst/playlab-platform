@@ -15,8 +15,6 @@ const PLANNED_DEFECTS = [
   'no-page-limit',
   'bfla-admin-users',
   'ssrf-avatar-url',
-  'missing-security-headers',
-  'verbose-errors',
   'shadow-api-v0',
   'trust-address-provider',
 ];
