@@ -340,7 +340,7 @@ Built in Phase 1 (API additions 2 and 3): correlation IDs, logs and metrics.
 
 As an API consumer, I want the API to keep its published contract, so that my integration doesn't break without warning.
 
-Not built yet: the contract jobs and `POST /test/provider-states` arrive in Phase 3 (API addition 9).
+Built in Phase 3: `POST /test/provider-states` (26.5), the Spectral lint, the `oasdiff` gate and Schemathesis (26.1 to 26.3), and the 405 and large-id rules (26.6, 26.7) that Schemathesis led to. Pact (26.4) is task 10.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
@@ -349,6 +349,8 @@ Not built yet: the contract jobs and `POST /test/provider-states` arrive in Phas
 | PLS-26.3 | Given a pull request that changes the OpenAPI file, when `oasdiff` compares it with `main`, then any breaking change to `/api/v1` fails the check |  |  |
 | PLS-26.4 | Given the web app's Pact consumer contracts, when they are verified against the API, then every interaction passes |  |  |
 | PLS-26.5 | Given a provider-state name such as "product 6 has stock 3", when `POST /test/provider-states` is called with it, then the matching data is set up |  |  |
+| PLS-26.6 | Given a path the OpenAPI file lists, when it is called with a method the file does not list for it, then the API returns 405 `METHOD_NOT_ALLOWED` with an `Allow` header; a path that is not in the file is still 404 | | |
+| PLS-26.7 | Given an id larger than the biggest the database holds (2147483647), when it is looked up, then the response is 404, not 500 | | |
 
 ## PLS-27 Performance and capacity (planned: Phase 3)
 

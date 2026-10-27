@@ -15,10 +15,12 @@
     "traceability": "node tools/traceability/trace.mjs",
     "traceability:check": "node tools/traceability/trace.mjs --check",
     "traceability:gate2": "node tools/traceability/trace.mjs --gate2",
-    "test:tools": "node --test tools/traceability/trace.test.mjs"
+    "test:tools": "node --test tools/traceability/trace.test.mjs",
+    "lint:openapi": "spectral lint app/api/openapi/openapi.yaml --fail-severity=error"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@stoplight/spectral-cli": "6.17.0",
     "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",

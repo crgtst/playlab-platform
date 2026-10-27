@@ -66,10 +66,10 @@ wishlistRouter.post(
 wishlistRouter.delete(
   '/items/:productId',
   asyncHandler(async (req: Request, res: Response) => {
-    const rows = await query('DELETE FROM wishlist_items WHERE user_id = $1 AND product_id = $2 RETURNING product_id', [
-      req.user!.id,
-      Number(req.params.productId) || 0,
-    ]);
+    const productId = Number(req.params.productId);
+    const rows = Number.isInteger(productId)
+      ? await query('DELETE FROM wishlist_items WHERE user_id = $1 AND product_id = $2 RETURNING product_id', [req.user!.id, productId])
+      : [];
     if (!rows.length) throw notFound('This product is not in your wishlist');
     res.json(await wishlistView(req.user!.id));
   }),

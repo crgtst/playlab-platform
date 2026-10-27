@@ -9,7 +9,8 @@ import { registry } from './lib/metrics';
 import { correlation } from './lib/requestContext';
 import { resolveTestSession } from './lib/testSessions';
 import { trustedProxies, trustProxy } from './lib/trustedProxy';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { createMethodGuard, createNotFoundHandler, createOptionsHandler, errorHandler } from './middleware/errorHandler';
+import { rejectNullCharacters } from './middleware/validate';
 import { apiRateLimit } from './middleware/rateLimit';
 import { requestLog } from './middleware/requestLog';
 import { securityHeaders } from './middleware/securityHeaders';
@@ -60,6 +61,10 @@ export function createApp() {
     req.body ??= {};
     next();
   });
+  app.use(rejectNullCharacters);
+  const spec = loadOpenApi();
+  app.use(createOptionsHandler(spec, config.testHooks));
+  app.use(createMethodGuard(spec, config.testHooks));
   // Injected latency and failures (POST /test/latency, /test/chaos). Never applies to /test/* or /health.
   if (config.testHooks) app.use(testFaults);
 
@@ -85,7 +90,6 @@ export function createApp() {
   app.use('/api/v0', legacyRouter);
   app.use('/pay', payFrameRouter);
 
-  const spec = loadOpenApi();
   // Prometheus metrics (PLS-25.4): outside /api/v1, so the rate limit never applies.
   app.get('/metrics', async (_req, res) => {
     res.type(registry.contentType).send(await registry.metrics());
@@ -96,7 +100,7 @@ export function createApp() {
 
   if (config.testHooks) app.use('/test', testRouter);
 
-  app.use(notFoundHandler);
+  app.use(createNotFoundHandler(spec, config.testHooks));
   app.use(errorHandler);
   return app;
 }

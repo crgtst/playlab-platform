@@ -148,3 +148,7 @@ vite.config.ts.timestamp-*
 # Turbo Repo
 .turbo
 .DS_Store
+
+# Schemathesis output
+tools/contract/results/
+schema-coverage.html

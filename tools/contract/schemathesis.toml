@@ -1,0 +1,10 @@
+# Settings for tools/contract/schemathesis.sh. The script mounts this file and passes it to Schemathesis.
+
+# Any 4xx counts as the API rejecting bad input. The default list leaves out 412: a stale If-Match is refused with 412
+# before the body is read, and that order is deliberate (PLS-21).
+[checks.negative_data_rejection]
+expected-statuses = ["4xx", "5xx"]
+
+# The same for a missing required header: a write with no If-Match is refused with 428 (PLS-21).
+[checks.missing_required_header]
+expected-statuses = ["4xx", "5xx"]
