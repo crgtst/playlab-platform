@@ -31,6 +31,7 @@ services:
       TEST_HOOKS: ${TEST_HOOKS:-true}
       JWT_SECRET: ${JWT_SECRET:-playlab-dev-secret-not-for-production}
       RATE_LIMIT_PER_MIN: ${RATE_LIMIT_PER_MIN:-100}
+      ACCESS_TOKEN_TTL_SEC: ${ACCESS_TOKEN_TTL_SEC:-900}
       PAYMENT_TIMEOUT_MS: ${PAYMENT_TIMEOUT_MS:-5000}
       # The payment iframe is served by the API on its own origin (cross-origin to the shop).
       PAYMENT_FRAME_URL: ${PAYMENT_FRAME_URL:-http://localhost:${API_PORT:-3000}/pay/frame}
@@ -65,6 +66,7 @@ services:
   web:
     build: ./web
     environment:
+      WEB_ALLOWED_HOSTS: ${WEB_ALLOWED_HOSTS:-}
       API_PROXY_TARGET: http://api:3000
       # Where the payment iframe lives, so the web app's Content-Security-Policy lets the page frame it (PLS-24.11).
       PAYMENT_FRAME_URL: ${PAYMENT_FRAME_URL:-http://localhost:${API_PORT:-3000}/pay/frame}

@@ -299,11 +299,11 @@ Built in Phase 1 (API addition 6).
 | PLS-23.4 | Given a support user, when they list users, then the list is returned, and when they try to change a user, then the API returns 403 |  |  |
 | PLS-23.5 | Given a customer, when they call `GET /admin/users`, then the API returns 403 |  |  |
 
-## PLS-24 API security (planned: Phases 1 and 3)
+## PLS-24 API security (built: Phases 1 and 3)
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 and 24.12 hold since Phase 3 task 1 (security headers, and 500 bodies with only the standard fields). The defects for PLS-24.2, 24.3, 24.4 and 24.8 are built (Phase 3 task 2), and so are those for PLS-24.5, 24.7, 24.13 and 24.14 (task 3). PLS-24.10 holds since task 4 (the avatar import, PLS-9.5), so every defect in this story is built. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 and 24.12 hold since Phase 3 task 1 (security headers, and 500 bodies with only the standard fields). The defects for PLS-24.2, 24.3, 24.4 and 24.8 are built (Phase 3 task 2), and so are those for PLS-24.5, 24.7, 24.13 and 24.14 (task 3). PLS-24.10 holds since task 4 (the avatar import, PLS-9.5), so every defect in this story is built (API addition 7). Phase 3 task 11 added the security suite (`tests/security`): a secure test and a defect test for every AC here, a matrix that switches each defect on and checks its test fails, and OWASP ZAP scans, written up in `docs/security-report.md`. The API policy also gained `form-action 'none'` and the web policy lost its bare `ws:` and `wss:` after ZAP flagged them. The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

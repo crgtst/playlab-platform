@@ -16,7 +16,8 @@
     "traceability:check": "node tools/traceability/trace.mjs --check",
     "traceability:gate2": "node tools/traceability/trace.mjs --gate2",
     "test:tools": "node --test tools/traceability/trace.test.mjs",
-    "lint:openapi": "spectral lint app/api/openapi/openapi.yaml --fail-severity=error"
+    "lint:openapi": "spectral lint app/api/openapi/openapi.yaml --fail-severity=error",
+    "security:report": "node tools/security-report/report.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

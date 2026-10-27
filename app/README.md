@@ -476,6 +476,8 @@ These check the app itself. They are not the training suites, which live in [`..
 | --- | --- | --- |
 | `TEST_HOOKS` | `true` | Mount `/test/*` |
 | `RATE_LIMIT_PER_MIN` | `100` | API rate limit (`0` turns it off) |
+| `WEB_ALLOWED_HOSTS` | empty | Extra hostnames the web app answers to, comma separated (`host.docker.internal` for a ZAP scan) |
+| `ACCESS_TOKEN_TTL_SEC` | `900` | How long an access token lasts. A long scan (ZAP) raises it |
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
 | `NODE_ENV` | `development` in Compose (`production` in the image) | With `production`, the API refuses to start while `TEST_HOOKS=true` |

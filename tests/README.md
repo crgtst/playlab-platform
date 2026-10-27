@@ -11,7 +11,7 @@ One folder per suite. Each brings its own build, dependencies and formatter sett
 | [`karate/`](karate/) | Karate | 2 |
 | [`rest-assured/`](rest-assured/) | REST Assured, JUnit 5, Maven | 2 |
 | [`contract/`](contract/) | Spectral, Schemathesis, oasdiff, Pact | 3 |
-| [`security/`](security/) | OWASP API Top 10 cases, ZAP | 3 |
+| [`security/`](security/) | OWASP API Top 10 tests (Playwright `request`), ZAP | 3 |
 | [`k6/`](k6/) | k6 | 3 |
 | [`jmeter/`](jmeter/) | JMeter | 3 |
 | [`playwright-java/`](playwright-java/) | Playwright for Java, JUnit 5, Maven | 4 |

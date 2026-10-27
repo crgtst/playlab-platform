@@ -12,8 +12,15 @@ const proxy = {
 };
 
 // Vite only answers requests for hosts it knows (DNS-rebinding protection). The API's readiness check calls this app
-// as http://web:5173 inside Compose, so the service name must be allowed as well as localhost.
-const allowedHosts = ['web'];
+// as http://web:5173 inside Compose, so the service name must be allowed as well as localhost. WEB_ALLOWED_HOSTS adds more,
+// for example host.docker.internal when an OWASP ZAP container scans the app (tests/security/zap/run-zap.sh).
+const allowedHosts = [
+  'web',
+  ...(process.env.WEB_ALLOWED_HOSTS ?? '')
+    .split(',')
+    .map((h) => h.trim())
+    .filter(Boolean),
+];
 
 // Security headers on every web response (PLS-24.11). The page loads its own scripts and styles only, talks to its own
 // origin (the API is proxied) and over WebSocket, and frames the payment page on the API's origin.
@@ -28,7 +35,8 @@ const headers = {
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    "connect-src 'self' ws: wss:",
+    // 'self' also covers WebSockets to the same host, which is how live order status connects. A bare ws: would allow any host.
+    "connect-src 'self'",
     "worker-src 'self'",
     `frame-src 'self' ${paymentFrameOrigin}`,
     "object-src 'none'",

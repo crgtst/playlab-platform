@@ -38,7 +38,7 @@ describe('PLS-24.11 security headers', () => {
 
   it('gives the API a policy that allows nothing, and the pages only what they use', async () => {
     expect((await request(app).get('/api/v1/products')).headers['content-security-policy']).toBe(
-      "default-src 'none'; frame-ancestors 'none'",
+      "default-src 'none'; frame-ancestors 'none'; form-action 'none'",
     );
     expect((await request(app).get('/api/docs/')).headers['content-security-policy']).toContain("script-src 'self' 'unsafe-inline'");
     const frame = (await request(app).get('/pay/frame')).headers['content-security-policy'];
