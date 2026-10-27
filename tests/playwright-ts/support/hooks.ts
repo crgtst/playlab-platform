@@ -42,6 +42,13 @@ export class TestHooks {
     return { ...body.user, password: body.password, accessToken: body.accessToken };
   }
 
+  /** Switches defects on for this test's session only. */
+  async enableDefects(...names: string[]): Promise<void> {
+    if (!names.length) return;
+    const res = await this.request.post(`${API_URL}/test/bugs`, { data: { enable: names } });
+    expect(res.status(), `Switch on ${names.join(', ')} (is the name right?)`).toBe(200);
+  }
+
   /** Moves this session's clock forward. */
   async advanceClock(ms: number): Promise<void> {
     const res = await this.request.post(`${API_URL}/test/clock`, { data: { advanceMs: ms } });

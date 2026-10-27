@@ -7,13 +7,30 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 14 are done; tasks 0 to 11 are merged, tasks 12 and 13 are on `tests/k6` and task 14 on `tests/load-dashboard` (stacked, none pushed).
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 15 are done; tasks 0 to 11 are merged, tasks 12 to 14 are PR #49 and task 15 is on `ci/pipelines` (stacked, not pushed).
 
 ## Next task
 
-Phase 3 task 15, CI/CD pipelines: a reusable "start the stack" action, required gates on pull requests, reports published to GitHub Pages, and a nightly run that switches on random defects and fails if one is missed (PLS-29.1 to 29.4).
+Phase 3 task 16, Gate 3 and v1.0.0: the release checklist (README, SECURITY.md, badges, making the repository public). Making it public also unlocks the merge rule and Pages (task 15).
 ## Done
 
+- 2026-10-27: Phase 3 task 15, CI/CD pipelines (PLS-29.1 to 29.4), on `ci/pipelines` (built on tasks 12 to 14). Pipelines are documented in `docs/CI.md`.
+  - **A reusable action** `.github/actions/start-stack` (`.env.example` on ports 3002/5174, optional perf profile, rate limit and extra env, wait until
+    healthy) replaces the same two steps copied into eight workflows (52 lines fewer).
+  - **The nightly defect sweep** (`nightly.yml`, `tools/nightly/defect-sweep.mjs`): picks defects at random (seeded by the date, repeatable), forces each on for
+    the tests of its ACs (`DEFECTS=name`, which the Playwright suite now honours like the security suite) and requires a failing test. All 47 defects are caught.
+    With the forcing switched off it reports the defect missed and fails (checked). `--all`, `--count`, `--seed`, `--only`.
+  - **The report site** (`pages.yml`, `tools/pages`): downloads the latest report artifacts from each pipeline's last good run on main (tested against real
+    runs), rewrites the traceability report from them, builds an index and the Markdown reports as HTML, deploys to GitHub Pages, then runs the release gate.
+  - **The gate**: `trace.mjs --check-sources` (a pull request fails if a test names an AC that does not exist; wired into `quality`) and `--gate3` (every AC
+    covered, nothing failing, every defect caught). Run over main's real artifacts it reports only PLS-27.1 to 27.4 uncovered, which is right until the
+    performance workflow (now also on push to main) has run there.
+  - **The merge rule** `.github/rulesets/main-gates.json` (17 required checks) with `tools/ci/check-ruleset.mjs` (in `quality`: fails if a required check does not
+    exist or only runs on some pull requests) and `tools/ci/apply-ruleset.sh`.
+  - **Not switched on, and why:** GitHub answers "Upgrade to GitHub Pro or make this repository public" for rulesets, branch protection and Pages. So PLS-29.1 and
+    29.2 are written and checked but not live. Run `tools/ci/apply-ruleset.sh` and set Pages to "GitHub Actions" when the repository goes public (task 16).
+    Until then nothing stops a merge, and the Pages site is the `pages-site` artifact of each `pages` run.
+  - Not run in CI yet: `nightly`, `pages` and the refactored workflows (the pull request is their first run; `nightly` and `pages` only run from main).
 - 2026-10-27: Phase 3 task 14, the k6 and JMeter dashboard and the SLO calibration (PLS-27.1 to 27.4), on `tests/load-dashboard` (built on tasks 12 and 13).
   - Grafana dashboard "k6 and JMeter" (`/d/playlab-load`, provisioned): p95, p99, throughput and error rate for each tool, one line for each run, and a
     table of runs; pick the load and the request. k6 sends its metrics over Prometheus remote write (`PROMETHEUS_RW=1`, tagged `tool`, `load`, `testid`).

@@ -1,0 +1,45 @@
+{
+  "name": "main gates",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "required_status_checks": [
+          { "context": "Lint and format" },
+          { "context": "Typecheck (api)" },
+          { "context": "Typecheck (web)" },
+          { "context": "Typecheck (e2e)" },
+          { "context": "API unit tests" },
+          { "context": "API integration tests" },
+          { "context": "E2E smoke" },
+          { "context": "Playwright" },
+          { "context": "Newman" },
+          { "context": "Karate" },
+          { "context": "REST Assured" },
+          { "context": "OpenAPI lint (Spectral)" },
+          { "context": "Breaking changes (oasdiff)" },
+          { "context": "Pact consumer tests (web)" },
+          { "context": "API fuzzing (Schemathesis)" },
+          { "context": "OWASP API Top 10 tests" },
+          { "context": "OWASP ZAP scans" }
+        ]
+      }
+    }
+  ]
+}

@@ -17,7 +17,10 @@
     "traceability:gate2": "node tools/traceability/trace.mjs --gate2",
     "test:tools": "node --test tools/traceability/trace.test.mjs",
     "lint:openapi": "spectral lint app/api/openapi/openapi.yaml --fail-severity=error",
-    "security:report": "node tools/security-report/report.mjs"
+    "security:report": "node tools/security-report/report.mjs",
+    "traceability:sources": "node tools/traceability/trace.mjs --check-sources",
+    "traceability:gate3": "node tools/traceability/trace.mjs --gate3",
+    "nightly:sweep": "node tools/nightly/defect-sweep.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -28,6 +31,7 @@
     "globals": "17.13.0",
     "husky": "9.1.7",
     "lint-staged": "17.6.0",
+    "marked": "^18.1.2",
     "prettier": "3.9.10",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.0"

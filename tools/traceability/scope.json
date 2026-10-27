@@ -6,7 +6,7 @@
   },
   "otherTools": {
     "PLS-26": "Contract checks: 26.1 to 26.3 run in the contract workflow (tools/contract), 26.5 to 26.7 have integration tests in app/api, Pact (26.4) is in app/web (consumer) and app/api (provider, in the integration tests)",
-    "PLS-29": "CI workflows, not tests",
+    "PLS-29": "CI workflows, not tests: see docs/CI.md (29.3 is the nightly sweep, 29.4 is the traceability gate)",
     "PLS-28.5": "Needs the API restarted; covered by a unit test in app/api",
     "PLS-28.8": "Needs an hour of real time; covered by an integration test in app/api",
     "PLS-12.1": "Covered by the API integration tests in app/api",

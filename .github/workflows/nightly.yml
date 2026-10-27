@@ -1,0 +1,80 @@
+# The nightly defect sweep (PLS-29.3): switch defects on at random and check that the test suites notice. Each defect picked is
+# forced on for the tests of the ACs it names, and at least one of them must fail. A defect no test fails for is missed, and the run
+# fails: the suites would not catch that bug if it came back. The seed picks the defects, so a failed night can be repeated.
+name: nightly
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      count:
+        description: How many defects to sweep (ignored with "all")
+        default: "10"
+      all:
+        description: Sweep every defect
+        type: boolean
+        default: false
+      seed:
+        description: "Seed that picks the defects (default is today's date)"
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: Defect sweep
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: ./.github/actions/start-stack
+
+      - name: Install the suites
+        run: |
+          npm ci --prefix tests/playwright-ts
+          npm ci --prefix tests/security
+          npx --prefix tests/playwright-ts playwright install --with-deps chromium
+
+      - name: Sweep
+        env:
+          API_URL: http://localhost:3002
+          COUNT: ${{ inputs.count || '10' }}
+          SEED: ${{ inputs.seed }}
+          ALL: ${{ inputs.all }}
+        run: |
+          args=()
+          if [ "$ALL" = true ]; then args+=(--all); fi
+          node tools/nightly/defect-sweep.mjs "${args[@]}"
+
+      - name: Show the sweep in the run summary
+        if: always()
+        run: |
+          if [ -f tools/nightly/results/defect-sweep.md ]; then cat tools/nightly/results/defect-sweep.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Print the API log if the run failed
+        if: failure()
+        working-directory: app
+        run: docker compose logs --no-color --tail 200 api
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nightly-sweep
+          path: tools/nightly/results/
+          if-no-files-found: ignore
+
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose down -v

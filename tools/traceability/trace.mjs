@@ -4,6 +4,9 @@
  *
  *   node tools/traceability/trace.mjs            write docs/traceability.md
  *   node tools/traceability/trace.mjs --check    exit 1 if a test names an AC ID that does not exist
+ *   node tools/traceability/trace.mjs --check-sources  exit 1 if a test source names an AC ID that does not exist (needs no results)
+ *   node tools/traceability/trace.mjs --gate3    exit 1 unless every AC is covered, nothing fails and every defect is caught
+ *   node tools/traceability/trace.mjs --reports <dir>  read the JUnit files from <dir>/tests/<suite>/ instead of the repo
  *   node tools/traceability/trace.mjs --gate2    exit 1 unless the Gate 2 conditions hold
  *
  * An AC is covered by a test whose name contains its ID (`PLS-5.2 expired code is rejected`); a defect is caught by a
@@ -177,6 +180,44 @@ export function gate2({ rows, defects }, scope) {
   return { original, uncovered, originalDefects, missed, passed: uncovered.length === 0 && missed.length === 0 };
 }
 
+/**
+ * Gate 3, the release gate (and the pipeline's): every AC that is in scope has a passing test, nothing fails, and every defect that is
+ * built is caught by a passing test.
+ */
+export function gate3({ rows, defects }) {
+  const uncovered = rows.filter((r) => r.result !== 'pass' && !r.note);
+  const failing = rows.filter((r) => r.result === 'fail');
+  const missed = defects.filter((d) => d.built && d.caught.length === 0);
+  return { uncovered, failing, missed, passed: uncovered.length === 0 && failing.length === 0 && missed.length === 0 };
+}
+
+const SOURCE_DIRS = ['tests', 'app/api/test', 'app/e2e/specs', 'app/web/pact', 'app/web/playwright'];
+const SOURCE_FILES = /\.(ts|tsx|java|feature|mjs|js)$/;
+const SKIP_DIRS = new Set(['node_modules', 'target', 'results', 'dist', 'test-results', 'playwright-report', 'schemas', '.git']);
+
+/** AC IDs named in test source files, by file: the check that needs no test results, so a pull request can run it. */
+export function acIdsInSources(root = ROOT) {
+  const found = new Map();
+  const walk = (dir) => {
+    if (!existsSync(dir)) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (SKIP_DIRS.has(entry.name)) continue;
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (SOURCE_FILES.test(entry.name)) {
+        for (const line of readFileSync(path, 'utf8').split('\n')) {
+          for (const id of acIds(line)) {
+            if (!found.has(id)) found.set(id, []);
+            found.get(id).push(relative(root, path));
+          }
+        }
+      }
+    }
+  };
+  for (const dir of SOURCE_DIRS) walk(join(root, dir));
+  return found;
+}
+
 // ---------------------------------------------------------------- the report
 
 const ICON = { pass: 'pass', fail: '**FAIL**', skipped: 'skipped', none: '' };
@@ -297,10 +338,24 @@ export function render({ rows, defects, unknown, stories }, sources, scope) {
 // ---------------------------------------------------------------- command line
 
 function main(argv) {
+  if (argv.includes('--check-sources')) {
+    const known = new Set(parseCriteria(readFileSync(join(ROOT, 'docs/ACCEPTANCE_CRITERIA.md'), 'utf8')).criteria.map((c) => c.id));
+    const unknown = [...acIdsInSources()].filter(([id]) => !known.has(id));
+    if (!unknown.length) {
+      console.log(`OK: every AC ID named in the test sources exists (${known.size} ACs).`);
+      return 0;
+    }
+    for (const [id, files] of unknown) console.error(`${id} does not exist (named in ${[...new Set(files)].slice(0, 3).join(', ')})`);
+    return 1;
+  }
+
   const scope = JSON.parse(readFileSync(join(ROOT, 'tools/traceability/scope.json'), 'utf8'));
   const { stories, criteria } = parseCriteria(readFileSync(join(ROOT, 'docs/ACCEPTANCE_CRITERIA.md'), 'utf8'));
   const bugNames = parseBugNames(readFileSync(join(ROOT, 'app/api/src/lib/bugs.ts'), 'utf8'));
-  const { tests, sources } = readTests();
+  // --reports <dir>: read the JUnit files from <dir>/tests/<suite>/... (the pages workflow assembles them from the pipelines' artifacts).
+  const reportsIndex = argv.indexOf('--reports');
+  const reportsRoot = reportsIndex >= 0 ? resolve(argv[reportsIndex + 1]) : ROOT;
+  const { tests, sources } = readTests(reportsRoot);
   const result = analyse({ criteria, stories, bugNames, scope, tests });
 
   if (argv.includes('--check')) {
@@ -322,6 +377,17 @@ function main(argv) {
     console.log(`Gate 2: ${g.originalDefects.length} original defects, ${g.missed.length} not caught.`);
     for (const d of g.missed) console.log(`  ${d.name} (${d.acs.join(', ')})`);
     console.log(g.passed ? 'Gate 2 met.' : 'Gate 2 not met.');
+    return g.passed ? 0 : 1;
+  }
+
+  if (argv.includes('--gate3')) {
+    const g = gate3(result);
+    console.log(
+      `Gate 3: ${g.uncovered.length} ACs without a passing test, ${g.failing.length} failing, ${g.missed.length} defects not caught.`,
+    );
+    for (const r of g.uncovered) console.log(`  ${r.id} (${r.result}): ${r.text}`);
+    for (const d of g.missed) console.log(`  defect ${d.name} (${d.acs.join(', ')})`);
+    console.log(g.passed ? 'Gate 3 met.' : 'Gate 3 not met.');
     return g.passed ? 0 : 1;
   }
 

@@ -1,0 +1,84 @@
+# Publishes the latest reports from main to GitHub Pages (PLS-29.2) and runs the release gate over them.
+#
+# After a pipeline finishes on main, this downloads the newest report artifacts from every pipeline's last successful run, builds one
+# site (an index, the traceability report, the security report, the Playwright, Newman, Karate, ZAP, k6 and JMeter reports), and
+# publishes it. It then runs the gate (PLS-29.4): every in-scope AC has a passing test, none fails, and every defect is caught.
+#
+# GitHub Pages is not available to a private repository on a free plan, so until the repository is public the site is built and kept as
+# the `pages-site` artifact, and the deploy job is skipped.
+name: pages
+
+on:
+  workflow_run:
+    workflows: [playwright, postman, karate, rest-assured, smoke, contract, security, performance, nightly]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  report:
+    name: Build the report site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - run: npm ci
+        env:
+          HUSKY: 0
+
+      - name: Collect the latest reports from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/pages/collect.sh out main
+
+      - name: Write the traceability report from them
+        run: node tools/traceability/trace.mjs --reports out/trace --out out/site/traceability.md
+
+      - name: Build the site
+        run: node tools/pages/build-site.mjs out/site "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pages-site
+          path: out/site/
+          retention-days: 14
+
+      - uses: actions/upload-pages-artifact@v3
+        if: ${{ github.event.repository.private == false }}
+        with:
+          path: out/site
+
+      # After the site is published, so a failing gate does not hide the reports that explain it.
+      - name: Release gate over the collected reports
+        run: node tools/traceability/trace.mjs --reports out/trace --gate3
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: report
+    if: ${{ always() && github.event.repository.private == false && needs.report.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
