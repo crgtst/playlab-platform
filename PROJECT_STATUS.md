@@ -7,14 +7,23 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 5 are done (task 4 is in PR #41, task 5 in PR #42).
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 6 are done and merged except task 6 (branch `feat/bulk-data`, not pushed).
 
 ## Next task
 
-Phase 3 tasks 6 and 7 (bulk data, provider states). Task 8 then checks all 47 defects.
+Phase 3 task 7 (provider states). Task 8 then checks all 47 defects.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 6, bulk data (PLS-28.3, 28.4), on `feat/bulk-data`. Tasks 3, 4 and 5 are merged (PRs #40 to #42).
+  - `POST /test/generate { products, users, ordersPerUser, seed }` (`db/seed/generate.ts`): a seeded generator (mulberry32),
+    fixed timestamps (not the clock), bulk inserts. 10,000 products, 1,000 users and 5,000 orders take about 3.5 s. After a reset
+    the same body and seed gives the same rows, ids and order numbers; the response carries a `checksum`. The same seed twice
+    without a reset is a 409 `GENERATE_CONFLICT`.
+  - `POST /test/users/bulk { count }` (1 to 5000) returns CSV `email,password,token`; each call makes new accounts.
+  - 9 integration tests (identical after reset, different seed differs, totals add up, 409, limits, all 500 accounts log in
+    with the rate limit off for that test, tokens work, calls do not share accounts). 58 unit, 236 integration pass.
+  - Traceability notes for PLS-28.3 and 28.4 updated; the hooks are not in OpenAPI (like the other `/test` hooks).
 - 2026-10-27: Phase 3 task 5, the performance profile (PLS-27.5), on `feat/perf-profile` (built on task 4).
   - `app/docker-compose.perf.yml` is an override file (a profile cannot change another service): API in production mode,
     no rate limit, `LOG_LEVEL=warn`, 2 CPUs / 1 GB; database 2 CPUs / 2 GB; Prometheus and Grafana with a provisioned

@@ -6,8 +6,8 @@
     "PLS-24.11": "security headers are Phase 3",
     "PLS-24.12": "verbose-errors is a Phase 3 defect",
     "PLS-24.14": "trust-address-provider is a Phase 3 defect",
-    "PLS-28.3": "POST /test/generate arrives with the perf profile (Phase 3)",
-    "PLS-28.4": "POST /test/users/bulk arrives with the perf profile (Phase 3)"
+    "PLS-28.3": "Built in Phase 3 task 6; covered by integration tests in app/api, used by the k6 and JMeter suites",
+    "PLS-28.4": "Built in Phase 3 task 6; covered by integration tests in app/api, used by the k6 and JMeter suites"
   },
   "otherTools": {
     "PLS-26": "Contract tools (Spectral, Schemathesis, oasdiff, Pact): Phase 3",
