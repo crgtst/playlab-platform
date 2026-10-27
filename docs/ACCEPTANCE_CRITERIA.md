@@ -340,7 +340,7 @@ Built in Phase 1 (API additions 2 and 3): correlation IDs, logs and metrics.
 
 As an API consumer, I want the API to keep its published contract, so that my integration doesn't break without warning.
 
-Built in Phase 3: `POST /test/provider-states` (26.5), the Spectral lint, the `oasdiff` gate and Schemathesis (26.1 to 26.3), and the 405 and large-id rules (26.6, 26.7) that Schemathesis led to. Pact (26.4) is task 10.
+Built in Phase 3: `POST /test/provider-states` (26.5), the Spectral lint, the `oasdiff` gate and Schemathesis (26.1 to 26.3), and the 405 and large-id rules (26.6, 26.7) that Schemathesis led to. Pact (26.4) is built in task 10.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
