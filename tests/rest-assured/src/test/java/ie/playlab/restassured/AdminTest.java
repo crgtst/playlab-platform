@@ -48,8 +48,8 @@ class AdminTest extends ApiTest {
     void productCrud() {
         int id = createProduct();
         String etag = api.guest().get("/api/v1/products/{id}", id).then().statusCode(200).body(Schema.matches("ProductEnvelope")).extract().header("ETag");
-        Response edited = api.as(admin).header("If-Match", etag).body(Map.of("name", "Renamed by REST Assured")).patch("/api/v1/products/{id}", id);
-        edited.then().statusCode(200).body("data.name", equalTo("Renamed by REST Assured"));
+        Response edited = api.as(admin).header("If-Match", etag).body(Map.of("name", "zz Renamed by REST Assured")).patch("/api/v1/products/{id}", id);
+        edited.then().statusCode(200).body("data.name", equalTo("zz Renamed by REST Assured"));
         assertNotEquals(etag, edited.header("ETag"));
         deleteProduct(id);
         api.guest().get("/api/v1/products/{id}", id).then().statusCode(404);
@@ -160,7 +160,7 @@ class AdminTest extends ApiTest {
         page.then().statusCode(200).body("data", hasSize(2)).body("data.role", everyItem(equalTo("support")))
                 .body("meta.limit", equalTo(2)).header("X-Total-Count", equalTo(String.valueOf((int) page.path("meta.total"))));
         // Every user in the list is an AdminUser (the generated class) and matches its schema.
-        for (AdminUser user : page.as(ie.playlab.api.model.AdminUsersGet200Response.class).getData()) {
+        for (AdminUser user : page.as(ie.playlab.api.model.GetAdminUsers200Response.class).getData()) {
             assertNotNull(user.getLocked());
         }
         try {

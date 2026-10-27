@@ -1,0 +1,99 @@
+# Contract checks on the OpenAPI file (PLS-26.1 to 26.3):
+#   spectral      lints the file with the repo's ruleset (.spectral.yaml)
+#   oasdiff       on a pull request, fails if the change breaks /api/v1 for an existing client
+#   schemathesis  fuzzes the running API: every response must match the file and no request may cause a 500
+name: contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  spectral:
+    name: OpenAPI lint (Spectral)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+        env:
+          HUSKY: 0
+      - run: npm run lint:openapi
+
+  oasdiff:
+    name: Breaking changes (oasdiff)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Compare the OpenAPI file with the one on the base branch
+        env:
+          BASE: origin/${{ github.base_ref }}
+          # Pinned by digest so a new oasdiff release cannot change what counts as breaking without a pull request.
+          OASDIFF: tufin/oasdiff@sha256:65a2269a4c2621c181b19d94ec3540cde44a942d8da4a6f802c209661f724c03
+        run: |
+          mkdir -p "$RUNNER_TEMP/oas"
+          git show "$BASE:app/api/openapi/openapi.yaml" > "$RUNNER_TEMP/oas/base.yaml"
+          cp app/api/openapi/openapi.yaml "$RUNNER_TEMP/oas/head.yaml"
+          echo "## Changes to the API"
+          docker run --rm -v "$RUNNER_TEMP/oas:/oas" "$OASDIFF" changelog /oas/base.yaml /oas/head.yaml || true
+          echo
+          echo "## Breaking changes"
+          docker run --rm -v "$RUNNER_TEMP/oas:/oas" "$OASDIFF" breaking /oas/base.yaml /oas/head.yaml --fail-on ERR
+
+  schemathesis:
+    name: API fuzzing (Schemathesis)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      # The rate limit is off: the fuzzer sends thousands of requests, and a 429 is not what is being tested.
+      - name: Configure the stack from .env.example on non-default ports
+        working-directory: app
+        run: sed -e 's/^API_PORT=.*/API_PORT=3002/' -e 's/^WEB_PORT=.*/WEB_PORT=5174/' -e 's/^RATE_LIMIT_PER_MIN=.*/RATE_LIMIT_PER_MIN=0/' .env.example > .env
+
+      - name: Start the stack
+        working-directory: app
+        run: docker compose up --build --detach --wait --wait-timeout 300
+
+      - name: Fuzz the API as a customer
+        run: bash tools/contract/schemathesis.sh
+
+      # A customer only gets 403 from the admin operations, so they need a second pass.
+      - name: Fuzz the API as an admin
+        run: OUT_DIR=tools/contract/results/admin ROLE=admin bash tools/contract/schemathesis.sh
+
+      - name: Print the API log if the run failed
+        if: failure()
+        working-directory: app
+        run: docker compose logs --no-color --tail 200 api
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: schemathesis-results
+          path: tools/contract/results/
+          if-no-files-found: ignore
+
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose down -v

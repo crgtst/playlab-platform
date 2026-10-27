@@ -48,7 +48,8 @@ function handleUpload(req: Request, res: Response, next: NextFunction) {
         new ApiError(422, 'VALIDATION_ERROR', 'Upload one file in the "avatar" field', [{ field: 'avatar', message: err.message }]),
       );
     }
-    next(err);
+    // The form parser itself failed (no boundary, a body cut short): the client sent something that is not multipart.
+    next(new ApiError(400, 'BAD_REQUEST', 'The upload is not valid multipart form data'));
   });
 }
 
@@ -137,7 +138,7 @@ usersRouter.get(
   '/:id/avatar',
   asyncHandler(async (req: Request, res: Response) => {
     const id = Number(req.params.id);
-    if (!Number.isInteger(id) || id <= 0) throw notFound('Avatar not found');
+    if (!Number.isInteger(id) || id <= 0 || id > 2_147_483_647) throw notFound('Avatar not found');
     const rows = await query('SELECT content_type, data, updated_at FROM avatars WHERE user_id = $1', [id]);
     if (!rows[0]) throw notFound('Avatar not found');
     const etag = `"av-${id}-${new Date(rows[0].updated_at).getTime()}"`;

@@ -1,0 +1,51 @@
+# The repo's OpenAPI ruleset (PLS-26.1). Run: npm run lint:openapi
+extends: [spectral:oas]
+rules:
+  # The base rules, kept as errors.
+  operation-operationId: error
+  operation-tags: error
+  operation-description: off # every operation has a summary; descriptions only where they add something
+  info-contact: off
+  playlab-operation-summary:
+    description: Every operation has a summary
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete]
+    then:
+      field: summary
+      function: truthy
+  info-description: error
+  # Ours.
+  playlab-operation-id-camel-case:
+    description: operationId is camelCase, so generated clients have predictable method names
+    severity: error
+    given: $.paths[*][get,post,put,patch,delete].operationId
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][A-Za-z0-9]*$"
+  playlab-paths-are-kebab-case:
+    description: Path segments are lower-case words with hyphens; {parameters} are camelCase
+    severity: error
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: '^(/([a-z0-9]+(-[a-z0-9]+)*(\.[a-z]+)?|\{[a-z][A-Za-z0-9]*\}))+$|^/$'
+  playlab-needs-error-response:
+    description: Every rate-limited operation documents at least one error response (4xx or default). Health, metrics, the payment frame and the test hooks are not rate limited
+    severity: error
+    given: $.paths[?(!/^\/(health|metrics|pay|test)/.test(@property))][get,post,put,patch,delete].responses
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          anyOf:
+            - required: ["400"]
+            - required: ["401"]
+            - required: ["403"]
+            - required: ["404"]
+            - required: ["409"]
+            - required: ["422"]
+            - required: ["429"]
+            - required: [default]

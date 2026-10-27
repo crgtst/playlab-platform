@@ -43,10 +43,10 @@ Feature: Admin, files and accounts (PLS-8, 9, 21, 22, 23, 24.8)
     Given path 'api', 'v1', 'products', made.id
     And header Authorization = 'Bearer ' + admin.token
     And header If-Match = etag
-    And request { name: 'Renamed by Karate' }
+    And request { name: 'zz Renamed by Karate' }
     When method patch
     Then status 200
-    And match response.data.name == 'Renamed by Karate'
+    And match response.data.name == 'zz Renamed by Karate'
     And match responseHeaders['ETag'][0] != etag
     Given path 'api', 'v1', 'products', made.id
     And header Authorization = 'Bearer ' + admin.token

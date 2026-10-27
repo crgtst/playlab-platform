@@ -218,10 +218,16 @@ authRouter.post(
   }),
 );
 
+/** The refresh token from the body or the cookie. Anything that is not a string counts as missing, so it cannot reach the hash. */
+function refreshTokenFrom(req: Request): string | undefined {
+  const token = req.body?.refreshToken ?? req.cookies?.[REFRESH_COOKIE];
+  return typeof token === 'string' ? token : undefined;
+}
+
 authRouter.post(
   '/refresh',
   asyncHandler(async (req: Request, res: Response) => {
-    const token: string | undefined = req.body?.refreshToken ?? req.cookies?.[REFRESH_COOKIE];
+    const token = refreshTokenFrom(req);
     // A failed refresh leaves the browser's login cookies dead. Clearing them sends its next request as a guest instead of
     // with an expired token, which would be refused even where no login is needed (PLS-1.8).
     const fail = (message: string, code: string) => {
@@ -257,7 +263,7 @@ authRouter.post(
   asyncHandler(async (req: Request, res: Response) => {
     // logout-incomplete: report success but leave the session cookie and refresh token working.
     if (isBugOn('logout-incomplete')) return res.status(204).end();
-    const token: string | undefined = req.body?.refreshToken ?? req.cookies?.[REFRESH_COOKIE];
+    const token = refreshTokenFrom(req);
     if (token) {
       await query('UPDATE refresh_tokens SET revoked_at = $1 WHERE token_hash = $2 AND revoked_at IS NULL', [
         clock.now(),

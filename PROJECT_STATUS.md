@@ -7,13 +7,28 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 8 are done; tasks 0 to 7 are merged and task 8 (branch `chore/platform-check`) is not pushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 9 are done; tasks 0 to 8 are merged and task 9 (branch `feat/contract-checks`) is not pushed.
 
 ## Next task
 
-Phase 3 task 9, contract checks: Spectral lint, `oasdiff` breaking-change gate and Schemathesis (PLS-26.1 to 26.3).
+Phase 3 task 10, Pact: consumer tests in the web app and provider verification in the API, using the provider states (PLS-26.4).
 ## Done
 
+- 2026-10-27: Phase 3 task 9, contract checks (PLS-26.1 to 26.3, new 26.6 and 26.7), on `feat/contract-checks`. Task 8 is merged
+  (PR #45); an earlier note here said the `/test` hooks are not in the OpenAPI file, which was wrong, and the three new hooks
+  (`/test/generate`, `/test/users/bulk`, `/test/provider-states`) are now in it.
+  - New workflow `contract` with three jobs: Spectral (`npm run lint:openapi`, ruleset `.spectral.yaml`), `oasdiff` on pull
+    requests (pinned image, `--fail-on ERR`; renaming `priceCents` fails it) and Schemathesis (`tools/contract/schemathesis.sh`,
+    a customer pass and an admin pass, fixed seed, pinned version). See `tools/contract/README.md`.
+  - The OpenAPI file gained an `operationId` on all 78 operations, 26 undocumented responses (400 for bad JSON, 401, 422), the
+    three hooks, and a correct schema for the stock stream.
+  - Schemathesis found real defects, fixed with 13 integration tests: a 500 for ids above 2147483647 (every `{id}` route), for a
+    null character in a query string or body, for `{"refreshToken": {}}`, for a malformed multipart avatar upload and for
+    `DELETE /wishlist/items/0.5`; and unlisted methods answered 404 or 401. New AC PLS-26.6 (405 with `Allow`, `OPTIONS` lists
+    exactly the methods in the file, checked before the login) and PLS-26.7 (an id above 2147483647 is a 404).
+  - Clean runs: seed 1 and seed 7 (50 examples), as customer and as admin. Settings that are choices, not defects: the
+    `positive_data_acceptance` check is off (a schema-valid request can break a business rule) and 412 and 428 count as rejections.
+  - Not done: the CI jobs have not run yet (first run is the pull request).
 - 2026-10-27: Phase 3 task 8, the platform check, on `chore/platform-check`. Task 7 is merged (PR #44).
   - All 47 defects have an AC (existing test) and now a test that names them: `bugs.test.ts` fails if a defect is in no
     api, e2e, web or tool-suite test (checked by adding a fake defect). 36 are caught by a passing tool-suite test; the 11

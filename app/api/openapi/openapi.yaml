@@ -47,6 +47,7 @@ tags:
 paths:
   /health:
     get:
+      operationId: getHealth
       tags: [Health]
       summary: Readiness check (API, database and web app)
       responses:
@@ -62,6 +63,7 @@ paths:
               schema: { $ref: '#/components/schemas/Health' }
   /health/live:
     get:
+      operationId: getHealthLive
       tags: [Health]
       summary: Liveness check (API and database only)
       responses:
@@ -78,6 +80,7 @@ paths:
 
   /auth/register:
     post:
+      operationId: postAuthRegister
       tags: [Auth]
       summary: Register a customer account
       description: Sends a confirmation email to the test mailbox. Does not log the user in.
@@ -87,6 +90,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/RegisterRequest' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Account created
           content:
@@ -97,6 +101,7 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
   /auth/confirm-email:
     post:
+      operationId: postAuthConfirmEmail
       tags: [Auth]
       summary: Confirm an email address with the token from the confirmation email
       requestBody:
@@ -114,6 +119,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
   /auth/login:
     post:
+      operationId: postAuthLogin
       tags: [Auth]
       summary: Log in
       description: |
@@ -125,6 +131,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/LoginRequest' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Logged in
           headers:
@@ -146,6 +153,7 @@ paths:
               schema: { $ref: '#/components/schemas/Error' }
   /auth/refresh:
     post:
+      operationId: postAuthRefresh
       tags: [Auth]
       summary: Exchange a refresh token for a new access token
       description: Reads the refresh token from the body or the `refresh_token` cookie. Refresh tokens are single use (rotated).
@@ -157,6 +165,8 @@ paths:
               properties:
                 refreshToken: { type: string }
       responses:
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: New tokens
           content:
@@ -165,14 +175,17 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /auth/logout:
     post:
+      operationId: postAuthLogout
       tags: [Auth]
       summary: Log out
       description: Revokes the refresh token and clears the session, refresh and cart cookies.
       responses:
+        '429': { $ref: '#/components/responses/RateLimited' }
         '204':
           description: Logged out
   /auth/me:
     get:
+      operationId: getAuthMe
       tags: [Auth]
       summary: The current user
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -185,6 +198,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /auth/forgot-password:
     post:
+      operationId: postAuthForgotPassword
       tags: [Auth]
       summary: Request a password reset link
       description: Always returns 202. If the account exists, a reset link (valid for 1 hour) is sent to the test mailbox.
@@ -198,6 +212,7 @@ paths:
               properties:
                 email: { type: string, format: email }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '202':
           description: Accepted
           content:
@@ -206,6 +221,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
   /auth/reset-password:
     post:
+      operationId: postAuthResetPassword
       tags: [Auth]
       summary: Set a new password with a reset token
       requestBody:
@@ -229,6 +245,7 @@ paths:
 
   /products:
     get:
+      operationId: getProducts
       tags: [Products]
       summary: Search, filter, sort and page through products
       parameters:
@@ -256,6 +273,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
     post:
+      operationId: postProducts
       tags: [Products]
       summary: Create a product (admin)
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -265,6 +283,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/ProductInput' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Created
           content:
@@ -278,6 +297,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     get:
+      operationId: getProductsById
       tags: [Products]
       summary: Get one product
       parameters:
@@ -295,6 +315,7 @@ paths:
           description: Not modified (ETag matched)
         '404': { $ref: '#/components/responses/NotFound' }
     put:
+      operationId: putProductsById
       tags: [Products]
       summary: Replace a product (admin)
       description: Needs `If-Match` with the `ETag` from `GET /products/{id}` (PLS-21). Any change, stock included, gives a new ETag.
@@ -307,6 +328,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/ProductInput' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Updated
           headers:
@@ -322,6 +344,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
     patch:
+      operationId: patchProductsById
       tags: [Products]
       summary: Update some fields of a product (admin)
       description: Needs `If-Match` with the `ETag` from `GET /products/{id}` (PLS-21). Any change, stock included, gives a new ETag.
@@ -334,6 +357,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/ProductPatch' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Updated
           headers:
@@ -349,6 +373,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
         '428': { $ref: '#/components/responses/PreconditionRequired' }
     delete:
+      operationId: deleteProductsById
       tags: [Products]
       summary: Delete a product (admin)
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -363,6 +388,7 @@ paths:
     parameters:
       - { name: productId, in: path, required: true, schema: { type: integer } }
     get:
+      operationId: getProductsByProductIdReviews
       tags: [Products]
       summary: Reviews for a product, newest first
       description: Review text is returned exactly as written. Render it as text, never as HTML.
@@ -374,6 +400,7 @@ paths:
               schema: { $ref: '#/components/schemas/ReviewList' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
+      operationId: postProductsByProductIdReviews
       tags: [Products]
       summary: Review a product (one review per user per product)
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -389,6 +416,7 @@ paths:
                 title: { type: string, maxLength: 100 }
                 body: { type: string, maxLength: 1000 }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Created
           content:
@@ -406,6 +434,7 @@ paths:
 
   /stock/stream:
     get:
+      operationId: getStockStream
       tags: [Products]
       summary: Live stock levels (Server-Sent Events)
       description: |
@@ -422,11 +451,21 @@ paths:
           description: Event stream
           content:
             text/event-stream:
-              schema: { type: string, example: "event: stock\ndata: {\"productId\":4,\"stock\":7,\"at\":\"2026-10-20T12:00:00.000Z\"}\n\n" }
+              schema:
+                type: object
+                description: One server-sent event. `data` is JSON text.
+                required: [data]
+                properties:
+                  event: { type: string, enum: [snapshot, stock] }
+                  data: { type: string }
+                  id: { type: string }
+                  retry: { type: string }
+                example: { event: stock, data: '{"productId":4,"stock":7,"at":"2026-10-20T12:00:00.000Z"}' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
   /stores:
     get:
+      operationId: getStores
       tags: [Stores]
       summary: List stores, optionally searching by town or name
       parameters:
@@ -450,6 +489,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
   /stores/nearest:
     get:
+      operationId: getStoresNearest
       tags: [Stores]
       summary: The stores nearest to a position, closest first
       parameters:
@@ -483,9 +523,11 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
   /offers:
     get:
+      operationId: getOffers
       tags: [Cart]
       summary: Public, currently active discount codes
       responses:
+        '429': { $ref: '#/components/responses/RateLimited' }
         '200':
           description: Offers
           content:
@@ -508,9 +550,11 @@ paths:
 
   /categories:
     get:
+      operationId: getCategories
       tags: [Products]
       summary: List categories
       responses:
+        '429': { $ref: '#/components/responses/RateLimited' }
         '200':
           description: Categories
           content:
@@ -525,6 +569,7 @@ paths:
 
   /cart:
     get:
+      operationId: getCart
       tags: [Cart]
       summary: The current cart
       description: Logged-in users get their account cart; guests get the cart in the `cart_id` cookie.
@@ -536,9 +581,12 @@ paths:
               schema: { $ref: '#/components/schemas/Cart' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     delete:
+      operationId: deleteCart
       tags: [Cart]
       summary: Empty the cart
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '200':
           description: Empty cart
           content:
@@ -546,6 +594,7 @@ paths:
               schema: { $ref: '#/components/schemas/Cart' }
   /cart/items:
     post:
+      operationId: postCartItems
       tags: [Cart]
       summary: Add a product to the cart
       description: Adds to the existing quantity if the product is already in the cart.
@@ -560,6 +609,8 @@ paths:
                 productId: { type: integer }
                 quantity: { type: integer, minimum: 1, maximum: 99, default: 1 }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '201':
           description: Updated cart
           headers:
@@ -576,6 +627,7 @@ paths:
     parameters:
       - { name: productId, in: path, required: true, schema: { type: integer } }
     patch:
+      operationId: patchCartItemsByProductId
       tags: [Cart]
       summary: Set the quantity of a cart item
       requestBody:
@@ -588,6 +640,8 @@ paths:
               properties:
                 quantity: { type: integer, minimum: 1, maximum: 99 }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200':
           description: Updated cart
           content:
@@ -597,9 +651,11 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteCartItemsByProductId
       tags: [Cart]
       summary: Remove an item from the cart
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200':
           description: Updated cart
           content:
@@ -608,6 +664,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /cart/discount:
     post:
+      operationId: postCartDiscount
       tags: [Cart]
       summary: Apply a discount code
       description: |
@@ -624,6 +681,8 @@ paths:
               properties:
                 code: { type: string, example: save10 }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200':
           description: Cart with the discount applied
           content:
@@ -632,9 +691,12 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteCartDiscount
       tags: [Cart]
       summary: Remove the applied discount code
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '200':
           description: Cart without a discount
           content:
@@ -643,6 +705,7 @@ paths:
 
   /orders:
     post:
+      operationId: postOrders
       tags: [Orders]
       summary: Place an order from the current cart
       description: |
@@ -693,6 +756,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
     get:
+      operationId: getOrders
       tags: [Orders]
       summary: List orders, newest first
       description: Customers see only their own orders. Admin and support users see every order and can filter them.
@@ -704,6 +768,7 @@ paths:
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
       responses:
+        '422': { $ref: '#/components/responses/ValidationError' }
         '200':
           description: Orders
           content:
@@ -714,6 +779,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     get:
+      operationId: getOrdersById
       tags: [Orders]
       summary: Get one order
       description: Returns 404 (not 403) for another customer's order, so ids are not leaked.
@@ -731,6 +797,7 @@ paths:
 
   /addresses/suggest:
     get:
+      operationId: getAddressesSuggest
       tags: [Addresses]
       summary: Address autocomplete
       parameters:
@@ -752,9 +819,11 @@ paths:
 
   /config:
     get:
+      operationId: getConfig
       tags: [Health]
       summary: Public runtime settings for the web app
       responses:
+        '429': { $ref: '#/components/responses/RateLimited' }
         '200':
           description: Settings
           content:
@@ -777,6 +846,7 @@ paths:
 
   /orders/export.csv:
     get:
+      operationId: getOrdersExportCsv
       tags: [Admin]
       summary: Download orders as CSV (admin)
       description: One row per order plus a header row. Honours the same `status`, `q` and `sort` filters as `GET /orders`.
@@ -786,6 +856,7 @@ paths:
         - { $ref: '#/components/parameters/OrderSearch' }
         - { $ref: '#/components/parameters/OrderSort' }
       responses:
+        '422': { $ref: '#/components/responses/ValidationError' }
         '200':
           description: CSV file
           headers:
@@ -800,6 +871,7 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
   /orders/bulk-status:
     post:
+      operationId: postOrdersBulkStatus
       tags: [Admin]
       summary: Change the status of several orders at once (admin)
       description: |
@@ -822,6 +894,7 @@ paths:
                   items: { type: integer }
                 status: { $ref: '#/components/schemas/OrderStatus' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Updated orders
           content:
@@ -845,6 +918,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     patch:
+      operationId: patchOrdersByIdStatus
       tags: [Admin]
       summary: Change an order's status (admin)
       description: |
@@ -864,6 +938,7 @@ paths:
               properties:
                 status: { $ref: '#/components/schemas/OrderStatus' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Updated order
           headers:
@@ -882,6 +957,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     post:
+      operationId: postOrdersByIdCancel
       tags: [Orders]
       summary: Cancel your own order
       description: |
@@ -901,6 +977,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     get:
+      operationId: getOrdersByIdTracking
       tags: [Orders]
       summary: Parcel tracking timeline for an order
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -919,6 +996,7 @@ paths:
 
   /payments/intents:
     post:
+      operationId: postPaymentsIntents
       tags: [Payments]
       summary: Create a payment intent for the current cart total
       description: |
@@ -949,6 +1027,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     get:
+      operationId: getPaymentsIntentsById
       tags: [Payments]
       summary: Get one of your payment intents
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -967,6 +1046,7 @@ paths:
 
   /admin/users:
     get:
+      operationId: getAdminUsers
       tags: [Admin]
       summary: List users (admin and support)
       description: Ordered by id. `q` matches the name or email. Customers get 403.
@@ -998,6 +1078,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     patch:
+      operationId: patchAdminUsersById
       tags: [Admin]
       summary: Change a user's role or unlock their account (admin)
       description: |
@@ -1014,6 +1095,7 @@ paths:
                 role: { type: string, enum: [customer, admin, support] }
                 unlock: { type: boolean, enum: [true] }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: The user after the change
           content:
@@ -1029,6 +1111,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
   /users/me:
     get:
+      operationId: getUsersMe
       tags: [Users]
       summary: Your profile
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -1044,6 +1127,7 @@ paths:
                   data: { $ref: '#/components/schemas/User' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     patch:
+      operationId: patchUsersMe
       tags: [Users]
       summary: Change your name or email
       description: |
@@ -1061,6 +1145,7 @@ paths:
                 email: { type: string, format: email, maxLength: 254 }
                 currentPassword: { type: string, description: Needed to change the email }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Updated account
           content:
@@ -1074,6 +1159,7 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteUsersMe
       tags: [Users]
       summary: Delete your account
       description: |
@@ -1086,6 +1172,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /users/me/avatar:
     post:
+      operationId: postUsersMeAvatar
       tags: [Users]
       summary: Upload your avatar
       description: PNG or JPG, at most 2 MB. The type is detected from the file contents, not its name or MIME type.
@@ -1100,6 +1187,7 @@ paths:
               properties:
                 avatar: { type: string, format: binary }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Uploaded
           content:
@@ -1128,6 +1216,7 @@ paths:
               schema: { $ref: '#/components/schemas/Error' }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteUsersMeAvatar
       tags: [Users]
       summary: Remove your avatar
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -1137,6 +1226,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /users/me/avatar/import:
     post:
+      operationId: postUsersMeAvatarImport
       tags: [Users]
       summary: Import your avatar from a URL
       description: |
@@ -1152,6 +1242,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/AvatarImportRequest' }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Imported
           content:
@@ -1183,6 +1274,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: integer } }
     get:
+      operationId: getUsersByIdAvatar
       tags: [Users]
       summary: A user's avatar image
       responses:
@@ -1202,6 +1294,7 @@ paths:
 
   /wishlist:
     get:
+      operationId: getWishlist
       tags: [Wishlist]
       summary: Your wishlist, in your chosen order
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -1214,6 +1307,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
   /wishlist/items:
     post:
+      operationId: postWishlistItems
       tags: [Wishlist]
       summary: Add a product to your wishlist (at the end)
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -1227,6 +1321,7 @@ paths:
               properties:
                 productId: { type: integer }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '201':
           description: Wishlist
           content:
@@ -1240,6 +1335,7 @@ paths:
     parameters:
       - { name: productId, in: path, required: true, schema: { type: integer } }
     delete:
+      operationId: deleteWishlistItemsByProductId
       tags: [Wishlist]
       summary: Remove a product from your wishlist
       security: [{ bearerAuth: [] }, { sessionCookie: [] }]
@@ -1253,6 +1349,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /wishlist/order:
     put:
+      operationId: putWishlistOrder
       tags: [Wishlist]
       summary: Reorder your wishlist
       description: '`productIds` must list exactly the products currently in the wishlist, in the new order.'
@@ -1269,6 +1366,7 @@ paths:
                   type: array
                   items: { type: integer }
       responses:
+        '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Wishlist
           content:
@@ -1280,6 +1378,7 @@ paths:
   # ---- Hosted payment frame: served from the server root (/pay/*), not /api/v1 ----
   /pay/frame:
     get:
+      operationId: getPayFrame
       tags: [Payments]
       summary: 'GET /pay/frame - the hosted payment page loaded in the checkout iframe'
       servers: [{ url: / }]
@@ -1296,6 +1395,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     get:
+      operationId: getPayIntentsById
       tags: [Payments]
       summary: 'GET /pay/intents/{id} - intent status, authorised by its client secret'
       servers: [{ url: / }]
@@ -1315,6 +1415,7 @@ paths:
     parameters:
       - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
     post:
+      operationId: postPayIntentsByIdConfirm
       tags: [Payments]
       summary: 'POST /pay/intents/{id}/confirm - charge a card for this intent (called from inside the frame)'
       description: Test cards as for `POST /orders`. A declined or timed-out intent can be retried.
@@ -1358,6 +1459,7 @@ paths:
   # ---- Test hooks: served from the server root (/test/*), not /api/v1 ----
   /metrics:
     get:
+      operationId: getMetrics
       tags: [Health]
       summary: 'GET /metrics - Prometheus metrics'
       description: |
@@ -1374,6 +1476,7 @@ paths:
               schema: { type: string }
   /test:
     get:
+      operationId: getTest
       tags: [Test hooks]
       summary: 'GET /test - lists the available hooks and fixtures'
       servers: [{ url: / }]
@@ -1386,6 +1489,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /test/reset:
     post:
+      operationId: postTestReset
       tags: [Test hooks]
       summary: 'POST /test/reset - truncate every table and reload the base seed'
       servers: [{ url: / }]
@@ -1403,6 +1507,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /test/sessions:
     post:
+      operationId: postTestSessions
       tags: [Test hooks]
       summary: 'POST /test/sessions - start an isolated test session'
       description: |
@@ -1429,6 +1534,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
   /test/seed:
     post:
+      operationId: postTestSeed
       tags: [Test hooks]
       summary: 'POST /test/seed - create named fixtures'
       servers: [{ url: / }]
@@ -1470,6 +1576,7 @@ paths:
         '422': { $ref: '#/components/responses/ValidationError' }
   /test/users:
     post:
+      operationId: postTestUsers
       tags: [Test hooks]
       summary: 'POST /test/users - create a throwaway, already-confirmed user and return its tokens'
       servers: [{ url: / }]
@@ -1497,10 +1604,118 @@ paths:
                   refreshToken: { type: string }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /test/users/bulk:
+    post:
+      operationId: postTestUsersBulk
+      tags: [Test hooks]
+      summary: 'POST /test/users/bulk - create many customers and return them as CSV (email, password, token)'
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [count]
+              properties:
+                count: { type: integer, minimum: 1, maximum: 5000 }
+      responses:
+        '201':
+          description: CSV with a header row `email,password,token`
+          content:
+            text/csv:
+              schema: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /test/generate:
+    post:
+      operationId: postTestGenerate
+      tags: [Test hooks]
+      summary: 'POST /test/generate - add generated products, users and orders; the same seed after a reset gives the same data'
+      servers: [{ url: / }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products: { type: integer, minimum: 0, maximum: 50000, default: 1000 }
+                users: { type: integer, minimum: 0, maximum: 5000, default: 100 }
+                ordersPerUser: { type: integer, minimum: 0, maximum: 20, default: 3 }
+                seed: { type: integer, minimum: 0, maximum: 2147483647, default: 1 }
+      responses:
+        '201':
+          description: What was created, with a checksum of it
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products, users, orders, checksum, seed, durationMs]
+                properties:
+                  products: { type: integer }
+                  users: { type: integer }
+                  orders: { type: integer }
+                  checksum: { type: string }
+                  seed: { type: integer }
+                  durationMs: { type: integer }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /test/provider-states:
+    get:
+      operationId: getTestProviderStates
+      tags: [Test hooks]
+      summary: 'GET /test/provider-states - one example sentence for each Pact provider state'
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: Example state names
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { type: string } }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: postTestProviderStates
+      tags: [Test hooks]
+      summary: 'POST /test/provider-states - set up the data a Pact provider state names'
+      servers: [{ url: / }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                state: { type: string, example: product 6 has stock 3 }
+                states: { type: array, items: { type: string } }
+      responses:
+        '200':
+          description: The result of each state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [state, result]
+                      properties:
+                        state: { type: string }
+                        result: {}
+        '404': { description: 'Unknown state (`PROVIDER_STATE_UNKNOWN`) or test hooks are off', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /test/mailbox/{email}:
     parameters:
       - { name: email, in: path, required: true, schema: { type: string } }
     get:
+      operationId: getTestMailboxByEmail
       tags: [Test hooks]
       summary: 'GET /test/mailbox/{email} - emails the app "sent" to this address, newest first'
       servers: [{ url: / }]
@@ -1518,6 +1733,7 @@ paths:
                     items: { $ref: '#/components/schemas/Email' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
+      operationId: deleteTestMailboxByEmail
       tags: [Test hooks]
       summary: 'DELETE /test/mailbox/{email} - empty this mailbox'
       servers: [{ url: / }]
@@ -1526,6 +1742,7 @@ paths:
           description: Emptied
   /test/clock:
     get:
+      operationId: getTestClock
       tags: [Test hooks]
       summary: "GET /test/clock - the server's current notion of now"
       servers: [{ url: / }]
@@ -1536,6 +1753,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ClockState' }
     post:
+      operationId: postTestClock
       tags: [Test hooks]
       summary: "POST /test/clock - set the server's now (empty body resets it)"
       servers: [{ url: / }]
@@ -1559,6 +1777,7 @@ paths:
 
   /test/latency:
     get:
+      operationId: getTestLatency
       tags: [Test hooks]
       summary: 'GET /test/latency - list latency rules'
       servers: [{ url: / }]
@@ -1569,6 +1788,7 @@ paths:
             application/json:
               schema: { type: object }
     post:
+      operationId: postTestLatency
       tags: [Test hooks]
       summary: 'POST /test/latency - delay matching requests'
       description: '`path` matches the request path without its query string; `*` is a wildcard. Never applies to /test/* or /health.'
@@ -1592,6 +1812,7 @@ paths:
               schema: { type: object }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteTestLatency
       tags: [Test hooks]
       summary: 'DELETE /test/latency - remove every latency rule'
       servers: [{ url: / }]
@@ -1600,6 +1821,7 @@ paths:
           description: Cleared
   /test/chaos:
     get:
+      operationId: getTestChaos
       tags: [Test hooks]
       summary: 'GET /test/chaos - list failure rules'
       servers: [{ url: / }]
@@ -1610,6 +1832,7 @@ paths:
             application/json:
               schema: { type: object }
     post:
+      operationId: postTestChaos
       tags: [Test hooks]
       summary: 'POST /test/chaos - make matching requests fail'
       description: |
@@ -1637,6 +1860,7 @@ paths:
               schema: { type: object }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteTestChaos
       tags: [Test hooks]
       summary: 'DELETE /test/chaos - remove every failure rule'
       servers: [{ url: / }]
@@ -1646,6 +1870,7 @@ paths:
 
   /test/bugs:
     get:
+      operationId: getTestBugs
       tags: [Test hooks]
       summary: 'GET /test/bugs - every named defect, whether it is on, and the AC it breaks'
       servers: [{ url: / }]
@@ -1669,6 +1894,7 @@ paths:
                         side: { type: string, description: 'Where the defect lives: api, web, api+web or payment frame' }
                         description: { type: string }
     post:
+      operationId: postTestBugs
       tags: [Test hooks]
       summary: 'POST /test/bugs - switch defects on or off'
       description: Web and payment-frame defects take effect on the next page load (they read `GET /api/v1/config`).
@@ -1690,6 +1916,7 @@ paths:
               schema: { type: object }
         '422': { $ref: '#/components/responses/ValidationError' }
     delete:
+      operationId: deleteTestBugs
       tags: [Test hooks]
       summary: 'DELETE /test/bugs - switch every defect off'
       servers: [{ url: / }]
@@ -1699,6 +1926,7 @@ paths:
 
   /test/logs:
     get:
+      operationId: getTestLogs
       tags: [Test hooks]
       summary: 'GET /test/logs - the redacted log lines for one request'
       description: |
