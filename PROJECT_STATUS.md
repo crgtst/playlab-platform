@@ -7,7 +7,7 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 15 are done; tasks 0 to 11 are merged, tasks 12 to 14 are PR #49 and task 15 is on `ci/pipelines` (stacked, not pushed).
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 15 are done; tasks 0 to 14 are merged (tasks 12 to 14 are PR #49) and task 15 is on `ci/pipelines` (not pushed).
 
 ## Next task
 
