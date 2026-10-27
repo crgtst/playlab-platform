@@ -7,14 +7,22 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 7 are done; tasks 0 to 6 are merged and task 7 (branch `feat/provider-states`) is not pushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 8 are done; tasks 0 to 7 are merged and task 8 (branch `chore/platform-check`) is not pushed.
 
 ## Next task
 
-Phase 3 task 8, the platform check. It checks all 47 defects.
-
+Phase 3 task 9, contract checks: Spectral lint, `oasdiff` breaking-change gate and Schemathesis (PLS-26.1 to 26.3).
 ## Done
 
+- 2026-10-27: Phase 3 task 8, the platform check, on `chore/platform-check`. Task 7 is merged (PR #44).
+  - All 47 defects have an AC (existing test) and now a test that names them: `bugs.test.ts` fails if a defect is in no
+    api, e2e, web or tool-suite test (checked by adding a fake defect). 36 are caught by a passing tool-suite test; the 11
+    Phase 3 defects (security headers, `verbose-errors`, the auth, data and SSRF defects) have integration tests and wait for
+    the security suite (task 11).
+  - Phase 2 suites against the current stack with every defect off: Playwright 204, Newman (all collections), Karate and
+    REST Assured pass. Traceability: 170 ACs, 140 in scope all covered, 47 defects built.
+  - Gate 2 had started failing because Phase 3 added PLS-9.5 and 11 defects to the range it counts. `scope.json` now lists
+    them (`phase3Defects`, and PLS-9.5 under `otherTools`); Gate 2 is met again (102 ACs, 33 original defects, all caught).
 - 2026-10-27: Phase 3 task 7, provider states (PLS-26.5), on `feat/provider-states`. Task 6 is merged (PR #43).
   - `POST /test/provider-states` takes a Pact provider-state name (`state`, or `states` for several; Pact's other fields are
     ignored) and sets up its data (`db/seed/providerStates.ts`): `product {id} has stock {n}`, `product {id} is out of stock`,

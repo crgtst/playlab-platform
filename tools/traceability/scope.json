@@ -19,8 +19,25 @@
     "PLS-12.2": "Covered by the API integration tests in app/api",
     "PLS-12.3": "Covered by the API integration tests in app/api",
     "PLS-12.4": "Covered by the API integration tests in app/api",
-    "PLS-12.5": "Covered by the API integration and e2e smoke tests in app"
+    "PLS-12.5": "Covered by the API integration and e2e smoke tests in app",
+    "PLS-9.5": "Phase 3: covered by integration and e2e tests in app (51 and 2); the Phase 3 security suite adds the tool tests"
   },
   "phase1Defects": ["status-any-transition", "lost-update", "rate-limit-bypass"],
-  "gate2Stories": { "from": 1, "to": 19 }
+  "gate2Stories": {
+    "from": 1,
+    "to": 19
+  },
+  "phase3Defects": [
+    "bfla-admin-users",
+    "excessive-data-exposure",
+    "jwt-alg-none",
+    "mass-assignment-role",
+    "missing-security-headers",
+    "no-page-limit",
+    "shadow-api-v0",
+    "ssrf-avatar-url",
+    "trust-address-provider",
+    "user-enumeration",
+    "verbose-errors"
+  ]
 }

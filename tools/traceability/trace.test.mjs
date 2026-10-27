@@ -98,3 +98,13 @@ test('analyse maps tests to ACs and defects, and flags unknown IDs', () => {
     ['a-defect'],
   );
 });
+
+test('gate2 leaves out defects listed as phase 1 or phase 3', () => {
+  const { stories, criteria } = parseCriteria(CRITERIA);
+  const scope = { notBuilt: {}, otherTools: {}, phase1Defects: [], phase3Defects: ['a-defect'], gate2Stories: { from: 1, to: 2 } };
+  const result = analyse({ criteria, stories, bugNames: ['a-defect', 'b-defect'], scope, tests: [] });
+  assert.deepEqual(
+    gate2(result, scope).missed.map((d) => d.name),
+    ['b-defect'],
+  );
+});
