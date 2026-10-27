@@ -38,8 +38,11 @@ public final class Shared {
         return product(sku).get("id").asInt();
     }
 
-    public static int productCount() {
-        return PRODUCTS.size();
+    /** The ids of the seeded products. */
+    public static java.util.List<Integer> productIds() {
+        java.util.List<Integer> ids = new java.util.ArrayList<>();
+        PRODUCTS.forEach((product) -> ids.add(product.get("id").asInt()));
+        return ids;
     }
 
     /** A test card number: success, decline, timeout or invalid. */

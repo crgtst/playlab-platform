@@ -51,6 +51,9 @@ The address is `http://localhost:<API_PORT from app/.env>`; set `BASE_URL` to ov
   (`OrdersTest` SP-007, `LifecycleTest` HK-007 and HK-006, `ConcurrencyTest` SP-002 and SP-003); orders a test places with
   `placeOrder` are cancelled afterwards, which puts the stock back. A shipped order cannot be cancelled, so
   `LifecycleTest` restores the stock of the one product it ships.
+- **A throwaway product can appear while another class counts the catalogue** (CI is slower, so it shows there first).
+  `AdminTest` names its products `zz ...`, which sorts last and never moves a seeded product between pages, and
+  `CatalogueTest` asks that every seeded product is there once, not for an exact total.
 - A subclass's `@AfterEach` runs **before** the base class's, so `ConcurrencyTest` cancels its orders itself before it
   restores the stock.
 - REST Assured sends **no cookies** unless asked, so the `test_session` cookie never wins over the `X-Test-Session` header

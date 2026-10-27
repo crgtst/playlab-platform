@@ -7,7 +7,7 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 5 are done; task 3 is awaiting merge and tasks 4 and 5 are unpushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 5 are done (task 4 is in PR #41, task 5 in PR #42).
 
 ## Next task
 
@@ -39,6 +39,12 @@ Phase 3 tasks 6 and 7 (bulk data, provider states). Task 8 then checks all 47 de
   - Not built: a button in the web app (the import is API only, like the account endpoints).
   - Found in CI: a race in two suites, not the API. A test that creates a throwaway product can run while another counts the
     catalogue (41, not 40). Fixed in the PR that fixes the REST Assured and Karate catalogue tests.
+- 2026-10-27: Fix for a race found in CI on PR #40: the REST Assured `CatalogueTest.paging` saw 41 products because `AdminTest`
+  had a throwaway product at that moment (parallel classes, slower runner). Karate's catalogue feature had the same latent race.
+  Both suites now name throwaway products `zz ...` (they sort last, so they cannot move a seeded product between pages) and
+  check that every seeded product is present once, not an exact total. The Playwright suite has the same exposure (its admin
+  tests create products while its catalogue tests count them) and is probably behind some of the occasional full-suite
+  failures; not changed here.
 - 2026-10-27: Phase 3 task 3, data and inventory defects (PLS-24.5, 24.7, 24.13, 24.14), on `feat/data-defects` (built on
   tasks 1 and 2).
   - Four new defects (46 built, 1 planned): `excessive-data-exposure` adds `alsoOrderedBy` (other buyers' names and

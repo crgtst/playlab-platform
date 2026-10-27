@@ -79,7 +79,10 @@ class CatalogueTest extends ApiTest {
     void paging() {
         List<Integer> ids = walk(Map.of("limit", 12)).stream().map(Product::getId).toList();
         assertEquals(ids.size(), new HashSet<>(ids).size(), "duplicates");
-        assertEquals(Shared.productCount(), ids.size());
+        // Another test class may have a throwaway product in the catalogue just now. Those sort last (their names start
+        // with "zz"), so they never move a seeded product between pages: what must hold is that every seeded one is there.
+        List<Integer> missing = Shared.productIds().stream().filter((id) -> !ids.contains(id)).toList();
+        assertTrue(missing.isEmpty(), "missing from the listing: " + missing);
     }
 
     @Test
