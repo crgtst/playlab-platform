@@ -7,14 +7,22 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 6 are done and merged except task 6 (branch `feat/bulk-data`, not pushed).
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 7 are done; tasks 0 to 6 are merged and task 7 (branch `feat/provider-states`) is not pushed.
 
 ## Next task
 
-Phase 3 task 7 (provider states). Task 8 then checks all 47 defects.
+Phase 3 task 8, the platform check. It checks all 47 defects.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 7, provider states (PLS-26.5), on `feat/provider-states`. Task 6 is merged (PR #43).
+  - `POST /test/provider-states` takes a Pact provider-state name (`state`, or `states` for several; Pact's other fields are
+    ignored) and sets up its data (`db/seed/providerStates.ts`): `product {id} has stock {n}`, `product {id} is out of stock`,
+    `product {id} exists`, `the catalogue has products`, `a customer exists`, `an admin exists`, `fixture {name}`. Names ignore
+    case and extra spaces. An unknown name is a 404 `PROVIDER_STATE_UNKNOWN` (with the known list) and changes nothing; a
+    missing product is a 422 and the whole call rolls back. `GET /test/provider-states` lists the states.
+  - 10 integration tests. 58 unit and 246 integration pass; lint clean.
+  - Task 10 (Pact) will add the states its contracts need; each is one entry in the list.
 - 2026-10-27: Phase 3 task 6, bulk data (PLS-28.3, 28.4), on `feat/bulk-data`. Tasks 3, 4 and 5 are merged (PRs #40 to #42).
   - `POST /test/generate { products, users, ordersPerUser, seed }` (`db/seed/generate.ts`): a seeded generator (mulberry32),
     fixed timestamps (not the clock), bulk inserts. 10,000 products, 1,000 users and 5,000 orders take about 3.5 s. After a reset
