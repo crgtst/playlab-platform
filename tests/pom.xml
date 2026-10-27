@@ -23,7 +23,7 @@
     <karate.version>1.5.2</karate.version>
     <junit.version>5.13.4</junit.version>
     <json-schema-validator.version>1.5.9</json-schema-validator.version>
-    <surefire.version>3.5.4</surefire.version>
+    <surefire.version>3.6.1</surefire.version>
   </properties>
 
   <dependencyManagement>
