@@ -9,7 +9,7 @@ Feature: Admin, files and accounts (PLS-8, 9, 21, 22, 23, 24.8)
     * def newUser = function(role) { return karate.call('classpath:common/user.feature', { session: sid, role: role }) }
     * def admin = callonce read('classpath:common/user.feature') { session: '#(session.id)', role: 'admin' }
     * def unique = function() { return java.util.UUID.randomUUID().toString().substring(0, 8) }
-    * def productBody = function() { var u = unique(); return { sku: 'KA-' + u, name: 'Karate test product ' + u, description: 'Made by Karate', category: 'books', priceCents: 1999, stock: 4 } }
+    * def productBody = function() { var u = unique(); return { sku: 'KA-' + u, name: 'zz Karate test product ' + u, description: 'Made by Karate', category: 'books', priceCents: 1999, stock: 4 } }
     * def createProduct =
       """
       function() {
