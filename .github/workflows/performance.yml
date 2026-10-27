@@ -1,0 +1,178 @@
+# Load tests against the performance profile (PLS-27): the k6 scripts and the JMeter plans, which run the same model
+# (tests/shared/load-model.json). Only ever run these against your own local stack.
+#
+# A pull request that changes a load suite, the model or the profile gets short runs at the real rates (30 seconds, not 5 minutes),
+# which is enough to prove the scripts work and the SLOs hold. A manual run with `full` switched on uses the real durations.
+# (The one-hour soak runs only from a manual full run, in a shortened form: see the README.)
+name: performance
+
+on:
+  pull_request:
+    paths:
+      - tests/k6/**
+      - tests/jmeter/**
+      - tests/shared/load-model.json
+      - app/perf/**
+      - app/docker-compose.perf.yml
+      - .github/workflows/performance.yml
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Run the full durations (5 minutes for each load test)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PERF: -f docker-compose.yml -f docker-compose.perf.yml
+
+jobs:
+  k6:
+    name: k6
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+
+      # The AC durations are 5 minutes. A pull request check proves the scripts work, in 30 seconds; a full run leaves SHORT empty.
+      - name: Choose the durations
+        run: |
+          if [ "${{ inputs.full }}" = true ]; then echo "SHORT=" >> "$GITHUB_ENV"; else echo "SHORT=30s" >> "$GITHUB_ENV"; fi
+
+      - name: Configure the stack from .env.example on non-default ports
+        working-directory: app
+        run: sed -e 's/^API_PORT=.*/API_PORT=3002/' -e 's/^WEB_PORT=.*/WEB_PORT=5174/' .env.example > .env
+
+      - name: Start the perf stack
+        working-directory: app
+        run: docker compose $PERF up --build --detach --wait --wait-timeout 300
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Smoke
+        run: tests/k6/run.sh smoke
+
+      - name: PLS-27.1 GET /products
+        run: DURATION="$SHORT" tests/k6/run.sh products
+
+      - name: PLS-27.2 POST /orders
+        run: DURATION="$SHORT" tests/k6/run.sh orders
+
+      - name: A threshold fails when GET /products is slow (the run must exit 1)
+        run: |
+          if INJECT_LATENCY_MS=300 DURATION=15s tests/k6/run.sh products; then
+            echo "::error::p95 went to 300 ms and the run still passed"
+            exit 1
+          fi
+
+      - name: PLS-27.3 soak, shortened to 3 minutes
+        if: ${{ inputs.full }}
+        run: DURATION=3m tests/k6/run.sh soak
+
+      # The perf profile has no rate limit; the overload test needs one it can reach.
+      - name: Start the API with a rate limit of 600 a minute
+        working-directory: app
+        run: PERF_RATE_LIMIT_PER_MIN=600 docker compose $PERF up --detach --wait --wait-timeout 120 api
+
+      - name: PLS-27.4 overload and recovery
+        run: tests/k6/run.sh overload
+
+      - name: Print the API log if the run failed
+        if: failure()
+        working-directory: app
+        run: docker compose $PERF logs --no-color --tail 200 api
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: k6-results
+          path: tests/k6/results/
+          if-no-files-found: ignore
+
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose $PERF down -v
+
+  jmeter:
+    name: JMeter
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      JMETER_VERSION: 5.6.3
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # The AC durations are 5 minutes. A pull request check proves the scripts work, in 30 seconds; a full run leaves SHORT empty.
+      - name: Choose the durations
+        run: |
+          if [ "${{ inputs.full }}" = true ]; then echo "SHORT=" >> "$GITHUB_ENV"; else echo "SHORT=30s" >> "$GITHUB_ENV"; fi
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # Downloaded and checked against the checksum Apache publishes, then cached for the next run.
+      - uses: actions/cache@v4
+        id: jmeter
+        with:
+          path: apache-jmeter-${{ env.JMETER_VERSION }}
+          key: jmeter-${{ env.JMETER_VERSION }}
+      - name: Install JMeter
+        if: steps.jmeter.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSLO "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz"
+          curl -fsSLO "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz.sha512"
+          sha512sum -c "apache-jmeter-${JMETER_VERSION}.tgz.sha512"
+          tar -xzf "apache-jmeter-${JMETER_VERSION}.tgz"
+
+      - name: Configure the stack from .env.example on non-default ports
+        working-directory: app
+        run: sed -e 's/^API_PORT=.*/API_PORT=3002/' -e 's/^WEB_PORT=.*/WEB_PORT=5174/' .env.example > .env
+
+      - name: Start the perf stack
+        working-directory: app
+        run: docker compose $PERF up --build --detach --wait --wait-timeout 300
+
+      - name: PLS-27.1 GET /products
+        run: DURATION="$SHORT" JMETER="$PWD/apache-jmeter-${JMETER_VERSION}/bin/jmeter" tests/jmeter/run.sh products
+
+      - name: PLS-27.2 the checkout journey
+        run: DURATION="$SHORT" JMETER="$PWD/apache-jmeter-${JMETER_VERSION}/bin/jmeter" tests/jmeter/run.sh journey
+
+      - name: Start the API with a rate limit of 600 a minute
+        working-directory: app
+        run: PERF_RATE_LIMIT_PER_MIN=600 docker compose $PERF up --detach --wait --wait-timeout 120 api
+
+      - name: PLS-27.4 overload and recovery
+        run: JMETER="$PWD/apache-jmeter-${JMETER_VERSION}/bin/jmeter" tests/jmeter/run.sh overload
+
+      - name: Print the API log if the run failed
+        if: failure()
+        working-directory: app
+        run: docker compose $PERF logs --no-color --tail 200 api
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: jmeter-results
+          path: tests/jmeter/results/
+          if-no-files-found: ignore
+
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose $PERF down -v

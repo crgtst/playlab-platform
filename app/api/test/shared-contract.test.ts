@@ -72,4 +72,19 @@ describe('tests/shared data contract', () => {
     expect([...actual.keys()].sort()).toEqual([...expected.keys()].sort());
     for (const [name, body] of expected) expect(actual.get(name), name).toBe(body);
   });
+
+  it('load-model.json stays inside what the API accepts and names ACs that exist', () => {
+    const model = read('load-model.json');
+    const md = fs.readFileSync(path.join(__dirname, '../../../docs/ACCEPTANCE_CRITERIA.md'), 'utf8');
+    // POST /test/generate takes up to 50,000 products, 5,000 users and 20 orders each; POST /test/users/bulk up to 5,000.
+    expect(model.data.products).toBeLessThanOrEqual(50_000);
+    expect(model.data.users).toBeLessThanOrEqual(5_000);
+    expect(model.data.ordersPerUser).toBeLessThanOrEqual(20);
+    for (const key of ['products', 'orders', 'soak', 'overload']) {
+      expect(md, `${key}: ${model[key].ac}`).toContain(`| ${model[key].ac} |`);
+    }
+    // The AC text quotes the same figures, so the two cannot drift apart unnoticed.
+    expect(md).toContain(`${model.products.rps} requests per second for 5 minutes, then p95 latency is under ${model.products.p95Ms} ms`);
+    expect(md).toContain(`${model.orders.rps} requests per second for 5 minutes, then p95 latency is under ${model.orders.p95Ms} ms`);
+  });
 });

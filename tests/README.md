@@ -12,8 +12,8 @@ One folder per suite. Each brings its own build, dependencies and formatter sett
 | [`rest-assured/`](rest-assured/) | REST Assured, JUnit 5, Maven | 2 |
 | [`contract/`](contract/) | Spectral, Schemathesis, oasdiff, Pact | 3 |
 | [`security/`](security/) | OWASP API Top 10 tests (Playwright `request`), ZAP | 3 |
-| [`k6/`](k6/) | k6 | 3 |
-| [`jmeter/`](jmeter/) | JMeter | 3 |
+| [`k6/`](k6/) | k6 (Docker): smoke, load, soak, overload, stress, spike | 3 |
+| [`jmeter/`](jmeter/) | JMeter: `.jmx` plans, non-GUI runs | 3 |
 | [`playwright-java/`](playwright-java/) | Playwright for Java, JUnit 5, Maven | 4 |
 | [`playwright-python/`](playwright-python/) | Playwright for Python, pytest | 4 |
 

@@ -7,13 +7,57 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 11 are done; tasks 0 to 9 are merged, task 10 is merged (PR #47) and task 11 is in PR #48.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 14 are done; tasks 0 to 11 are merged, tasks 12 and 13 are on `tests/k6` and task 14 on `tests/load-dashboard` (stacked, none pushed).
 
 ## Next task
 
-Phase 3 task 12, the k6 suite against the perf profile (PLS-27.1 to 27.4). The perf profile, `/test/generate` and `/test/users/bulk` are ready for it.
+Phase 3 task 15, CI/CD pipelines: a reusable "start the stack" action, required gates on pull requests, reports published to GitHub Pages, and a nightly run that switches on random defects and fails if one is missed (PLS-29.1 to 29.4).
 ## Done
 
+- 2026-10-27: Phase 3 task 14, the k6 and JMeter dashboard and the SLO calibration (PLS-27.1 to 27.4), on `tests/load-dashboard` (built on tasks 12 and 13).
+  - Grafana dashboard "k6 and JMeter" (`/d/playlab-load`, provisioned): p95, p99, throughput and error rate for each tool, one line for each run, and a
+    table of runs; pick the load and the request. k6 sends its metrics over Prometheus remote write (`PROMETHEUS_RW=1`, tagged `tool`, `load`, `testid`).
+    JMeter 5.6 has no Prometheus listener, so `tests/jmeter/lib/push-metrics.mjs` reads the results file after a run and remote-writes one sample every 5
+    seconds in the same labels (a hand-made protobuf in the uncompressed snappy format, no library). `app/perf/smoke.sh` checks the dashboard exists.
+  - Calibration on this machine (`tools/calibrate`: 3 runs of 3 minutes for each test and tool): the worst p95 was 12 ms for `GET /products` and 15 ms for
+    `POST /orders` (JMeter a little higher than k6, as its threads add latency), so the limits are now 60 ms and 80 ms (worst times 5, rounded up),
+    down from the guesses of 200 and 800. They are in `load-model.json` and the AC text (a unit test keeps the two equal), with the numbers and the method.
+    Injecting 100 ms now fails the run; the old limit would not have.
+  - Capacity (stress script, now one scenario per step with its own p95): `GET /products` is fine at 200 requests a second (p95 about 11 ms) and falls over
+    between 300 and 400 (p95 of 7 s at 400, requests queue behind one Node process), about six times the AC rate.
+  - Found on the way: the JMeter journey started all 100 shoppers at once, and the burst of logins slowed the first orders (p95 2.2 s in a 60-second run).
+    It now uses 40 shoppers started over 20 seconds, and measures the sent rate after the ramp-up.
+  - Risk: one JMeter 30-second run right after the heavy stress runs showed a p95 of 1250 ms; three reruns were clean. With limits this tight a CI runner
+    may need a wider factor: the first CI run of the `performance` workflow will show (`FACTOR=` in `tools/calibrate`).
+  - Not done: the calibration is for this one machine; the soak's one-hour run and the CI numbers are still to come.
+- 2026-10-27: Phase 3 task 13, the JMeter suite (PLS-27.1 to 27.4), on `tests/k6` (built on task 12). You asked for the load suites to be written.
+  - `tests/jmeter/plans`: `products-load.jmx` (27.1, and the soak 27.3 at a lower rate), `checkout-journey.jmx` (27.2) and `overload.jmx` (27.4).
+    Run with `tests/jmeter/run.sh products|journey|soak|overload` (JMeter 5.6.3, non-GUI): data through the same test hooks, the same load
+    model file as k6 (`lib/model.mjs` turns it into `-J` properties), HTML dashboard, and `lib/jtl-to-junit.mjs` turns the results into JUnit cases
+    with the same names and pass marks as k6's, so traceability shows both tools for each AC.
+  - Techniques: a Precise Throughput Timer for the rate, a CSV Data Set for the bulk shoppers, a JSON Extractor that reads the access token out of
+    the login reply (correlation), a Once Only Controller (a shopper logs in once), and a JSR223 assertion that fails a 429 without `Retry-After`.
+  - Results at the real durations: products p95 under the limit, the journey p95 under 800 ms with no errors, overload and recovery as k6.
+    The first journey plan logged in on every journey and missed 27.2 (p95 815 ms): bcrypt at 10 a second took most of the API's two CPUs, which
+    the k6 script avoids by using the token from the CSV. The plan now logs in once per shopper, so the two tools put the same load on the order path.
+    300 ms of injected latency fails the JMeter plan too.
+  - New `performance` workflow (k6 and JMeter jobs): short runs at the real rates for a pull request that touches a load suite, the model or the
+    profile; `workflow_dispatch` with `full` runs the 5-minute durations. Not run in CI yet.
+  - Traceability: 149 of 149 in-scope ACs covered (PLS-27.1 to 27.4 by k6 and JMeter); PLS-27.5 is checked by `app/perf/smoke.sh`.
+- 2026-10-27: Phase 3 task 12, the k6 suite (PLS-27.1 to 27.4), on `tests/k6`. You asked for the load suites to be written, so these are.
+  - `tests/k6/scripts`: smoke, `products` (27.1), `orders` (27.2), `soak` (27.3), `overload` (27.4), stress and spike. Run with
+    `tests/k6/run.sh <script>` (k6 2.3.0 in Docker, nothing to install). Each script sets up its own data through the test hooks
+    (10,000 generated products, 1,000 bulk shoppers, 20 products of its own with a million in stock).
+  - One load model for both tools: `tests/shared/load-model.json` (rates, durations, SLOs, data), checked by a unit test against the AC text
+    and the hooks' limits. `handleSummary` writes JUnit (every threshold a case named after its AC, which traceability reads), JSON and HTML.
+    The soak's drift between its first and last windows and the API's peak memory (asked of Prometheus) are extra cases, because k6 has no threshold for them.
+  - Results at the real durations on this machine: `GET /products` 50/s for 5 minutes, p95 9.8 ms (limit 200); `POST /orders` 10/s for 5 minutes,
+    p95 15 ms (limit 800); overload at 100/s against a limit of 10/s: refused with 429 and `Retry-After`, no errors, back to 200 in the minute;
+    soak run for 3 minutes (the hour is for the nightly run): drift under 3%, memory peak 141 MiB of 1 GiB. The figures leave a lot of room, so
+    calibrating them is task 14.
+  - `INJECT_LATENCY_MS=300 tests/k6/run.sh products` makes the p95 threshold fail the run (exit 1), as the plan asks.
+    `PROMETHEUS_RW=1` sends k6's metrics to the perf stack's Prometheus, which now accepts remote write.
+  - The perf profile gained `PERF_RATE_LIMIT_PER_MIN` (the overload test needs a limit to reach) and `PERF_ACCESS_TOKEN_TTL_SEC` (default 2 hours).
 - 2026-10-27: Phase 3 task 11, the security suite and ZAP (PLS-24.1 to 24.14), on `tests/security`. You asked me to write the
   suite, so this one is written, not just scaffolded.
   - `tests/security`: Playwright Test with the `request` fixture, one spec for each of the ten OWASP API risks. Every AC has a secure
