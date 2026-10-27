@@ -46,6 +46,9 @@ traceability report.
   `common/` does).
 - **Karate's HTTP client keeps the `test_session` cookie** the API sets, and the cookie wins over the header. Sessions
   are made through `Race.createSession`, not an HTTP step, so there is no cookie.
+- **A throwaway product can appear while another scenario counts the catalogue** (CI is slower, so it shows there first).
+  Products these features create are named `zz ...`, which sorts last and never moves a seeded product between pages,
+  and the catalogue checks ask that every seeded product is there once, not for an exact total.
 - `match` splits a line at its first `==`, including one inside a function: put the filter in a `def`, then match on it.
 - `status` takes a number, not an expression: `Then match responseStatus == parseInt(status)` in an outline.
 - The Java HTTP client offers an upgrade to HTTP/2, which the API's WebSocket handler answers with a 404: `Race` uses

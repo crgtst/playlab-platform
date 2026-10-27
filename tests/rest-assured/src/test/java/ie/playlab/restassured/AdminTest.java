@@ -23,7 +23,7 @@ class AdminTest extends ApiTest {
 
     private Map<String, Object> newProduct() {
         String u = UUID.randomUUID().toString().substring(0, 8);
-        return Map.of("sku", "RA-" + u, "name", "REST Assured test product " + u, "description", "Made by REST Assured", "category", "books", "priceCents", 1999, "stock", 4);
+        return Map.of("sku", "RA-" + u, "name", "zz REST Assured test product " + u, "description", "Made by REST Assured", "category", "books", "priceCents", 1999, "stock", 4);
     }
 
     private int createProduct() {
@@ -64,7 +64,7 @@ class AdminTest extends ApiTest {
                 .then().statusCode(412).body("error.code", equalTo("PRECONDITION_FAILED"));
         api.as(admin).body(Map.of("name", "Should not be saved")).patch("/api/v1/products/{id}", id)
                 .then().statusCode(428).body("error.code", equalTo("PRECONDITION_REQUIRED"));
-        api.guest().get("/api/v1/products/{id}", id).then().body("data.name", startsWith("REST Assured test product"));
+        api.guest().get("/api/v1/products/{id}", id).then().body("data.name", startsWith("zz REST Assured test product"));
         deleteProduct(id);
     }
 

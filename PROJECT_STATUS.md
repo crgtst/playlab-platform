@@ -16,6 +16,12 @@ to 7 (perf profile, bulk data, provider states) do not depend on it and can go f
 
 ## Done
 
+- 2026-10-27: Fix for a race found in CI on PR #40: the REST Assured `CatalogueTest.paging` saw 41 products because `AdminTest`
+  had a throwaway product at that moment (parallel classes, slower runner). Karate's catalogue feature had the same latent race.
+  Both suites now name throwaway products `zz ...` (they sort last, so they cannot move a seeded product between pages) and
+  check that every seeded product is present once, not an exact total. The Playwright suite has the same exposure (its admin
+  tests create products while its catalogue tests count them) and is probably behind some of the occasional full-suite
+  failures; not changed here.
 - 2026-10-27: Phase 3 task 3, data and inventory defects (PLS-24.5, 24.7, 24.13, 24.14), on `feat/data-defects` (built on
   tasks 1 and 2).
   - Four new defects (46 built, 1 planned): `excessive-data-exposure` adds `alsoOrderedBy` (other buyers' names and
