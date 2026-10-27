@@ -29,12 +29,13 @@ function clientKey(req: import('express').Request): string {
 
 export const apiRateLimit = rateLimit({
   windowMs: 60_000,
-  limit: config.rateLimitPerMin,
+  // Read on every request, and 0 turns the limit off (the perf profile, PLS-27.5).
+  limit: () => Math.max(config.rateLimitPerMin, 1),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   store,
   keyGenerator: userKey,
-  skip: (req) => req.path === '/health',
+  skip: (req) => config.rateLimitPerMin <= 0 || req.path === '/health',
   handler: (req, res, _next, options) => {
     const resetTime = (req as any).rateLimit?.resetTime as Date | undefined;
     const retryAfter = resetTime ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000)) : Math.ceil(options.windowMs / 1000);

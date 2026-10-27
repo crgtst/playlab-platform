@@ -362,7 +362,7 @@ Not built yet: these run against the `perf` Compose profile with generated data 
 | PLS-27.2 | Given the perf profile with generated data, when `POST /orders` is called at 10 requests per second for 5 minutes, then p95 latency is under 800 ms and errors are under 1% |  |  |
 | PLS-27.3 | Given steady load at half the PLS-27.1 rate for 1 hour, when the soak ends, then p95 latency is within 20% of the first 5 minutes and the API stays within its memory limit |  |  |
 | PLS-27.4 | Given load well beyond capacity, when the API is overloaded, then it answers with 429 or 503 and `Retry-After` rather than timing out, and recovers within 1 minute of the load dropping |  |  |
-| PLS-27.5 | Given `docker compose --profile perf up`, when the stack is ready, then the rate limit is off, the API and database run with their CPU and memory limits, and Grafana shows request rate, p95 latency and error rate |  |  |
+| PLS-27.5 | Given the stack started with `docker-compose.perf.yml` added, when the stack is ready, then the rate limit is off, the API and database run with their CPU and memory limits, and Grafana shows request rate, p95 latency and error rate |  |  |
 
 ## PLS-28 Test environment v2 (planned: Phase 1)
 
