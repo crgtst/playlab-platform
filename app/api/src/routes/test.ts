@@ -6,6 +6,8 @@ import { pool, query, withTransaction } from '../db/pool';
 import { getSeedPasswordHash, resetDatabase, SEED_PASSWORD } from '../db/seed/base';
 import { createUser, FIXTURES } from '../db/seed/fixtures';
 import { generateData } from '../db/seed/generate';
+import { providerStateExamples, resolveStates } from '../db/seed/providerStates';
+import { ApiError } from '../lib/errors';
 import { toCsv } from '../lib/csv';
 import { clock } from '../lib/clock';
 import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
@@ -31,6 +33,7 @@ testRouter.get('/', (_req, res) => {
       'POST /test/users',
       'POST /test/users/bulk',
       'POST /test/generate',
+      'GET|POST /test/provider-states',
       'GET /test/mailbox/{email}',
       'GET|POST /test/clock',
       'GET|POST|DELETE /test/latency',
@@ -155,6 +158,36 @@ testRouter.post(
     const started = Date.now();
     const result = await withTransaction((client) => generateData(client, body));
     res.status(201).json({ ...result, seed: body.seed, durationMs: Date.now() - started });
+  }),
+);
+
+// Pact sends { state } (v2) or { states: [...] } (v3) plus the consumer name and an action; the extras are ignored.
+const providerStateSchema = z
+  .object({
+    state: z.string().trim().min(1).optional(),
+    states: z.array(z.string().trim().min(1)).optional(),
+  })
+  .refine((v) => v.state || v.states?.length, { message: 'Send a state name, or a list in states' });
+
+testRouter.get('/provider-states', (_req, res) => res.json({ data: providerStateExamples() }));
+
+/** Sets up the data a Pact provider state names. Unknown names are a 404 and nothing is changed. */
+testRouter.post(
+  '/provider-states',
+  asyncHandler(async (req: Request, res: Response) => {
+    const body = parse(providerStateSchema, req.body ?? {});
+    const names = [...(body.state ? [body.state] : []), ...(body.states ?? [])];
+    const { found, unknown } = resolveStates(names);
+    if (unknown.length)
+      throw new ApiError(404, 'PROVIDER_STATE_UNKNOWN', `Unknown provider state: ${unknown.map((n) => `"${n}"`).join(', ')}`, {
+        known: providerStateExamples(),
+      });
+    const data = await withTransaction(async (client) => {
+      const out = [];
+      for (const f of found) out.push({ state: f.name, result: await f.state.run(client, f.match) });
+      return out;
+    });
+    res.json({ data });
   }),
 );
 
