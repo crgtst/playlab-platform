@@ -389,6 +389,21 @@ There are 47 defects. Each one changes only its own behaviour (PLS-12.3). There 
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 
+## Performance profile
+
+For load tests (k6, JMeter) run the stack with the perf override. It is a second Compose file, because a profile cannot change another service's settings:
+
+```bash
+cd app
+docker compose -f docker-compose.yml -f docker-compose.perf.yml up --build -d
+bash perf/smoke.sh               # checks the profile did what it says
+```
+
+- The API runs with `NODE_ENV=production`, `LOG_LEVEL=warn` and no rate limit (`RATE_LIMIT_PER_MIN=0` switches it off), limited to 2 CPUs and 1 GB. The database gets 2 CPUs and 2 GB.
+- Prometheus (`PROMETHEUS_PORT`, default 9091) scrapes `/metrics` every 5 seconds.
+- Grafana (`GRAFANA_PORT`, default 3300, no login) shows the "PlayLab API" dashboard: request rate, p95 latency, error rate, per-route rate and latency, orders and declined payments, database pool.
+- Go back to the normal stack with `docker compose down -v` and a plain `docker compose up --build -d`.
+
 ## Locators: `data-testid` conventions
 
 - Every link, button, input, select and textarea has a kebab-case `data-testid`.
@@ -455,7 +470,7 @@ These check the app itself. They are not the training suites, which live in [`..
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `TEST_HOOKS` | `true` | Mount `/test/*` |
-| `RATE_LIMIT_PER_MIN` | `100` | API rate limit |
+| `RATE_LIMIT_PER_MIN` | `100` | API rate limit (`0` turns it off) |
 | `PAYMENT_TIMEOUT_MS` | `5000` | Delay before the timeout card returns 504 |
 | `JWT_SECRET` | dev value | Access-token signing key |
 | `NODE_ENV` | `development` in Compose (`production` in the image) | With `production`, the API refuses to start while `TEST_HOOKS=true` |

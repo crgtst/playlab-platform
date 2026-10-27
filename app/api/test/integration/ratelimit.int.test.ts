@@ -44,3 +44,21 @@ describe('PLS-24.6 the rate limit cannot be dodged with X-Forwarded-For', () => 
     expect((await fromIp('203.0.113.8')).status).toBe(200);
   });
 });
+
+describe('PLS-27.5 the rate limit is off in the perf profile', () => {
+  const limit = config.rateLimitPerMin;
+  afterEach(() => {
+    config.rateLimitPerMin = limit;
+  });
+
+  it('lets any number of requests through when RATE_LIMIT_PER_MIN is 0', async () => {
+    config.rateLimitPerMin = 0;
+    for (let i = 0; i < limit * 2; i++) expect((await fromIp('198.51.100.9')).status).toBe(200);
+  });
+
+  it('is on again as soon as the setting is', async () => {
+    config.rateLimitPerMin = 5;
+    for (let i = 0; i < 5; i++) expect((await fromIp('198.51.100.10')).status).toBe(200);
+    expect((await fromIp('198.51.100.10')).status).toBe(429);
+  });
+});

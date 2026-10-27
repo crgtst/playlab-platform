@@ -7,15 +7,20 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 3 are done, with task 3 awaiting merge.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 5 are done; task 3 is awaiting merge and tasks 4 and 5 are unpushed.
 
 ## Next task
 
-Phase 3 task 5, the performance profile (the Compose `perf` profile with Prometheus and Grafana). Tasks 6 and 7 (bulk data,
-provider states) are independent of it. Task 8 then checks all 47 defects.
+Phase 3 tasks 6 and 7 (bulk data, provider states). Task 8 then checks all 47 defects.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 5, the performance profile (PLS-27.5), on `feat/perf-profile` (built on task 4).
+  - `app/docker-compose.perf.yml` is an override file (a profile cannot change another service): API in production mode,
+    no rate limit, `LOG_LEVEL=warn`, 2 CPUs / 1 GB; database 2 CPUs / 2 GB; Prometheus and Grafana with a provisioned
+    "PlayLab API" dashboard (7 panels). `RATE_LIMIT_PER_MIN=0` now turns the limit off, read live; limit tests cover it.
+  - `app/perf/smoke.sh` checks the profile end to end; it passed against the real stack. The AC wording changed from
+    `--profile perf` to the override file.
 - 2026-10-27: Phase 3 task 4, the avatar import and its SSRF defect (PLS-9.5, 24.10), on `feat/avatar-import` (built on
   task 3). Decision 12 agreed: a `fixtures` container.
   - New endpoint `POST /users/me/avatar/import { url }` (OpenAPI, `AvatarImportRequest` schema). `lib/safeFetch.ts` checks the
@@ -605,7 +610,7 @@ provider states) are independent of it. Task 8 then checks all 47 defects.
 | 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Agreed | 2026-10-22 |
 | 10 | Compose ports stay published on all interfaces (not bound to `127.0.0.1`), so another machine on the network can reach the stack, e.g. to generate JMeter load. The README and `SECURITY.md` say local, trusted networks only | Agreed | 2026-10-22 |
 | 11 | `SECURITY.md` keeps "an acknowledgement within a week" as written | Agreed | 2026-10-22 |
-| 12 | How the avatar import's positive case reaches an image (Phase 3 task 4): recommended is a small `fixtures` container in Compose (nginx serving one PNG) that the import allow-lists by name through an environment variable, with every other address checked against the blocked ranges. The alternative is a public URL, which makes the test depend on the internet | Open | 2026-10-26 |
+| 12 | How the avatar import's positive case reaches an image (Phase 3 task 4): recommended is a small `fixtures` container in Compose (nginx serving one PNG) that the import allow-lists by name through an environment variable, with every other address checked against the blocked ranges. The alternative is a public URL, which makes the test depend on the internet | Agreed | 2026-10-26 |
 
 ## Known issues
 

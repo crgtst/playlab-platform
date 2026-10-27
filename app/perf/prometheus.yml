@@ -1,0 +1,10 @@
+# Scrapes the API's /metrics every 5 seconds (PLS-25.4): the request-duration histogram, the order and payment counters, the
+# active-defects gauge and the database pool.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+scrape_configs:
+  - job_name: playlab-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:3000"]
