@@ -1,0 +1,20 @@
+note,name,email,password,status,field
+name: 1 character,A,UNIQUE8X@example.com,Password123!,201,
+name: 500 characters,<a*500>,UNIQUE8X@example.com,Password123!,201,
+name: 501 characters,<a*501>,UNIQUE8X@example.com,Password123!,422,name
+name: empty,,UNIQUE8X@example.com,Password123!,422,name
+name: fadas,Seán Ó Briain,UNIQUE8X@example.com,Password123!,201,
+name: apostrophe,D'Arcy O'Neill Jr.,UNIQUE8X@example.com,Password123!,201,
+name: emoji,Zoë 😀 Ó,UNIQUE8X@example.com,Password123!,201,
+name: Arabic,محمد علي,UNIQUE8X@example.com,Password123!,201,
+email: upper case is lower-cased,Casey Tester,UPPER-UNIQUE8X@EXAMPLE.COM,Password123!,201,
+email: plus tag,Casey Tester,jo+shop-UNIQUE8X@example.com,Password123!,201,
+email: no @,Casey Tester,no-at-sign-example.com,Password123!,422,email
+email: two @,Casey Tester,two@@example.com,Password123!,422,email
+email: no top-level domain,Casey Tester,user@example,Password123!,422,email
+email: space in the local part,Casey Tester,us er@example.com,Password123!,422,email
+password: 8 characters,Casey Tester,UNIQUE8X@example.com,Passw0rd,201,
+password: 128 characters,Casey Tester,UNIQUE8X@example.com,<p*128>,201,
+password: 129 characters,Casey Tester,UNIQUE8X@example.com,<p*129>,422,password
+password: 7 characters,Casey Tester,UNIQUE8X@example.com,Passw0r,422,password
+password: empty,Casey Tester,UNIQUE8X@example.com,,422,password

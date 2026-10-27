@@ -15,7 +15,8 @@ How a test is matched:
 - An AC is covered by a test whose name contains its ID (`PLS-5.2 ...`). `PLS-25.4 and 25.5` and `PLS-1.1, 1.2` name
   every ID in the list.
 - A defect is caught by a **passing** test whose name contains the defect's name (`... detects the lost-update defect`).
-- Report files are `junit*.xml` or `TEST-*.xml` anywhere under `tests/<suite>/`; the folder name is the tool.
+- Report files are `junit*.xml` or `TEST-*.xml` anywhere under `tests/<suite>/` (and the `*.xml` files in Karate's
+  `target/karate-reports/`); the folder name is the tool.
 
 The reports are whatever the last run wrote, so run a whole suite first (a partial run leaves a partial report). For
 Playwright that is `cd tests/playwright-ts && npx playwright test`, which writes `results/junit.xml`.
