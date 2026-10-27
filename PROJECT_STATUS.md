@@ -7,13 +7,27 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 12 are done; tasks 0 to 11 are merged and task 12 (branch `tests/k6`) is not pushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 13 are done; tasks 0 to 11 are merged and tasks 12 and 13 (branch `tests/k6`) are not pushed.
 
 ## Next task
 
-Phase 3 task 13, the JMeter suite (the same load model).
+Phase 3 task 14, one Grafana dashboard comparing k6 and JMeter, and calibrating the SLOs on a real machine (the figures leave a lot of room on a laptop).
 ## Done
 
+- 2026-10-27: Phase 3 task 13, the JMeter suite (PLS-27.1 to 27.4), on `tests/k6` (built on task 12). You asked for the load suites to be written.
+  - `tests/jmeter/plans`: `products-load.jmx` (27.1, and the soak 27.3 at a lower rate), `checkout-journey.jmx` (27.2) and `overload.jmx` (27.4).
+    Run with `tests/jmeter/run.sh products|journey|soak|overload` (JMeter 5.6.3, non-GUI): data through the same test hooks, the same load
+    model file as k6 (`lib/model.mjs` turns it into `-J` properties), HTML dashboard, and `lib/jtl-to-junit.mjs` turns the results into JUnit cases
+    with the same names and pass marks as k6's, so traceability shows both tools for each AC.
+  - Techniques: a Precise Throughput Timer for the rate, a CSV Data Set for the bulk shoppers, a JSON Extractor that reads the access token out of
+    the login reply (correlation), a Once Only Controller (a shopper logs in once), and a JSR223 assertion that fails a 429 without `Retry-After`.
+  - Results at the real durations: products p95 under the limit, the journey p95 under 800 ms with no errors, overload and recovery as k6.
+    The first journey plan logged in on every journey and missed 27.2 (p95 815 ms): bcrypt at 10 a second took most of the API's two CPUs, which
+    the k6 script avoids by using the token from the CSV. The plan now logs in once per shopper, so the two tools put the same load on the order path.
+    300 ms of injected latency fails the JMeter plan too.
+  - New `performance` workflow (k6 and JMeter jobs): short runs at the real rates for a pull request that touches a load suite, the model or the
+    profile; `workflow_dispatch` with `full` runs the 5-minute durations. Not run in CI yet.
+  - Traceability: 149 of 149 in-scope ACs covered (PLS-27.1 to 27.4 by k6 and JMeter); PLS-27.5 is checked by `app/perf/smoke.sh`.
 - 2026-10-27: Phase 3 task 12, the k6 suite (PLS-27.1 to 27.4), on `tests/k6`. You asked for the load suites to be written, so these are.
   - `tests/k6/scripts`: smoke, `products` (27.1), `orders` (27.2), `soak` (27.3), `overload` (27.4), stress and spike. Run with
     `tests/k6/run.sh <script>` (k6 2.3.0 in Docker, nothing to install). Each script sets up its own data through the test hooks
