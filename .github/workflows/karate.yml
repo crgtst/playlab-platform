@@ -35,9 +35,27 @@ jobs:
         working-directory: app
         run: docker compose up --build --detach --wait --wait-timeout 300
 
+      # Locally the suite takes about 15 seconds. If Maven is still running after 5 minutes something is stuck, so print
+      # what every thread is doing and stop, rather than waiting for the job's timeout with no log.
       - name: Run the features
         working-directory: tests
-        run: ./mvnw --batch-mode -pl karate test -Dkarate.env=ci
+        run: |
+          ./mvnw --batch-mode -pl karate test -Dkarate.env=ci > karate-run.log 2>&1 &
+          maven=$!
+          for _ in $(seq 1 60); do
+            kill -0 "$maven" 2>/dev/null || break
+            sleep 5
+          done
+          if kill -0 "$maven" 2>/dev/null; then
+            echo "::error::The Karate run was still going after 5 minutes"
+            for pid in $(pgrep -f surefire); do echo "--- thread dump of $pid"; jcmd "$pid" Thread.print | head -300; done
+            grep -vE "DEBUG|THYMELEAF" karate-run.log | tail -150
+            pkill -P "$maven" || true
+            exit 1
+          fi
+          wait "$maven" && status=0 || status=$?
+          grep -vE "DEBUG|THYMELEAF" karate-run.log | tail -60
+          exit "$status"
 
       - uses: actions/upload-artifact@v7
         if: always()

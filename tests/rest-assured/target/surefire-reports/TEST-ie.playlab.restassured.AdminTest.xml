@@ -1,0 +1,2442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="ie.playlab.restassured.AdminTest" time="6.333" tests="15" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/test-classes:/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/classes:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured/5.5.7/rest-assured-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/Users/craigbennett/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/craigbennett/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/Users/craigbennett/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/craigbennett/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/Users/craigbennett/.m2/repository/io/rest-assured/json-path/5.5.7/json-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured-common/5.5.7/rest-assured-common-5.5.7.jar:/Users/craigbennett/.m2/repository/io/rest-assured/xml-path/5.5.7/xml-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar:/Users/craigbennett/.m2/repository/com/networknt/json-schema-validator/1.5.9/json-schema-validator-1.5.9.jar:/Users/craigbennett/.m2/repository/com/ethlo/time/itu/1.14.0/itu-1.14.0.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.18.3/jackson-dataformat-yaml-2.18.3.jar:/Users/craigbennett/.m2/repository/org/yaml/snakeyaml/2.3/snakeyaml-2.3.jar:/Users/craigbennett/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter/5.13.4/junit-jupiter-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.13.4/junit-jupiter-api-5.13.4.jar:/Users/craigbennett/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-commons/1.13.4/junit-platform-commons-1.13.4.jar:/Users/craigbennett/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.13.4/junit-jupiter-params-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.13.4/junit-jupiter-engine-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-engine/1.13.4/junit-platform-engine-1.13.4.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.19.2/jackson-databind-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.19.2/jackson-core-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.2/jackson-datatype-jsr310-2.19.2.jar:/Users/craigbennett/.m2/repository/org/openapitools/jackson-databind-nullable/0.2.13/jackson-databind-nullable-0.2.13.jar:/Users/craigbennett/.m2/repository/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar:"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="user.timezone" value="Europe/Dublin"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="sun.java.command" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire/surefirebooter-20261026224332648_3.jar /Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire 2026-10-26T22-43-32_594-jvmRun1 surefire-20261026224332648_1tmp surefire_0-20261026224332648_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/test-classes:/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/classes:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured/5.5.7/rest-assured-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/Users/craigbennett/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/craigbennett/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/Users/craigbennett/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/craigbennett/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/Users/craigbennett/.m2/repository/io/rest-assured/json-path/5.5.7/json-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured-common/5.5.7/rest-assured-common-5.5.7.jar:/Users/craigbennett/.m2/repository/io/rest-assured/xml-path/5.5.7/xml-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar:/Users/craigbennett/.m2/repository/com/networknt/json-schema-validator/1.5.9/json-schema-validator-1.5.9.jar:/Users/craigbennett/.m2/repository/com/ethlo/time/itu/1.14.0/itu-1.14.0.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.18.3/jackson-dataformat-yaml-2.18.3.jar:/Users/craigbennett/.m2/repository/org/yaml/snakeyaml/2.3/snakeyaml-2.3.jar:/Users/craigbennett/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter/5.13.4/junit-jupiter-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.13.4/junit-jupiter-api-5.13.4.jar:/Users/craigbennett/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-commons/1.13.4/junit-platform-commons-1.13.4.jar:/Users/craigbennett/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.13.4/junit-jupiter-params-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.13.4/junit-jupiter-engine-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-engine/1.13.4/junit-platform-engine-1.13.4.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.19.2/jackson-databind-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.19.2/jackson-core-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.2/jackson-datatype-jsr310-2.19.2.jar:/Users/craigbennett/.m2/repository/org/openapitools/jackson-databind-nullable/0.2.13/jackson-databind-nullable-0.2.13.jar:/Users/craigbennett/.m2/repository/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/Users/craigbennett"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-08-18"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured"/>
+    <property name="java.vm.compressedOopsMode" value="Non-zero disjoint base"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="defects" value=""/>
+    <property name="apple.awt.application.name" value="ForkedBooter"/>
+    <property name="surefire.real.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire/surefirebooter-20261026224332648_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12.1"/>
+    <property name="user.name" value="craigbennett"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="27.0.1"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="localRepository" value="/Users/craigbennett/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="java.io.tmpdir" value="/var/folders/4w/6p5t9vw13j913qkvv8xm27bm0000gn/T/"/>
+    <property name="java.version" value="21.0.12.1"/>
+    <property name="user.dir" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/craigbennett/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="java.vm.version" value="21.0.12.1"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="java.class.version" value="65.0"/>
+    <property name="restassured.env" value="local"/>
+  </properties>
+  <testcase name="PLS-22.2 an email changes only with the current password, and not to one that is taken (PLS-22.3, 22.6)" classname="ie.playlab.restassured.AdminTest" time="0.823">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/login
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "email": "customer-5db2f9ca@playlab.test"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=a394c4b4-235d-4746-9c8e-9760a6438e22
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/register
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=0a095f15-09e5-4695-a226-b5da30fcc85c
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "name": "Seán Ó Briain",
+    "email": "fa9fcefd@example.com"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-8.4 an admin creates, edits with the current ETag, and deletes a product" classname="ie.playlab.restassured.AdminTest" time="0.434">
+    <system-out><![CDATA[Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products?limit=3
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=a394c4b4-235d-4746-9c8e-9760a6438e22
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-9.1 a PNG under 2 MB becomes the avatar, and is served back unchanged" classname="ie.playlab.restassured.AdminTest" time="0.336"/>
+  <testcase name="PLS-22.4 deleting the account ends the sessions on both devices" classname="ie.playlab.restassured.AdminTest" time="0.477"/>
+  <testcase name="PLS-9.3 a text file renamed to .png is 415, because the contents are checked, not the name" classname="ie.playlab.restassured.AdminTest" time="0.129"/>
+  <testcase name="PLS-22.1 a new name is returned by GET /users/me" classname="ie.playlab.restassured.AdminTest" time="0.178">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=3e45427c-cd0f-4edd-8c07-db79d67ee090
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1hNDQyNDQ4N0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ._MNpkXWyQi8BlPRl8lt4cceMzQLf9UzOxmbkUy61cXQ
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 34,
+    "quantity": 1
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/users/me
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci03ZWE0ODM4NUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.5azdUCLrsv5cSxbG1V5WnMK-8Gn49AhRJbn7FMIj0us
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "name": "Casey Renamed"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/users/me
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci03ZWE0ODM4NUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.5azdUCLrsv5cSxbG1V5WnMK-8Gn49AhRJbn7FMIj0us
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-9.2 a file over 2 MB is 413 &quot;File too large&quot;" classname="ie.playlab.restassured.AdminTest" time="1.01">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci03ZDk3OTNiMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.0BAWtxoOGZ63l-3nT6LDUZaJ9WCJZZK1QDMwIeguMms
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 23,
+    "quantity": 1
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci04NWNkOWQ1MUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.P7AdQoSGgYlLly9HGPtteRookZcitLYWtJ5kmExp8qk
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 34,
+    "quantity": 1
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=7295ef38-8833-45b0-8674-82806747713b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "admin"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci03ZDk3OTNiMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.0BAWtxoOGZ63l-3nT6LDUZaJ9WCJZZK1QDMwIeguMms
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1kM2I4OTY1OEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.V4Rsr_ctehZ0lYkk2rczmWyYwUFafbYLuFeXAbJeElQ
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 34,
+    "quantity": 1
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci03ZDk3OTNiMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.0BAWtxoOGZ63l-3nT6LDUZaJ9WCJZZK1QDMwIeguMms
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 23,
+    "quantity": 1
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-23.3 an admin unlocks a locked account and the user can log in at once" classname="ie.playlab.restassured.AdminTest" time="0.668">
+    <system-out><![CDATA[Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/admin/users/72
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Iiwicm9sZSI6ImFkbWluIiwibmFtZSI6IlRlc3QgYWRtaW4iLCJlbWFpbCI6ImFkbWluLWFlODhhNGMyQHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.CGYdXHkrNl3u5FLDxnJRJlg1Usi5ESrOvluqD9UVJHo
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "unlock": true
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci05NmU5MDVjOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.dHbpKA2hMjW8CVBlo57j8K8P8JprBA5e90UyOiIQ-UI
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 34,
+    "quantity": 1
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/login
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "email": "customer-98616ded@playlab.test"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NiIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1jYThkZWViMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.IMkmtOvSS4A7h3UcOpRBCH4fMB97LChGLXYbHRSmHps
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 23,
+    "quantity": 1
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-8.5 a customer or support user cannot create a product: 403 PLS-8.5 a customer cannot create a product: 403" classname="ie.playlab.restassured.AdminTest" time="0.03">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NiIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1jYThkZWViMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.IMkmtOvSS4A7h3UcOpRBCH4fMB97LChGLXYbHRSmHps
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/categories
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=57f5ff91-d575-452a-a05d-e6456488c23d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/4/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				If-Match="stale"
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "processing"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1lYTE4YzJmYUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.HBUbhqASpnogmf-rsNUU_ygPCffQxEDnl4UMY8qNS1A
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 34,
+    "quantity": 1
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/products
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0wZmEzYmZmN0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.S-AaIG5igDUVOYVqfpkV8Td5JqanK0VIMV0PQk7ICf4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "stock": 4,
+    "name": "REST Assured test product 5a89d3c4",
+    "category": "books",
+    "priceCents": 1999,
+    "sku": "RA-5a89d3c4",
+    "description": "Made by REST Assured"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-8.5 a customer or support user cannot create a product: 403 PLS-8.5 a support cannot create a product: 403" classname="ie.playlab.restassured.AdminTest" time="0.05">
+    <system-out><![CDATA[Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/4/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "processing"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=a394c4b4-235d-4746-9c8e-9760a6438e22
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci04YWQ1NmYxNkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.QgVzBIJjg9DEH3McwJ2vdD5MiRIhhfBe5xz63wf0ZDU
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyOSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci04MTgwNGM2MEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.NztW-rihpnbmHMsagW9AUvYA2RGRcpFi6M8eyTQ_tx4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0wZDM1MjUwM0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.m1jC4UYGZlCSZdbfBDk9V0mQ8_i-RND2iBoumH-8vnQ
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci04M2I1ODAxNkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.oU00pO_s6i-1ggYsq4cRtNKXoYS3iQN2Xh958-hEPcE
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1hNDQyNDQ4N0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ._MNpkXWyQi8BlPRl8lt4cceMzQLf9UzOxmbkUy61cXQ
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzNiIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0xNmQ3ZWYzN0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.YJJlf7987ldCieZBWCyinhtP0SJ5oIdqewxlu-nQWQE
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci03ZmJjMmI0ZkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.Bw-S17o71LW-9rSZ9tBkvpXu9WBcb3YI6vh4DXzNI9M
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzMyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1hNGQ2ZjNlN0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.9RlYzBp9GfqX7h_tLFOZMYsz2hMtUyRnjq3zpoJBFhM
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1kODdhNmNkY0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.WM2HAzboP2sqoz_a0ma4SM2NPPcVNmLzMmP95IaZkkQ
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1hZmQ0YTBmOUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.CxgQocOPQ8h2H45Eg01YDRYaOftJotfKckygDfEghrM
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0wZDYzZmRlMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.IFgLZkjZOPxVY8ZEw3ylEmi40SLXbg0O5XHkaTLayno
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1lMmVlZDQ3MkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNiwiZXhwIjoxNzkzMDU1NTE2fQ.isGIziyRFrzVhUW-zr_qSc-Fb1mZYyMf7NSdOLqaOt4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1lNzkzMjE4OEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.LUu26eiTFalgsrZmaSqKR-xFr_MqVgTkliBI7j8o5h8
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci04NWNkOWQ1MUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.P7AdQoSGgYlLly9HGPtteRookZcitLYWtJ5kmExp8qk
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2NSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1mNDg4MDkwNUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.aCJG8-WuMMgUXs0Bf3syhmWHbgV1KXWpcM2ThB4DLp8
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1kM2I4OTY1OEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.V4Rsr_ctehZ0lYkk2rczmWyYwUFafbYLuFeXAbJeElQ
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3MyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci05ZDg1MGMwY0BwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.xSQfAYMnKz9SXU-LRFg8kYkpK_p2UoXGD4ANk6I-j8A
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1jODhhZWQxZkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.cjOh93KLmhdnaahNWFRTeLG4u8YTlWK3-rDeApmw5ek
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci05NmU5MDVjOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.dHbpKA2hMjW8CVBlo57j8K8P8JprBA5e90UyOiIQ-UI
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1lYTE4YzJmYUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.HBUbhqASpnogmf-rsNUU_ygPCffQxEDnl4UMY8qNS1A
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/4/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "cancelled"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/products
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3OSIsInJvbGUiOiJzdXBwb3J0IiwibmFtZSI6IlRlc3Qgc3VwcG9ydCIsImVtYWlsIjoic3VwcG9ydC0zNzYzMDZiYUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.VtRWWndBOQpZbs25JgVclpCgm5b4BpEeYsiU31JDjqY
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "stock": 4,
+    "name": "REST Assured test product 9c222e89",
+    "category": "books",
+    "priceCents": 1999,
+    "sku": "RA-9c222e89",
+    "description": "Made by REST Assured"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-9.4 an admin exports orders to a CSV with a header row; a customer cannot" classname="ie.playlab.restassured.AdminTest" time="0.136">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/test/logs?correlationId=restassured-log-eafc6bc5-f841-48b9-95bd-30c0d5cc7752
+Proxy:			<none>
+Request params:	<none>
+Query params:	correlationId=restassured-log-eafc6bc5-f841-48b9-95bd-30c0d5cc7752
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=a394c4b4-235d-4746-9c8e-9760a6438e22
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/5/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0yM2RkMTdkMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNSwiZXhwIjoxNzkzMDU1NTE1fQ.qmSpPTBerL9j0ENtT5j3itMAoaEhJ7WFZNxDptr0wL8
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "cancelled"
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/products/34
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0yM2RkMTdkMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNSwiZXhwIjoxNzkzMDU1NTE1fQ.qmSpPTBerL9j0ENtT5j3itMAoaEhJ7WFZNxDptr0wL8
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "stock": 15
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/orders/export.csv
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci01OThjMjNiNkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.gH7x2OoHS497lRGpj_x8KEbwuJdX2d5EVj2op48OoXI
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MiIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00OTk5ZjVmNkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.dBdZ1QwGBDg5iADz2Y8GzP2MBu3wZVCwjttJTsBSpgc
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 23,
+    "quantity": 1
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-23.1 the user list filters by role, pages, shows lock state and never shows a password" classname="ie.playlab.restassured.AdminTest" time="0.177">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "support"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0zNjdiZDU0YkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.OjYipX6USeV3XAM8wizKPjAOtr2S1Cxr02bS3KrZe-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 35,
+    "quantity": 1
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/6/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "processing"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "support"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/6/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "paid"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0zNjdiZDU0YkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.OjYipX6USeV3XAM8wizKPjAOtr2S1Cxr02bS3KrZe-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/admin/users?role=support&limit=2&page=1
+Proxy:			<none>
+Request params:	<none>
+Query params:	role=support
+				limit=2
+				page=1
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Iiwicm9sZSI6ImFkbWluIiwibmFtZSI6IlRlc3QgYWRtaW4iLCJlbWFpbCI6ImFkbWluLWFlODhhNGMyQHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.CGYdXHkrNl3u5FLDxnJRJlg1Usi5ESrOvluqD9UVJHo
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0zNjdiZDU0YkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.OjYipX6USeV3XAM8wizKPjAOtr2S1Cxr02bS3KrZe-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/6/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "cancelled"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-23.2 a role change applies from the user&apos;s next login, not to the token already issued" classname="ie.playlab.restassured.AdminTest" time="0.252">
+    <system-out><![CDATA[Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/admin/users/87
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Iiwicm9sZSI6ImFkbWluIiwibmFtZSI6IlRlc3QgYWRtaW4iLCJlbWFpbCI6ImFkbWluLWFlODhhNGMyQHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.CGYdXHkrNl3u5FLDxnJRJlg1Usi5ESrOvluqD9UVJHo
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "support"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0zNjdiZDU0YkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.OjYipX6USeV3XAM8wizKPjAOtr2S1Cxr02bS3KrZe-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/admin/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00YmI0NDI2NEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOCwiZXhwIjoxNzkzMDU1NTE4fQ.9m8-SCmExSutE0R33eX3I44JDQImZW9h2YOeKxkk_R0
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/login
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "email": "customer-4bb44264@playlab.test"
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/7/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0yM2RkMTdkMUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNSwiZXhwIjoxNzkzMDU1NTE1fQ.qmSpPTBerL9j0ENtT5j3itMAoaEhJ7WFZNxDptr0wL8
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "cancelled"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00M2ZjOTM1OUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.sORfTYFyj8HUgJc3pt-kT44tcoPBPTU3YMz0bzG5Igc
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 23,
+    "quantity": 1
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/admin/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NyIsInJvbGUiOiJzdXBwb3J0IiwibmFtZSI6IlRlc3QgY3VzdG9tZXIiLCJlbWFpbCI6ImN1c3RvbWVyLTRiYjQ0MjY0QHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE5LCJleHAiOjE3OTMwNTU1MTl9.DT0oUmyHkbVEgkh7JWKgTROomLpyizUA_OdEi3omV5k
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00M2ZjOTM1OUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.sORfTYFyj8HUgJc3pt-kT44tcoPBPTU3YMz0bzG5Igc
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-23.4 support may list users but not change them, and a customer may do neither (PLS-23.5, 24.8)" classname="ie.playlab.restassured.AdminTest" time="0.216">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/seed
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "fixtures": [
+        "single-use-discount"
+    ]
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00M2ZjOTM1OUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.sORfTYFyj8HUgJc3pt-kT44tcoPBPTU3YMz0bzG5Igc
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 23,
+    "quantity": 1
+}
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1lMGE5ZjhjZEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.z_IZQu93LSopbVVN5gtDmjGZ1B3oD_4o427q97WfLe4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 35,
+    "quantity": 2
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00M2ZjOTM1OUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.sORfTYFyj8HUgJc3pt-kT44tcoPBPTU3YMz0bzG5Igc
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "shipping": {
+        "fullName": "REST Assured Customer",
+        "line1": "1 Main Street",
+        "country": "IE",
+        "postcode": "D01 F5P2",
+        "city": "Dublin"
+    },
+    "deliveryDate": "2026-10-31",
+    "payment": {
+        "nameOnCard": "Casey Customer",
+        "expiry": "12/30",
+        "cvc": "123",
+        "cardNumber": "4242 4242 4242 4242"
+    }
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/discount
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MSIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1lMGE5ZjhjZEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.z_IZQu93LSopbVVN5gtDmjGZ1B3oD_4o427q97WfLe4
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "code": "ONCE15"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/admin/users?limit=1
+Proxy:			<none>
+Request params:	<none>
+Query params:	limit=1
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OSIsInJvbGUiOiJzdXBwb3J0IiwibmFtZSI6IlRlc3Qgc3VwcG9ydCIsImVtYWlsIjoic3VwcG9ydC04ZWQ1ZDUzZEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.75dr9_cCK7dlxeISvdiXMNS-cvTT63rlJMZQmc2X9ug
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/admin/users/92
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OSIsInJvbGUiOiJzdXBwb3J0IiwibmFtZSI6IlRlc3Qgc3VwcG9ydCIsImVtYWlsIjoic3VwcG9ydC04ZWQ1ZDUzZEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.75dr9_cCK7dlxeISvdiXMNS-cvTT63rlJMZQmc2X9ug
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "admin"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/admin/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci02M2U1N2Y1ZUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.B_NeO8j7QsJj1EtZjeLEvp2Fbh42hXsZL6KWaDxtf84
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/admin/users/92
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci02M2U1N2Y1ZUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.B_NeO8j7QsJj1EtZjeLEvp2Fbh42hXsZL6KWaDxtf84
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "admin"
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/orders/9/status
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MCIsInJvbGUiOiJhZG1pbiIsIm5hbWUiOiJUZXN0IGFkbWluIiwiZW1haWwiOiJhZG1pbi0xOWFlYzVlOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNywiZXhwIjoxNzkzMDU1NTE3fQ.2LiJulDA9omWHW37NM6NC_G7D-QuQk640VI-nxpW0r4
+				If-Match=*
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "status": "processing"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/admin/users?q=customer-40a37c79%40playlab.test
+Proxy:			<none>
+Request params:	<none>
+Query params:	q=customer-40a37c79@playlab.test
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Iiwicm9sZSI6ImFkbWluIiwibmFtZSI6IlRlc3QgYWRtaW4iLCJlbWFpbCI6ImFkbWluLWFlODhhNGMyQHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.CGYdXHkrNl3u5FLDxnJRJlg1Usi5ESrOvluqD9UVJHo
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=c0eb0bc4-0c9d-488f-9ca5-18e30d22edd7
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MyIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci0xNjJhOTdjYkBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.FDaooUWQBihqDEcTWxvA6IVZhngMopT51G9Osy2RaeE
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 35,
+    "quantity": 2
+}
+Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/orders/9/cancel
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=1c6a4b55-cd59-4601-a93f-e0d7c812085b
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci00M2ZjOTM1OUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxOSwiZXhwIjoxNzkzMDU1NTE5fQ.sORfTYFyj8HUgJc3pt-kT44tcoPBPTU3YMz0bzG5Igc
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-21.2 a stale ETag is 412 and no If-Match is 428, and the product is left alone" classname="ie.playlab.restassured.AdminTest" time="0.077">
+    <system-out><![CDATA[Request method:	GET
+Request URI:	http://localhost:3001/metrics
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=33854a5c-f679-4395-a0be-c9fdd9474dd9
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+</testsuite>

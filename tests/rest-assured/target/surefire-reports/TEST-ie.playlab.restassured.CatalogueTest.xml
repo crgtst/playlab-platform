@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="ie.playlab.restassured.CatalogueTest" time="2.589" tests="8" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/test-classes:/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/classes:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured/5.5.7/rest-assured-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/Users/craigbennett/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/craigbennett/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/Users/craigbennett/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/craigbennett/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/Users/craigbennett/.m2/repository/io/rest-assured/json-path/5.5.7/json-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured-common/5.5.7/rest-assured-common-5.5.7.jar:/Users/craigbennett/.m2/repository/io/rest-assured/xml-path/5.5.7/xml-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar:/Users/craigbennett/.m2/repository/com/networknt/json-schema-validator/1.5.9/json-schema-validator-1.5.9.jar:/Users/craigbennett/.m2/repository/com/ethlo/time/itu/1.14.0/itu-1.14.0.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.18.3/jackson-dataformat-yaml-2.18.3.jar:/Users/craigbennett/.m2/repository/org/yaml/snakeyaml/2.3/snakeyaml-2.3.jar:/Users/craigbennett/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter/5.13.4/junit-jupiter-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.13.4/junit-jupiter-api-5.13.4.jar:/Users/craigbennett/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-commons/1.13.4/junit-platform-commons-1.13.4.jar:/Users/craigbennett/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.13.4/junit-jupiter-params-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.13.4/junit-jupiter-engine-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-engine/1.13.4/junit-platform-engine-1.13.4.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.19.2/jackson-databind-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.19.2/jackson-core-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.2/jackson-datatype-jsr310-2.19.2.jar:/Users/craigbennett/.m2/repository/org/openapitools/jackson-databind-nullable/0.2.13/jackson-databind-nullable-0.2.13.jar:/Users/craigbennett/.m2/repository/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar:"/>
+    <property name="java.vm.vendor" value="Homebrew"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="user.timezone" value="Europe/Dublin"/>
+    <property name="os.name" value="Mac OS X"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="user.country" value="US"/>
+    <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home/lib"/>
+    <property name="sun.java.command" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire/surefirebooter-20261026224332648_3.jar /Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire 2026-10-26T22-43-32_594-jvmRun1 surefire-20261026224332648_1tmp surefire_0-20261026224332648_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/test-classes:/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/classes:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured/5.5.7/rest-assured-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar:/Users/craigbennett/.m2/repository/commons-logging/commons-logging/1.2/commons-logging-1.2.jar:/Users/craigbennett/.m2/repository/commons-codec/commons-codec/1.11/commons-codec-1.11.jar:/Users/craigbennett/.m2/repository/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar:/Users/craigbennett/.m2/repository/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar:/Users/craigbennett/.m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar:/Users/craigbennett/.m2/repository/io/rest-assured/json-path/5.5.7/json-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar:/Users/craigbennett/.m2/repository/io/rest-assured/rest-assured-common/5.5.7/rest-assured-common-5.5.7.jar:/Users/craigbennett/.m2/repository/io/rest-assured/xml-path/5.5.7/xml-path-5.5.7.jar:/Users/craigbennett/.m2/repository/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar:/Users/craigbennett/.m2/repository/com/networknt/json-schema-validator/1.5.9/json-schema-validator-1.5.9.jar:/Users/craigbennett/.m2/repository/com/ethlo/time/itu/1.14.0/itu-1.14.0.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.18.3/jackson-dataformat-yaml-2.18.3.jar:/Users/craigbennett/.m2/repository/org/yaml/snakeyaml/2.3/snakeyaml-2.3.jar:/Users/craigbennett/.m2/repository/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter/5.13.4/junit-jupiter-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.13.4/junit-jupiter-api-5.13.4.jar:/Users/craigbennett/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-commons/1.13.4/junit-platform-commons-1.13.4.jar:/Users/craigbennett/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.13.4/junit-jupiter-params-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.13.4/junit-jupiter-engine-5.13.4.jar:/Users/craigbennett/.m2/repository/org/junit/platform/junit-platform-engine/1.13.4/junit-platform-engine-1.13.4.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.19.2/jackson-databind-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.19.2/jackson-core-2.19.2.jar:/Users/craigbennett/.m2/repository/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.19.2/jackson-datatype-jsr310-2.19.2.jar:/Users/craigbennett/.m2/repository/org/openapitools/jackson-databind-nullable/0.2.13/jackson-databind-nullable-0.2.13.jar:/Users/craigbennett/.m2/repository/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/Users/craigbennett"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-08-18"/>
+    <property name="java.home" value="/opt/homebrew/Cellar/openjdk@21/21.0.12.1/libexec/openjdk.jdk/Contents/Home"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured"/>
+    <property name="java.vm.compressedOopsMode" value="Non-zero disjoint base"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="defects" value=""/>
+    <property name="apple.awt.application.name" value="ForkedBooter"/>
+    <property name="surefire.real.class.path" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured/target/surefire/surefirebooter-20261026224332648_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.12.1"/>
+    <property name="user.name" value="craigbennett"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="27.0.1"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="java.vendor.version" value="Homebrew"/>
+    <property name="localRepository" value="/Users/craigbennett/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="java.io.tmpdir" value="/var/folders/4w/6p5t9vw13j913qkvv8xm27bm0000gn/T/"/>
+    <property name="java.version" value="21.0.12.1"/>
+    <property name="user.dir" value="/Users/craigbennett/VSCode/playlab-platform/tests/rest-assured"/>
+    <property name="os.arch" value="aarch64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/Users/craigbennett/Library/Java/Extensions:/Library/Java/Extensions:/Network/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java:."/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vendor" value="Homebrew"/>
+    <property name="java.vm.version" value="21.0.12.1"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeBig"/>
+    <property name="java.class.version" value="65.0"/>
+    <property name="restassured.env" value="local"/>
+  </properties>
+  <testcase name="PLS-3.5 paging shows every product exactly once, with none missing" classname="ie.playlab.restassured.CatalogueTest" time="0.301">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products?limit=12&page=2
+Proxy:			<none>
+Request params:	<none>
+Query params:	limit=12
+				page=2
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=55b23513-221a-4d4d-97c5-42bf3cb6ec7b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=3e45427c-cd0f-4edd-8c07-db79d67ee090
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5Iiwicm9sZSI6ImN1c3RvbWVyIiwibmFtZSI6IlRlc3QgY3VzdG9tZXIiLCJlbWFpbCI6ImN1c3RvbWVyLTAwNGVmZjI2QHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.eGcfihyYLSgyq2PJ3Op5q7iCcoIdAogoHL2OgEGnb-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 8,
+    "quantity": 1
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products?limit=12&page=3
+Proxy:			<none>
+Request params:	<none>
+Query params:	limit=12
+				page=3
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=55b23513-221a-4d4d-97c5-42bf3cb6ec7b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/discount
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=3e45427c-cd0f-4edd-8c07-db79d67ee090
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5Iiwicm9sZSI6ImN1c3RvbWVyIiwibmFtZSI6IlRlc3QgY3VzdG9tZXIiLCJlbWFpbCI6ImN1c3RvbWVyLTAwNGVmZjI2QHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.eGcfihyYLSgyq2PJ3Op5q7iCcoIdAogoHL2OgEGnb-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "code": "SAVE10"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products?limit=12&page=4
+Proxy:			<none>
+Request params:	<none>
+Query params:	limit=12
+				page=4
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=55b23513-221a-4d4d-97c5-42bf3cb6ec7b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/register
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=0a095f15-09e5-4695-a226-b5da30fcc85c
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "name": "A",
+    "email": "95538ebd@example.com"
+}
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/discount
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=3e45427c-cd0f-4edd-8c07-db79d67ee090
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5Iiwicm9sZSI6ImN1c3RvbWVyIiwibmFtZSI6IlRlc3QgY3VzdG9tZXIiLCJlbWFpbCI6ImN1c3RvbWVyLTAwNGVmZjI2QHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.eGcfihyYLSgyq2PJ3Op5q7iCcoIdAogoHL2OgEGnb-Q
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "code": "FIXED20"
+}
+Request method:	PATCH
+Request URI:	http://localhost:3001/api/v1/users/me
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMCIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci01ZGIyZjljYUBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNCwiZXhwIjoxNzkzMDU1NTE0fQ.yas67xOfYDaIbc7iQKLETTdpB-gA8hAp6GsBB5beFLY
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "currentPassword": "not-the-password",
+    "email": "restassured-new-eadc0d64@playlab.test"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-3.1 a search returns only matching products, and the count equals what is listed" classname="ie.playlab.restassured.CatalogueTest" time="0.147"/>
+  <testcase name="PLS-3.3 category and price filters apply together" classname="ie.playlab.restassured.CatalogueTest" time="0.158"/>
+  <testcase name="PLS-3.4 sorting by price ascending holds across every page" classname="ie.playlab.restassured.CatalogueTest" time="0.313">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/api/v1/products
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Iiwicm9sZSI6ImFkbWluIiwibmFtZSI6IlRlc3QgYWRtaW4iLCJlbWFpbCI6ImFkbWluLWFlODhhNGMyQHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.CGYdXHkrNl3u5FLDxnJRJlg1Usi5ESrOvluqD9UVJHo
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "stock": 4,
+    "name": "REST Assured test product 8dcbeaa1",
+    "category": "books",
+    "priceCents": 1999,
+    "sku": "RA-8dcbeaa1",
+    "description": "Made by REST Assured"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products?sort=price_asc&limit=12&page=4
+Proxy:			<none>
+Request params:	<none>
+Query params:	sort=price_asc
+				limit=12
+				page=4
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=55b23513-221a-4d4d-97c5-42bf3cb6ec7b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/cart/items
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=3e45427c-cd0f-4edd-8c07-db79d67ee090
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNiIsInJvbGUiOiJjdXN0b21lciIsIm5hbWUiOiJUZXN0IGN1c3RvbWVyIiwiZW1haWwiOiJjdXN0b21lci1jNzdiM2RkOEBwbGF5bGFiLnRlc3QiLCJ2ZXIiOjEsImlhdCI6MTc5MzA1NDYxNSwiZXhwIjoxNzkzMDU1NTE1fQ._B-88hZo2iwZzW0DFTvT0_CTcE7gwxEw8V5rskm7-kU
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "productId": 35,
+    "quantity": 1
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-3.2 an apostrophe in a search is not a server error" classname="ie.playlab.restassured.CatalogueTest" time="0.029">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/register
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=0a095f15-09e5-4695-a226-b5da30fcc85c
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "name": "D'Arcy O'Neill Jr.",
+    "email": "c9820d7a@example.com"
+}
+Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products/41
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-10.6 a product has an ETag, and If-None-Match on it returns 304" classname="ie.playlab.restassured.CatalogueTest" time="0.185">
+    <system-out><![CDATA[Request method:	POST
+Request URI:	http://localhost:3001/test/users
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=3e45427c-cd0f-4edd-8c07-db79d67ee090
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "role": "customer"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-24.7 a limit above the maximum is refused with 422 naming the limit" classname="ie.playlab.restassured.CatalogueTest" time="0.014">
+    <system-out><![CDATA[Request method:	GET
+Request URI:	http://localhost:3001/api/v1/products?limit=100000
+Proxy:			<none>
+Request params:	<none>
+Query params:	limit=100000
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=55b23513-221a-4d4d-97c5-42bf3cb6ec7b
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/login
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=a394c4b4-235d-4746-9c8e-9760a6438e22
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "wrong-password",
+    "email": "nobody-at-all@playlab.test"
+}
+Request method:	DELETE
+Request URI:	http://localhost:3001/api/v1/products/41
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=27ca4c9b-243e-4161-8204-05964697a04d
+				Authorization=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Iiwicm9sZSI6ImFkbWluIiwibmFtZSI6IlRlc3QgYWRtaW4iLCJlbWFpbCI6ImFkbWluLWFlODhhNGMyQHBsYXlsYWIudGVzdCIsInZlciI6MSwiaWF0IjoxNzkzMDU0NjE0LCJleHAiOjE3OTMwNTU1MTR9.CGYdXHkrNl3u5FLDxnJRJlg1Usi5ESrOvluqD9UVJHo
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:			<none>
+Request method:	POST
+Request URI:	http://localhost:3001/api/v1/auth/register
+Proxy:			<none>
+Request params:	<none>
+Query params:	<none>
+Form params:	<none>
+Path params:	<none>
+Headers:		Accept=application/json, application/javascript, text/javascript, text/json
+				X-Test-Session=0a095f15-09e5-4695-a226-b5da30fcc85c
+				Content-Type=application/json
+Cookies:		<none>
+Multiparts:		<none>
+Body:
+{
+    "password": "Password123!",
+    "name": "Zoë 😀 Ó",
+    "email": "33ee5ac2@example.com"
+}
+]]></system-out>
+  </testcase>
+  <testcase name="PLS-3.6 no matches is still a 200 with an empty list" classname="ie.playlab.restassured.CatalogueTest" time="0.103"/>
+</testsuite>
