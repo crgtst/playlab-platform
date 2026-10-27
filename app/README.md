@@ -358,6 +358,12 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `lost-update` | PLS-21.2, 21.3, 21.5, 21.7 | API | `If-Match` is ignored, so a stale or missing one still overwrites the latest version |
 | `status-any-transition` | PLS-20.2, 20.3, 20.4 | API | An admin can set any status, singly or in bulk, such as delivered back to pending |
 | `wrong-status-code` | PLS-2.4, 10.2 | API | Validation errors return 500 instead of 422 |
+| `missing-security-headers` | PLS-24.11 | API | API responses carry none of `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy` and `Permissions-Policy` (the web app's headers are fixed) |
+| `verbose-errors` | PLS-24.12 | API | An unexpected 500 includes the stack trace, the SQL and file paths in `error.details` (reach one with `search-apostrophe`) |
+| `jwt-alg-none` | PLS-24.2 | API | A token whose header says `"alg": "none"` is believed without a signature, so anyone can make themselves any user |
+| `user-enumeration` | PLS-24.3 | API | Login and password reset say whether an email has an account (404 `USER_NOT_FOUND`, or 401 `INVALID_PASSWORD`) |
+| `mass-assignment-role` | PLS-24.4 | API | A `role` of `admin` or `support` in the registration body is honoured |
+| `bfla-admin-users` | PLS-24.8 | API | `PATCH /admin/users/{id}` skips its role check, so any logged-in user can change any user |
 | `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
 | `permission-denied-crash` | PLS-13.2 | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
 | `clipboard-wrong-value` | PLS-15.1 | Web | Each "Copy code" button copies the previous code in the list (`SAVE10` copies `FIXED20`) |
@@ -366,7 +372,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 36 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 42 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 

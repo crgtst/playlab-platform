@@ -78,6 +78,21 @@ export const BUGS = {
     side: 'service worker',
     description: 'The offline cache keeps showing old prices after going back online',
   },
+  // Phase 3: the security lab
+  'missing-security-headers': { ac: 'PLS-24.11', side: 'api', description: 'API responses carry none of the security headers' },
+  'verbose-errors': { ac: 'PLS-24.12', side: 'api', description: 'An unexpected 500 includes the stack trace, the SQL and file paths' },
+  'jwt-alg-none': { ac: 'PLS-24.2', side: 'api', description: 'A token with "alg": "none" is accepted without a signature' },
+  'user-enumeration': { ac: 'PLS-24.3', side: 'api', description: 'Login and password reset say whether an email has an account' },
+  'mass-assignment-role': {
+    ac: 'PLS-24.4',
+    side: 'api',
+    description: 'A "role" in the registration body is honoured, so anyone can register as an admin',
+  },
+  'bfla-admin-users': {
+    ac: 'PLS-24.8',
+    side: 'api',
+    description: 'Any logged-in user can change any other user through PATCH /admin/users/{id}',
+  },
   'aria-heading-skip': { ac: 'PLS-19.2', side: 'web', description: 'The order summary jumps from h2 to h4' },
 } as const;
 

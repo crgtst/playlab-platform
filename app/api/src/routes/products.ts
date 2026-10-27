@@ -103,7 +103,9 @@ productsRouter.get(
     const q = parse(listSchema, req.query);
     if (isBugOn('search-apostrophe') && q.q?.includes("'")) {
       // Simulates a query built by string concatenation breaking on the quote.
-      throw new Error(`syntax error at or near "${q.q.slice(q.q.indexOf("'") + 1)}"`);
+      throw Object.assign(new Error(`syntax error at or near "${q.q.slice(q.q.indexOf("'") + 1)}"`), {
+        query: `SELECT * FROM products WHERE name ILIKE '%${q.q}%'`,
+      });
     }
     const where: string[] = [];
     const params: unknown[] = [];

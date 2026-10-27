@@ -36,6 +36,17 @@ export function signAccessToken(user: { id: number; role: Role; name: string; em
 
 /** Throws jwt errors (TokenExpiredError, JsonWebTokenError) on failure. */
 export function verifyAccessToken(token: string): AccessClaims {
+  // jwt-alg-none: a token whose header says "alg": "none" is believed without checking any signature (PLS-24.2).
+  if (isBugOn('jwt-alg-none')) {
+    const [header, payload] = token.split('.');
+    try {
+      if (JSON.parse(Buffer.from(header ?? '', 'base64url').toString('utf8')).alg === 'none') {
+        return JSON.parse(Buffer.from(payload ?? '', 'base64url').toString('utf8')) as AccessClaims;
+      }
+    } catch {
+      // not a readable token: the normal check below refuses it
+    }
+  }
   return jwt.verify(token, config.jwtSecret, {
     algorithms: ['HS256'],
     clockTimestamp: clock.nowSec(),

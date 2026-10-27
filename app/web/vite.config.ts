@@ -15,8 +15,31 @@ const proxy = {
 // as http://web:5173 inside Compose, so the service name must be allowed as well as localhost.
 const allowedHosts = ['web'];
 
+// Security headers on every web response (PLS-24.11). The page loads its own scripts and styles only, talks to its own
+// origin (the API is proxied) and over WebSocket, and frames the payment page on the API's origin.
+const paymentFrameOrigin = new URL(process.env.PAYMENT_FRAME_URL ?? 'http://localhost:3000/pay/frame').origin;
+const headers = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  // The shop uses geolocation (store finder) and the clipboard (copy buttons); nothing else.
+  'Permissions-Policy': 'camera=(), microphone=(), payment=(), usb=(), geolocation=(self), clipboard-read=(self), clipboard-write=(self)',
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "connect-src 'self' ws: wss:",
+    "worker-src 'self'",
+    `frame-src 'self' ${paymentFrameOrigin}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; '),
+};
+
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173, host: true, strictPort: true, allowedHosts, proxy },
-  preview: { port: 5173, host: true, strictPort: true, allowedHosts, proxy },
+  server: { port: 5173, host: true, strictPort: true, allowedHosts, proxy, headers },
+  preview: { port: 5173, host: true, strictPort: true, allowedHosts, proxy, headers },
 });

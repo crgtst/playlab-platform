@@ -51,6 +51,8 @@ services:
     build: ./web
     environment:
       API_PROXY_TARGET: http://api:3000
+      # Where the payment iframe lives, so the web app's Content-Security-Policy lets the page frame it (PLS-24.11).
+      PAYMENT_FRAME_URL: ${PAYMENT_FRAME_URL:-http://localhost:${API_PORT:-3000}/pay/frame}
     ports:
       - "${WEB_PORT:-5173}:5173"
     depends_on:

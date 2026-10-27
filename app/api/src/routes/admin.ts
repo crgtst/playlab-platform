@@ -3,7 +3,8 @@ import { z } from '../lib/zod';
 import { query } from '../db/pool';
 import { clock } from '../lib/clock';
 import { notFound } from '../lib/errors';
-import { requireRole } from '../middleware/auth';
+import { isBugOn } from '../lib/bugs';
+import { requireAuth, requireRole } from '../middleware/auth';
 import { noStore } from '../middleware/noStore';
 import { asyncHandler, parse } from '../middleware/validate';
 import { publicUser, SELECT_USER, UserRow } from './auth';
@@ -73,7 +74,8 @@ const changeSchema = z
  */
 adminRouter.patch(
   '/users/:id',
-  requireRole('admin'),
+  // bfla-admin-users: any logged-in user may change any other user, because the role check is skipped (PLS-24.8).
+  (req, res, next) => (isBugOn('bfla-admin-users') ? requireAuth(req, res, next) : requireRole('admin')(req, res, next)),
   asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) throw notFound('User not found');

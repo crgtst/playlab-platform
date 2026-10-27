@@ -78,7 +78,11 @@ payFrameRouter.get('/frame', (_req, res) => {
     '__BUGS__',
     JSON.stringify(bugs.active()),
   );
-  res.setHeader('Content-Security-Policy', `frame-ancestors ${config.shopOrigins.join(' ')}`);
+  // The frame is one HTML page with its own inline script and styles, calls only this API, and may be framed only by the shop.
+  res.setHeader(
+    'Content-Security-Policy',
+    `default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; frame-ancestors ${config.shopOrigins.join(' ')}`,
+  );
   res.setHeader('Cache-Control', 'no-store');
   res.type('html').send(html);
 });

@@ -1,19 +1,53 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-24
+Last updated: 2026-10-27
 
 ## Current phase
 
-Phase 2 started on `tests/phase-2-auth-suite`. Phase 1 merged to `main` in PR #16 on 2026-10-22 (Gate 1 passed).
+Phase 2's four functional suites are written and merged (PRs #25 to #29 and #37), and Gate 2 is met by the traceability
+report. The Playwright workflow (PR #30) is the one Phase 2 item still in CI. Phase 3 is planned (see "Phase 3 tasks" in
+`docs/REVIEW_AND_PLAN.md`); tasks 1 and 2 are built.
 
 ## Next task
 
-Continue the Playwright TypeScript suite through the remaining acceptance criteria (done for what the platform builds; PLS-26, 27 and 29 belong to other tools), then proceed through the planned
-Postman/Newman, Karate, REST Assured and traceability work.
+Phase 3 task 3: the data and inventory defects (`excessive-data-exposure`, `no-page-limit`, `shadow-api-v0`,
+`trust-address-provider`). Phase 3 task 0 closes when the Playwright workflow is green on `main`.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 2, authentication defects (PLS-24.2, 24.3, 24.4, 24.8), on `feat/auth-defects` (built on task 1).
+  - Four new defects (42 built, 5 planned): `jwt-alg-none` believes an unsigned token (so forged claims make an admin);
+    `user-enumeration` tells an unknown email from a wrong password in login and in forgot-password;
+    `mass-assignment-role` honours `role: admin` or `support` at registration; `bfla-admin-users` skips the role check
+    on `PATCH /admin/users/{id}`. All four hold with the defect off, which the existing criteria already required.
+  - Tests: 11 integration tests, each criterion with the defect off and on, in a session of its own (a signature check
+    still refuses a tampered token with `jwt-alg-none` on; `mass-assignment-role` ignores a role that does not exist;
+    `bfla-admin-users` still refuses a guest). 58 unit, 162 integration, e2e 19, Playwright TypeScript 204 and Postman
+    pass; one Playwright test (PLS-6.7) failed once under load and passed 16 of 16 on repeat, one of the known flakes.
+  - Process: a Karate follow-up commit used `git add -A` while another branch's build folder was untracked, so 304
+    generated files from `tests/rest-assured/target/` reached `main` in PR #29. PR #37 untracks them. From now on commits
+    name their paths.
+- 2026-10-26: Phase 3 task 1, security headers and error bodies (PLS-24.11, 24.12), on `feat/security-headers`.
+  - API: every response (errors, `/metrics`, `/test/*` included) carries `X-Content-Type-Options`, `Referrer-Policy`,
+    `Content-Security-Policy` and `Permissions-Policy`. The policy allows an API nothing; `/api/docs` and the payment
+    frame get the inline script and style they use, and the frame may still be framed only by the shop.
+  - Web: the same four headers from Vite (`server` and `preview`), with a policy that lets the page load its own
+    scripts and styles, talk to its own origin and over WebSocket, run the service worker and frame the payment page.
+    Compose now passes `PAYMENT_FRAME_URL` to the web container so the policy knows the API's origin.
+  - New defects (38 built, 9 planned): `missing-security-headers` removes the API headers for a session;
+    `verbose-errors` puts the stack, SQL and file paths into a 500's `details`. The simulated SQL error behind
+    `search-apostrophe` now carries its query, so there is a real 500 to test.
+  - Tests: 14 integration tests (every route type, the policy text, the defect on and off per session, a 500's body with
+    and without the defect); 2 e2e tests: the web headers, and no CSP violation on the main pages with checkout still
+    paying. 58 unit tests, e2e 19, Gate 1 screenshots unchanged, Playwright TypeScript 204 and Postman all pass.
+  - Not covered by the headers: the web app's headers are static, so `missing-security-headers` affects the API only.
+- 2026-10-26: Phase 3 planned. "Phase 3 tasks" added to `docs/REVIEW_AND_PLAN.md`: 17 tasks, each with its ACs, defects
+  and tests, platform tasks (1 to 8) before the suites that need them (9 to 15) and Gate 3 last. The 11 security-lab
+  defects (47 in all), the SSRF import feature, the perf profile, bulk data and provider states are tasks 1 to 7. One new
+  AC (PLS-9.5, the positive path of the avatar import) is added in task 4. Karate CI: the first run hung for 15 minutes
+  (cause not seen, because a cancelled job keeps no log); the Java helpers now have timeouts and the workflow prints a
+  thread dump if it runs over 5 minutes, and the next run passed in 2 minutes.
 - 2026-10-26: Added the REST Assured suite (Phase 2), on `tests/rest-assured-suite` (built on the Karate branch), at
   Craig's request. This completes the Phase 2 suites.
   - `tests/rest-assured/`: 112 tests in 10 classes, with the AC ID first in each `@DisplayName` and as a `@Tag`.
@@ -541,6 +575,7 @@ Postman/Newman, Karate, REST Assured and traceability work.
 | 9 | Phase 1 test approach: every Phase 1 AC gets a platform test (unit or Postgres integration in `app/api/test/`, UI parts in an `app/e2e/` smoke suite); A7 rate-limit fix in Phase 1 (task 9) | Agreed | 2026-10-22 |
 | 10 | Compose ports stay published on all interfaces (not bound to `127.0.0.1`), so another machine on the network can reach the stack, e.g. to generate JMeter load. The README and `SECURITY.md` say local, trusted networks only | Agreed | 2026-10-22 |
 | 11 | `SECURITY.md` keeps "an acknowledgement within a week" as written | Agreed | 2026-10-22 |
+| 12 | How the avatar import's positive case reaches an image (Phase 3 task 4): recommended is a small `fixtures` container in Compose (nginx serving one PNG) that the import allow-lists by name through an environment variable, with every other address checked against the blocked ranges. The alternative is a public URL, which makes the test depend on the internet | Open | 2026-10-26 |
 
 ## Known issues
 

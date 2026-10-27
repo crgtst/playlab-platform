@@ -367,6 +367,32 @@ Edits to existing ACs, applied in the task that builds them, so built ACs never 
 | PLS-8.4 | 6 | Given an admin, when they create, edit and delete a product, then each change is reflected in the catalogue; an edit made after someone else changed the product returns 412 and the modal says "This product was changed by someone else" |
 | PLS-10.1 | 2 | Given any error, when returned, then the body matches `{ error: { code, message, details, correlationId } }` |
 
+**Phase 3 tasks**
+
+Platform first, as in Phase 1: every new behaviour has an AC, every new defect maps to an AC, and every platform task has a test in `app/api/test/` (unit, or Postgres integration) that shows its AC failing with the defect on and passing with it off. Suites come after the platform tasks they depend on. Defects added: 11, which makes 47.
+
+| # | Task | ACs | Defects | Tests |
+| --- | --- | --- | --- | --- |
+| 0 | Close Phase 2: the four functional suites and the traceability report run green together in CI | | | CI: playwright, newman, karate and rest-assured workflows all pass on `main` |
+| 1 | Security headers and error bodies (A8): `X-Content-Type-Options`, `Referrer-Policy`, `Content-Security-Policy` and `Permissions-Policy` on every API and web response; 500s carry only the standard fields | 24.11, 24.12 | `missing-security-headers`, `verbose-errors` | int: each header on a sample of routes, defect on and off; a 500 body has no stack, SQL or file path, and with the defect on it does |
+| 2 | Authentication defects (A2, A3, A5): `jwt-alg-none`, `user-enumeration`, `mass-assignment-role`, `bfla-admin-users` | 24.2, 24.3, 24.4, 24.8 | the four named | int: each AC holds with the defect off (24.2, 24.3, 24.4 and 24.8 already do) and fails with it on |
+| 3 | Data and inventory defects (A3, A4, A9, A10): `excessive-data-exposure`, `no-page-limit`, `shadow-api-v0`, `trust-address-provider` | 24.5, 24.7, 24.13, 24.14 | the four named | int: as task 2; `shadow-api-v0` brings back an unauthenticated `/api/v0/orders` |
+| 4 | Import avatar from a URL, and its SSRF defect (A7): `POST /users/me/avatar/import`, which refuses `localhost`, the `db` container, private ranges and `169.254.169.254` | 24.10, new PLS-9.5 | `ssrf-avatar-url` | int: each blocked address returns 422 and the fetch never starts; the defect lets it through. **Open question:** the positive case needs a URL the API can reach (decision 12 in `PROJECT_STATUS.md`) |
+| 5 | Performance profile (A4): `docker compose --profile perf up` turns the rate limit off, sets `NODE_ENV=production`, applies CPU and memory limits, and adds Prometheus and a provisioned Grafana dashboard (request rate, p95, error rate) | 27.5 | | smoke: the profile starts, `/health` is ready, Grafana shows the three panels |
+| 6 | Bulk data (A4): `POST /test/generate` (deterministic from `seed`) and `POST /test/users/bulk` (CSV of email, password, token) | 28.3, 28.4 | | int: the same seed twice gives identical data; 500 bulk users can all log in |
+| 7 | Contract support (A9): `POST /test/provider-states` maps a provider-state name to its fixture | 26.5 | | int: each named state sets up its data, an unknown state is a 404 |
+| 8 | Platform check for Phase 3: all 47 defects have an AC and a platform test; the Phase 2 suites still pass with the new defects off, and the security tests written next catch each one on | all above | | the traceability report shows 47 defects built |
+| 9 | Contract suite: a Spectral ruleset and workflow, an `oasdiff` breaking-change gate on pull requests, and Schemathesis against the running API | 26.1, 26.2, 26.3 | | CI: a pull request that renames a response field fails the `oasdiff` gate (shown in the README) |
+| 10 | Pact: consumer tests in the web app, provider verification in the API, using the provider states | 26.4 | | CI: a renamed response field fails both the `oasdiff` and the Pact gate |
+| 11 | Security suite (`tests/security`): one test per OWASP API risk, each with its defect, plus ZAP baseline and API scans from the OpenAPI file in CI, written up as a security test report | 24.1 to 24.14 | | each defect makes its test fail; the report lists all ten risks |
+| 12 | k6: smoke, load, stress, spike and soak scenarios with thresholds tied to the SLOs, `handleSummary` to JUnit and HTML, Prometheus remote write | 27.1 to 27.4 | | a threshold fails the build when `p(95)` of `GET /products` goes over the SLO with injected latency |
+| 13 | JMeter: `.jmx` plans in git, non-GUI runs, CSV data from bulk users, token extraction, HTML dashboard; a checkout journey under load | 27.1 to 27.4 | | the same load model as k6, run through `tests/jmeter` |
+| 14 | One Grafana dashboard comparing k6 and JMeter; calibrate the SLOs on a real machine and write the numbers into the AC text | 27.1 to 27.4 | | the dashboard in the README |
+| 15 | CI/CD pipelines: a reusable "start the stack" action, a required-gates rule on pull requests, reports published to GitHub Pages, a nightly run that switches on random defects and fails if one is missed | 29.1 to 29.4 | | the traceability check runs in CI (29.4) |
+| 16 | Gate 3 = v1.0.0: the release checklist below, all 47 defects caught, repo public | all | | the checklist is ticked |
+
+Tasks 1 to 7 are independent of each other and can be done in any order; 8 closes the platform work. Tasks 9 to 15 each need the platform tasks named above them: the contract suite needs 7, the security suite needs 1 to 4, k6 and JMeter need 5 and 6. The new ACs for these tasks (PLS-9.5) are added in the task that builds them, so no built AC describes behaviour that is not there yet.
+
 ## Phase 5 (stretch): PlayLab Pay
 
 After v1.0.0, the payment provider moves out of the Express API into its own FastAPI service, **PlayLab Pay**. It works like a real third-party gateway, in the style of Stripe or Adyen: the shop never handles card numbers, and it trusts only what Pay confirms server to server.
