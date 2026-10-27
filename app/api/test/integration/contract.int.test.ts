@@ -62,6 +62,15 @@ describe('ids too large for the database', () => {
 });
 
 describe('input that used to cause a 500', () => {
+  it('PLS-26.2 returns 422 for a number in a JSON body that is larger than the database can hold', async () => {
+    const user = await request(app).post('/test/users').send({}).expect(201);
+    const auth = { Authorization: `Bearer ${user.body.accessToken}` };
+    const cart = await request(app).post('/api/v1/cart/items').set(auth).send({ productId: 53287031635 }).expect(422);
+    expect(cart.body.error.details[0].field).toBe('productId');
+    await request(app).post('/api/v1/wishlist/items').set(auth).send({ productId: 1e20 }).expect(422);
+    await request(app).post('/api/v1/cart/items').set(auth).send({ productId: 6, quantity: 1 }).expect(201);
+  });
+
   it('PLS-26.2 returns 404, not 500, for a wishlist product id that is not a whole number', async () => {
     const user = await request(app).post('/test/users').send({}).expect(201);
     const auth = { Authorization: `Bearer ${user.body.accessToken}` };

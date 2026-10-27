@@ -165,6 +165,7 @@ paths:
               properties:
                 refreshToken: { type: string }
       responses:
+        '422': { $ref: '#/components/responses/ValidationError' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: New tokens
