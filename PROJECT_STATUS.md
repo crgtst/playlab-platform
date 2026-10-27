@@ -5,17 +5,35 @@ Last updated: 2026-10-27
 
 ## Current phase
 
-Phase 2's four functional suites are written and merged (PRs #25 to #29 and #37), and Gate 2 is met by the traceability
-report. The Playwright workflow (PR #30) is the one Phase 2 item still in CI. Phase 3 is planned (see "Phase 3 tasks" in
-`docs/REVIEW_AND_PLAN.md`); tasks 1 and 2 are built.
+Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
+workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 3 are done, with task 3 awaiting merge.
 
 ## Next task
 
-Phase 3 task 3: the data and inventory defects (`excessive-data-exposure`, `no-page-limit`, `shadow-api-v0`,
-`trust-address-provider`). Phase 3 task 0 closes when the Playwright workflow is green on `main`.
+Phase 3 task 4 needs your answer to decision 12 first (how the avatar import's positive case reaches an image). Tasks 5
+to 7 (perf profile, bulk data, provider states) do not depend on it and can go first.
 
 ## Done
 
+- 2026-10-27: Fix for a race found in CI on PR #40: the REST Assured `CatalogueTest.paging` saw 41 products because `AdminTest`
+  had a throwaway product at that moment (parallel classes, slower runner). Karate's catalogue feature had the same latent race.
+  Both suites now name throwaway products `zz ...` (they sort last, so they cannot move a seeded product between pages) and
+  check that every seeded product is present once, not an exact total. The Playwright suite has the same exposure (its admin
+  tests create products while its catalogue tests count them) and is probably behind some of the occasional full-suite
+  failures; not changed here.
+- 2026-10-27: Phase 3 task 3, data and inventory defects (PLS-24.5, 24.7, 24.13, 24.14), on `feat/data-defects` (built on
+  tasks 1 and 2).
+  - Four new defects (46 built, 1 planned): `excessive-data-exposure` adds `alsoOrderedBy` (other buyers' names and
+    emails) to a customer's orders; `no-page-limit` removes the maximum `limit` on products and orders; `shadow-api-v0`
+    brings back an unauthenticated `GET /api/v0/orders`; `trust-address-provider` makes an order with an
+    `addressSuggestionId` skip the shipping rules.
+  - New behaviour: the order request takes an optional `addressSuggestionId` (OpenAPI and `tests/shared/schemas/` updated),
+    and the address book has one hostile suggestion (search "overflow": a 300-character first line).
+  - Tests: 12 integration tests, each criterion with the defect off and on (and what each defect leaves alone: admins,
+    a limit of 0, other v0 routes, a typed address). 58 unit, 174 integration, e2e 19, Gate 1 screenshots unchanged,
+    Playwright TypeScript 204 and Postman pass on the rebuilt stack.
+  - zod 4: an object schema with refinements cannot be `.extend`ed, so the defect uses `.safeExtend`.
 - 2026-10-27: Phase 3 task 2, authentication defects (PLS-24.2, 24.3, 24.4, 24.8), on `feat/auth-defects` (built on task 1).
   - Four new defects (42 built, 5 planned): `jwt-alg-none` believes an unsigned token (so forged claims make an admin);
     `user-enumeration` tells an unknown email from a wrong password in login and in forgot-password;

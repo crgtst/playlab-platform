@@ -20,6 +20,7 @@ import { authRouter } from './routes/auth';
 import { cartRouter } from './routes/cart';
 import { configRouter } from './routes/config';
 import { healthRouter } from './routes/health';
+import { legacyRouter } from './routes/legacy';
 import { ordersRouter } from './routes/orders';
 import { payFrameRouter, paymentsRouter } from './routes/payments';
 import { categoriesRouter, productsRouter } from './routes/products';
@@ -81,6 +82,7 @@ export function createApp() {
   v1.use('/offers', offersRouter);
   v1.use('/admin', adminRouter);
   app.use('/api/v1', v1);
+  app.use('/api/v0', legacyRouter);
   app.use('/pay', payFrameRouter);
 
   const spec = loadOpenApi();

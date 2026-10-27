@@ -52,9 +52,23 @@ const shippingSchema = z.object({
   phone: z.string().trim().max(30).optional().default(''),
 });
 
+/** The shipping address with no length rules, for trust-address-provider. */
+const unvalidatedShipping = z.object({
+  fullName: z.string(),
+  line1: z.string(),
+  line2: z.string().optional().default(''),
+  city: z.string(),
+  county: z.string().optional().default(''),
+  postcode: z.string(),
+  country: z.string().default('IE'),
+  phone: z.string().optional().default(''),
+});
+
 const orderSchema = z
   .object({
     shipping: shippingSchema,
+    // The id of the address suggestion the shipping address was filled from, if it was (PLS-24.14).
+    addressSuggestionId: z.string().max(100).optional(),
     deliveryDate: z.string(typeErrors({ required: 'Choose a delivery date' })).regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD'),
     instructions: z.string().max(200, 'Instructions must be at most 200 characters').optional().default(''),
     // Pay either with card details directly (API clients) or with an intent confirmed in the payment iframe (the web app).
@@ -147,6 +161,27 @@ const listSchema = filterSchema.extend({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+// no-page-limit: the same list with no maximum, so one request can ask for everything (PLS-24.7).
+const unlimitedListSchema = listSchema.extend({ limit: z.coerce.number().int().min(1).default(20) });
+
+/**
+ * excessive-data-exposure: a customer's order also carries the name and email of other customers who bought the same
+ * things ("people who ordered this"), which they should never see (PLS-24.5).
+ */
+async function withOtherBuyers<T extends { id: number; userId: number }>(order: T, viewer: { id: number; role: string }) {
+  if (!isBugOn('excessive-data-exposure') || viewer.role !== 'customer') return order;
+  const others = await query<{ email: string; name: string }>(
+    `SELECT DISTINCT u.email, u.name
+       FROM order_items mine
+       JOIN order_items theirs ON theirs.product_id = mine.product_id
+       JOIN orders o ON o.id = theirs.order_id
+       JOIN users u ON u.id = o.user_id
+      WHERE mine.order_id = $1 AND o.user_id <> $2
+      LIMIT 5`,
+    [order.id, viewer.id],
+  );
+  return { ...order, alsoOrderedBy: others };
+}
 
 const bulkSchema = z.object({
   ids: z.array(z.number().int().positive()).min(1, 'Select at least one order').max(200),
@@ -279,7 +314,9 @@ ordersRouter.post(
       }
     }
 
-    const body = parse(orderSchema, req.body);
+    // trust-address-provider: an address picked from the suggestions is believed, so it skips the shipping rules (PLS-24.14).
+    const fromSuggestion = isBugOn('trust-address-provider') && typeof req.body?.addressSuggestionId === 'string';
+    const body = parse(fromSuggestion ? orderSchema.safeExtend({ shipping: unvalidatedShipping }) : orderSchema, req.body);
     validateDeliveryDate(body.deliveryDate);
 
     // Pre-flight checks without locks, so a slow payment never holds row locks.
@@ -425,7 +462,7 @@ function orderFilters(user: { id: number; role: string }, f: z.infer<typeof filt
 ordersRouter.get(
   '/',
   asyncHandler(async (req: Request, res: Response) => {
-    const q = parse(listSchema, req.query);
+    const q = parse(isBugOn('no-page-limit') ? unlimitedListSchema : listSchema, req.query);
     const f = orderFilters(req.user!, q);
     const count = await query<{ n: number }>(`SELECT COUNT(*)::int AS n FROM orders o JOIN users u ON u.id = o.user_id ${f.sql}`, f.params);
     const rows = await query<{ id: number }>(
@@ -434,7 +471,7 @@ ordersRouter.get(
       [...f.params, q.limit, (q.page - 1) * q.limit],
     );
     const data = [];
-    for (const r of rows) data.push(await loadOrder(r.id));
+    for (const r of rows) data.push(await withOtherBuyers((await loadOrder(r.id))!, req.user!));
     res.json({
       data,
       meta: { page: q.page, limit: q.limit, total: count[0].n, totalPages: Math.ceil(count[0].n / q.limit) },
@@ -559,7 +596,7 @@ async function visibleOrder(req: Request<{ id: string }>) {
 ordersRouter.get(
   '/:id',
   asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const order = await visibleOrder(req);
+    const order = await withOtherBuyers(await visibleOrder(req), req.user!);
     res.setHeader('ETag', order.etag);
     res.json({ data: order });
   }),

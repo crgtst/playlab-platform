@@ -364,6 +364,10 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `user-enumeration` | PLS-24.3 | API | Login and password reset say whether an email has an account (404 `USER_NOT_FOUND`, or 401 `INVALID_PASSWORD`) |
 | `mass-assignment-role` | PLS-24.4 | API | A `role` of `admin` or `support` in the registration body is honoured |
 | `bfla-admin-users` | PLS-24.8 | API | `PATCH /admin/users/{id}` skips its role check, so any logged-in user can change any user |
+| `excessive-data-exposure` | PLS-24.5 | API | A customer's order and order list also carry `alsoOrderedBy`: the names and emails of other customers who bought the same things |
+| `no-page-limit` | PLS-24.7 | API | `GET /products` and `GET /orders` accept any `limit`, so `limit=100000` returns everything |
+| `shadow-api-v0` | PLS-24.13 | API | The retired `GET /api/v0/orders` is back: no login, every order with its customer's email |
+| `trust-address-provider` | PLS-24.14 | API | An order sent with an `addressSuggestionId` skips the shipping-address rules, so a suggested 300-character line is stored (search "overflow" for that suggestion) |
 | `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
 | `permission-denied-crash` | PLS-13.2 | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
 | `clipboard-wrong-value` | PLS-15.1 | Web | Each "Copy code" button copies the previous code in the list (`SAVE10` copies `FIXED20`) |
@@ -372,7 +376,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 42 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 46 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 

@@ -93,6 +93,22 @@ export const BUGS = {
     side: 'api',
     description: 'Any logged-in user can change any other user through PATCH /admin/users/{id}',
   },
+  'excessive-data-exposure': {
+    ac: 'PLS-24.5',
+    side: 'api',
+    description: "A customer's orders also show other customers' names and emails",
+  },
+  'no-page-limit': { ac: 'PLS-24.7', side: 'api', description: 'The list limit has no maximum: limit=100000 returns everything' },
+  'shadow-api-v0': {
+    ac: 'PLS-24.13',
+    side: 'api',
+    description: 'The retired /api/v0/orders route is still on: no login, every order and email',
+  },
+  'trust-address-provider': {
+    ac: 'PLS-24.14',
+    side: 'api',
+    description: 'An address picked from the suggestions skips the shipping-address rules',
+  },
   'aria-heading-skip': { ac: 'PLS-19.2', side: 'web', description: 'The order summary jumps from h2 to h4' },
 } as const;
 

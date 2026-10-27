@@ -24,6 +24,11 @@
       "type": "boolean",
       "default": false
     },
+    "addressSuggestionId": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "The id of the address suggestion the shipping address was filled from. The address is validated like a typed one."
+    },
     "paymentIntentId": {
       "type": "string",
       "format": "uuid"

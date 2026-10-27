@@ -71,9 +71,11 @@ Feature: Catalogue: search, filter, sort, paging (PLS-3)
   Scenario: PLS-3.5 paging shows every product exactly once, with none missing
     * def all = walk('limit=12')
     * def ids = karate.map(all, function(p) { return p.id })
-    * match ids == '#[40]'
+    # Another scenario may have a throwaway product in the catalogue just now. Those sort last (their names start with "zz"),
+    # so they never move a seeded product between pages: every seeded product must be there, once.
     * def seeded = karate.map(shared.products.products, function(p) { return p.id })
-    * match karate.sort(ids, function(x) { return x }) == karate.sort(seeded, function(x) { return x })
+    * def missing = karate.filter(seeded, function(id) { return ids.indexOf(id) < 0 })
+    * match missing == []
     * def seen = {}
     * karate.forEach(ids, function(id) { seen[id] = true })
     * match karate.keysOf(seen).length == ids.length
@@ -118,4 +120,4 @@ Feature: Catalogue: search, filter, sort, paging (PLS-3)
     * def counts = karate.map(response.data, function(c) { return c.productCount })
     * def total = 0
     * karate.forEach(counts, function(n) { total += n })
-    * match total == shared.products.products.length
+    * assert total >= shared.products.products.length

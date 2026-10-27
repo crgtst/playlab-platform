@@ -26,6 +26,18 @@ const ADDRESSES = [
   { line1: '11 Bridge Street', city: 'Ennis', county: 'Clare', postcode: 'V95 R2X4' },
 ].map((a, i) => ({ id: `addr-${i + 1}`, ...a, country: 'IE', label: `${a.line1}, ${a.city}, ${a.postcode}` }));
 
+// An address provider is outside our control. This one suggests an address whose first line is 300 characters, which the
+// shipping rules refuse (a line is at most 200). Search "overflow" to get it (PLS-24.14).
+ADDRESSES.push({
+  id: 'addr-overflow',
+  line1: `Overflow House ${'x'.repeat(285)}`,
+  city: 'Dublin 2',
+  county: 'Dublin',
+  postcode: 'D02 OV03',
+  country: 'IE',
+  label: 'Overflow House (a very long address), Dublin 2, D02 OV03',
+});
+
 const schema = z.object({
   q: z
     .string(typeErrors({ required: 'q is required' }))
