@@ -11,11 +11,29 @@ workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the tra
 
 ## Next task
 
-Phase 3 task 4 needs your answer to decision 12 first (how the avatar import's positive case reaches an image). Tasks 5
-to 7 (perf profile, bulk data, provider states) do not depend on it and can go first.
+Phase 3 task 5, the performance profile (the Compose `perf` profile with Prometheus and Grafana). Tasks 6 and 7 (bulk data,
+provider states) are independent of it. Task 8 then checks all 47 defects.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 4, the avatar import and its SSRF defect (PLS-9.5, 24.10), on `feat/avatar-import` (built on
+  task 3). Decision 12 agreed: a `fixtures` container.
+  - New endpoint `POST /users/me/avatar/import { url }` (OpenAPI, `AvatarImportRequest` schema). `lib/safeFetch.ts` checks the
+    address when the connection is made, on every address the name resolves to (loopback, private, link-local and metadata
+    ranges, IPv6 and IPv4-in-IPv6 included), does not follow redirects, caps the body at 2 MB and opens a new connection each
+    time (a pooled one would skip the check). New AC PLS-9.5; the defect `ssrf-avatar-url` switches the address check off.
+    47 built, none planned: every defect in the plan exists.
+  - New Compose service `fixtures` (nginx, files in `app/fixtures/`, no host port); the API allow-lists it by name through
+    `AVATAR_IMPORT_ALLOWED_HOSTS`. Nothing else inside the network may be fetched.
+  - Tests: 51 integration tests (an in-process server counts hits, so "no request is made" is checked: blocked names and
+    numbers, IPv6 forms, the metadata address, private ranges, redirects, size and type, and each blocked case fetching with the
+    defect on) including a regression test for a bug found on the way (a pooled connection to an allowed host skipped the check
+    for a later request); 2 e2e tests against the real containers (`fixtures` allowed, `db`, `api`, `web`, `localhost`, the
+    metadata address and `::1` refused). 58 unit, 225 integration, e2e 21, Gate 1 unchanged, Playwright 204, Postman, Karate 116
+    and REST Assured 112 pass.
+  - Not built: a button in the web app (the import is API only, like the account endpoints).
+  - Found in CI: a race in two suites, not the API. A test that creates a throwaway product can run while another counts the
+    catalogue (41, not 40). Fixed in the PR that fixes the REST Assured and Karate catalogue tests.
 - 2026-10-27: Phase 3 task 3, data and inventory defects (PLS-24.5, 24.7, 24.13, 24.14), on `feat/data-defects` (built on
   tasks 1 and 2).
   - Four new defects (46 built, 1 planned): `excessive-data-exposure` adds `alsoOrderedBy` (other buyers' names and
