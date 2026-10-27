@@ -48,8 +48,8 @@ class AdminTest extends ApiTest {
     void productCrud() {
         int id = createProduct();
         String etag = api.guest().get("/api/v1/products/{id}", id).then().statusCode(200).body(Schema.matches("ProductEnvelope")).extract().header("ETag");
-        Response edited = api.as(admin).header("If-Match", etag).body(Map.of("name", "Renamed by REST Assured")).patch("/api/v1/products/{id}", id);
-        edited.then().statusCode(200).body("data.name", equalTo("Renamed by REST Assured"));
+        Response edited = api.as(admin).header("If-Match", etag).body(Map.of("name", "zz Renamed by REST Assured")).patch("/api/v1/products/{id}", id);
+        edited.then().statusCode(200).body("data.name", equalTo("zz Renamed by REST Assured"));
         assertNotEquals(etag, edited.header("ETag"));
         deleteProduct(id);
         api.guest().get("/api/v1/products/{id}", id).then().statusCode(404);
