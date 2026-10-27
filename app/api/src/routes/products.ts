@@ -27,20 +27,26 @@ const euros = z.coerce
   .min(0, 'Must be zero or more')
   .max(1_000_000, 'Too large');
 
-const listSchema = z
-  .object({
-    q: z.string().trim().max(200, 'Search must be at most 200 characters').optional(),
-    category: z.string().trim().max(100).optional(),
-    minPrice: euros.optional(),
-    maxPrice: euros.optional(),
-    sort: z.enum(Object.keys(SORTS) as [keyof typeof SORTS, ...(keyof typeof SORTS)[]]).default('name_asc'),
-    page: z.coerce.number().int('Must be a whole number').min(1, 'Must be 1 or more').default(1),
-    limit: z.coerce.number().int('Must be a whole number').min(1, 'Must be 1 or more').max(48, 'Must be 48 or fewer').default(12),
-  })
-  .refine((v) => v.minPrice === undefined || v.maxPrice === undefined || v.minPrice <= v.maxPrice, {
-    message: 'minPrice must not be greater than maxPrice',
-    path: ['minPrice'],
-  });
+/** The list query. `maxLimit` is 48; the no-page-limit defect asks for no maximum at all (PLS-24.7). */
+function listQuery(maxLimit?: number) {
+  const limit = z.coerce.number().int('Must be a whole number').min(1, 'Must be 1 or more');
+  return z
+    .object({
+      q: z.string().trim().max(200, 'Search must be at most 200 characters').optional(),
+      category: z.string().trim().max(100).optional(),
+      minPrice: euros.optional(),
+      maxPrice: euros.optional(),
+      sort: z.enum(Object.keys(SORTS) as [keyof typeof SORTS, ...(keyof typeof SORTS)[]]).default('name_asc'),
+      page: z.coerce.number().int('Must be a whole number').min(1, 'Must be 1 or more').default(1),
+      limit: (maxLimit === undefined ? limit : limit.max(maxLimit, `Must be ${maxLimit} or fewer`)).default(12),
+    })
+    .refine((v) => v.minPrice === undefined || v.maxPrice === undefined || v.minPrice <= v.maxPrice, {
+      message: 'minPrice must not be greater than maxPrice',
+      path: ['minPrice'],
+    });
+}
+const listSchema = listQuery(48);
+const unlimitedListSchema = listQuery();
 
 const productFields = z.object({
   sku: z.string().trim().min(1).max(40),
@@ -100,7 +106,7 @@ function buildLink(req: Request, page: number, totalPages: number): string {
 productsRouter.get(
   '/',
   asyncHandler(async (req: Request, res: Response) => {
-    const q = parse(listSchema, req.query);
+    const q = parse(isBugOn('no-page-limit') ? unlimitedListSchema : listSchema, req.query);
     if (isBugOn('search-apostrophe') && q.q?.includes("'")) {
       // Simulates a query built by string concatenation breaking on the quote.
       throw Object.assign(new Error(`syntax error at or near "${q.q.slice(q.q.indexOf("'") + 1)}"`), {

@@ -11,11 +11,23 @@ report. The Playwright workflow (PR #30) is the one Phase 2 item still in CI. Ph
 
 ## Next task
 
-Phase 3 task 3: the data and inventory defects (`excessive-data-exposure`, `no-page-limit`, `shadow-api-v0`,
-`trust-address-provider`). Phase 3 task 0 closes when the Playwright workflow is green on `main`.
+Phase 3 task 4 needs your answer to decision 12 first (how the avatar import's positive case reaches an image). Tasks 5
+to 7 (perf profile, bulk data, provider states) do not depend on it and can go first.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 3, data and inventory defects (PLS-24.5, 24.7, 24.13, 24.14), on `feat/data-defects` (built on
+  tasks 1 and 2).
+  - Four new defects (46 built, 1 planned): `excessive-data-exposure` adds `alsoOrderedBy` (other buyers' names and
+    emails) to a customer's orders; `no-page-limit` removes the maximum `limit` on products and orders; `shadow-api-v0`
+    brings back an unauthenticated `GET /api/v0/orders`; `trust-address-provider` makes an order with an
+    `addressSuggestionId` skip the shipping rules.
+  - New behaviour: the order request takes an optional `addressSuggestionId` (OpenAPI and `tests/shared/schemas/` updated),
+    and the address book has one hostile suggestion (search "overflow": a 300-character first line).
+  - Tests: 12 integration tests, each criterion with the defect off and on (and what each defect leaves alone: admins,
+    a limit of 0, other v0 routes, a typed address). 58 unit, 174 integration, e2e 19, Gate 1 screenshots unchanged,
+    Playwright TypeScript 204 and Postman pass on the rebuilt stack.
+  - zod 4: an object schema with refinements cannot be `.extend`ed, so the defect uses `.safeExtend`.
 - 2026-10-27: Phase 3 task 2, authentication defects (PLS-24.2, 24.3, 24.4, 24.8), on `feat/auth-defects` (built on task 1).
   - Four new defects (42 built, 5 planned): `jwt-alg-none` believes an unsigned token (so forged claims make an admin);
     `user-enumeration` tells an unknown email from a wrong password in login and in forgot-password;

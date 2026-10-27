@@ -7,7 +7,7 @@ import { BUG_NAMES, BUGS, bugs, isBugOn } from '../src/lib/bugs';
 const testHooks = config.testHooks;
 
 // Defects that planned stories (PLS-20 to PLS-29) already name. Move each one into bugs.ts when it is built.
-const PLANNED_DEFECTS = ['excessive-data-exposure', 'no-page-limit', 'ssrf-avatar-url', 'shadow-api-v0', 'trust-address-provider'];
+const PLANNED_DEFECTS = ['ssrf-avatar-url'];
 
 afterEach(() => {
   bugs.clear();
