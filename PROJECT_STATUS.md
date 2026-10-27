@@ -7,13 +7,29 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 13 are done; tasks 0 to 11 are merged and tasks 12 and 13 (branch `tests/k6`) are not pushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 14 are done; tasks 0 to 11 are merged, tasks 12 and 13 are on `tests/k6` and task 14 on `tests/load-dashboard` (stacked, none pushed).
 
 ## Next task
 
-Phase 3 task 14, one Grafana dashboard comparing k6 and JMeter, and calibrating the SLOs on a real machine (the figures leave a lot of room on a laptop).
+Phase 3 task 15, CI/CD pipelines: a reusable "start the stack" action, required gates on pull requests, reports published to GitHub Pages, and a nightly run that switches on random defects and fails if one is missed (PLS-29.1 to 29.4).
 ## Done
 
+- 2026-10-27: Phase 3 task 14, the k6 and JMeter dashboard and the SLO calibration (PLS-27.1 to 27.4), on `tests/load-dashboard` (built on tasks 12 and 13).
+  - Grafana dashboard "k6 and JMeter" (`/d/playlab-load`, provisioned): p95, p99, throughput and error rate for each tool, one line for each run, and a
+    table of runs; pick the load and the request. k6 sends its metrics over Prometheus remote write (`PROMETHEUS_RW=1`, tagged `tool`, `load`, `testid`).
+    JMeter 5.6 has no Prometheus listener, so `tests/jmeter/lib/push-metrics.mjs` reads the results file after a run and remote-writes one sample every 5
+    seconds in the same labels (a hand-made protobuf in the uncompressed snappy format, no library). `app/perf/smoke.sh` checks the dashboard exists.
+  - Calibration on this machine (`tools/calibrate`: 3 runs of 3 minutes for each test and tool): the worst p95 was 12 ms for `GET /products` and 15 ms for
+    `POST /orders` (JMeter a little higher than k6, as its threads add latency), so the limits are now 60 ms and 80 ms (worst times 5, rounded up),
+    down from the guesses of 200 and 800. They are in `load-model.json` and the AC text (a unit test keeps the two equal), with the numbers and the method.
+    Injecting 100 ms now fails the run; the old limit would not have.
+  - Capacity (stress script, now one scenario per step with its own p95): `GET /products` is fine at 200 requests a second (p95 about 11 ms) and falls over
+    between 300 and 400 (p95 of 7 s at 400, requests queue behind one Node process), about six times the AC rate.
+  - Found on the way: the JMeter journey started all 100 shoppers at once, and the burst of logins slowed the first orders (p95 2.2 s in a 60-second run).
+    It now uses 40 shoppers started over 20 seconds, and measures the sent rate after the ramp-up.
+  - Risk: one JMeter 30-second run right after the heavy stress runs showed a p95 of 1250 ms; three reruns were clean. With limits this tight a CI runner
+    may need a wider factor: the first CI run of the `performance` workflow will show (`FACTOR=` in `tools/calibrate`).
+  - Not done: the calibration is for this one machine; the soak's one-hour run and the CI numbers are still to come.
 - 2026-10-27: Phase 3 task 13, the JMeter suite (PLS-27.1 to 27.4), on `tests/k6` (built on task 12). You asked for the load suites to be written.
   - `tests/jmeter/plans`: `products-load.jmx` (27.1, and the soak 27.3 at a lower rate), `checkout-journey.jmx` (27.2) and `overload.jmx` (27.4).
     Run with `tests/jmeter/run.sh products|journey|soak|overload` (JMeter 5.6.3, non-GUI): data through the same test hooks, the same load

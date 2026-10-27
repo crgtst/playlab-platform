@@ -20,8 +20,12 @@ export function propertiesFor(plan, env = process.env) {
   switch (plan) {
     case 'products':
       return { rps: rps(model.products.rps), duration: duration(model.products.duration) };
-    case 'journey':
-      return { rps: rps(model.orders.rps), duration: duration(model.orders.duration) };
+    case 'journey': {
+      // 40 shoppers are plenty for 10 journeys a second, and they log in once each. Starting them all at once makes a burst of
+      // logins (bcrypt) that slows the first orders, so they start over 20 seconds (a third of a short run).
+      const total = duration(model.orders.duration);
+      return { rps: rps(model.orders.rps), duration: total, threads: 40, ramp: Math.min(20, Math.floor(total / 3)) };
+    }
     case 'soak':
       return { rps: rps(model.soak.rps), duration: duration(model.soak.duration) };
     case 'overload': {

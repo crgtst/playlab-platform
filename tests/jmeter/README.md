@@ -5,9 +5,9 @@ read out of the login reply, and the HTML dashboard. Run them only against your 
 
 | Plan | AC | What it does | Pass mark |
 | --- | --- | --- | --- |
-| `plans/products-load.jmx` (`run.sh products`) | 27.1 | `GET /products` at 50 requests a second for 5 minutes | p95 under 200 ms, errors under 1% |
+| `plans/products-load.jmx` (`run.sh products`) | 27.1 | `GET /products` at 50 requests a second for 5 minutes | p95 under 60 ms, errors under 1% |
 | `plans/products-load.jmx` (`run.sh soak`) | 27.3 | the same plan at 25 a second for an hour | p95 in the last 5 minutes within 20% of the first 5, and the API's memory under its limit |
-| `plans/checkout-journey.jmx` (`run.sh journey`) | 27.2 | each shopper logs in once, then adds to the cart and orders: 10 journeys a second for 5 minutes | `POST /orders` p95 under 800 ms, errors under 1% |
+| `plans/checkout-journey.jmx` (`run.sh journey`) | 27.2 | each shopper logs in once, then adds to the cart and orders: 10 journeys a second for 5 minutes | `POST /orders` p95 under 80 ms, errors under 1% |
 | `plans/overload.jmx` (`run.sh overload`) | 27.4 | 100 a second against a limit of 10 a second, then 2 a second | 429 with `Retry-After`, no errors or timeouts, back to 200 within a minute |
 
 The rates, durations and pass marks come from [`../shared/load-model.json`](../shared/load-model.json), the file the k6 scripts read, and the
@@ -32,12 +32,18 @@ For `overload`, restart the API with a rate limit it can reach (the perf profile
 and turns the results into `results/junit-<plan>.xml`. It exits 1 if a pass mark is missed. Open `results/<plan>/dashboard/index.html` for
 the dashboard: throughput, response times over time, percentiles.
 
+## Next to k6 in Grafana
+
+`PROMETHEUS_RW=1 tests/jmeter/run.sh products` also sends the run to the perf stack's Prometheus, and the **k6 and JMeter** dashboard
+(`http://localhost:3300/d/playlab-load`) shows both tools' p95, p99, throughput and error rate for the same load, one line for each run.
+JMeter has no Prometheus listener, so `lib/push-metrics.mjs` reads the results file after the run and sends one sample every 5 seconds.
+
 ## How the plans work
 
 - **Rate.** A Precise Throughput Timer sets requests a second. In the checkout journey it sits on the cart request, so the rate is
   journeys a second, not requests.
-- **Shoppers.** A CSV Data Set Config reads `data/users.csv` (email, password, token) made by `POST /test/users/bulk`. Each of the 100
-  threads is a shopper: a Once Only Controller logs it in once, and it then orders over and over. (Logging in on every journey is a
+- **Shoppers.** A CSV Data Set Config reads `data/users.csv` (email, password, token) made by `POST /test/users/bulk`. Each of the 40
+  threads is a shopper, started over 20 seconds: a Once Only Controller logs it in once, and it then orders over and over. (Logging in on every journey is a
   different test: bcrypt takes most of the API's two CPUs at 10 a second, and orders slow down for that reason. The k6 script skips the
   login by using the token from the CSV, so the two tools see the same load on the order path.)
 - **Correlation.** A JSON Extractor reads `accessToken` from the login reply into a variable, and a Header Manager sends it as
@@ -54,4 +60,5 @@ the dashboard: throughput, response times over time, percentiles.
 | `lib/model.mjs` | Prints the `-J` properties for a plan from the load model |
 | `lib/prepare-data.mjs` | Makes the catalogue, shoppers and products through the test hooks |
 | `lib/jtl-to-junit.mjs` | Results file to JUnit: p95 and error rate for the label, the rate JMeter really sent, the soak's drift, the overload's refusals |
+| `lib/push-metrics.mjs` | With `PROMETHEUS_RW=1`, sends the run to Prometheus over remote write (JMeter has no Prometheus listener), tagged like the k6 runs, for the k6 and JMeter dashboard |
 | `lib/soak-memory.mjs`, `lib/check-results.mjs` | The soak's memory check from Prometheus, and the exit code |

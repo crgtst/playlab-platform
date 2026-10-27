@@ -46,6 +46,9 @@ sleep 12
 title=$(curl -fsS "$GRAF/api/dashboards/uid/playlab-api" | python3 -c 'import sys,json; print(json.load(sys.stdin)["dashboard"]["title"])') || fail "Grafana has no dashboard playlab-api"
 [ "$title" = "PlayLab API" ] || fail "dashboard title is '$title'"
 ok "Grafana has the PlayLab API dashboard"
+panels=$(curl -fsS "$GRAF/api/dashboards/uid/playlab-load" | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["dashboard"]["panels"]))') || fail "Grafana has no dashboard playlab-load (k6 and JMeter)"
+[ "$panels" -ge 6 ] || fail "the k6 and JMeter dashboard has only $panels panels"
+ok "Grafana has the k6 and JMeter dashboard"
 panel() {
   curl -fsS -G "$GRAF/api/datasources/proxy/uid/prometheus/api/v1/query" --data-urlencode "query=$1" | python3 -c 'import sys,json; r=json.load(sys.stdin)["data"]["result"]; sys.exit(0 if r and r[0]["value"][1] not in ("NaN",) else 1)'
 }

@@ -3,6 +3,7 @@
 #
 #   tests/jmeter/run.sh products | journey | soak | overload
 #   RPS=5 DURATION=30s tests/jmeter/run.sh products     # a short run to try the plan (an override is not evidence for an AC)
+#   PROMETHEUS_RW=1 tests/jmeter/run.sh products        # also send the results to the stack's Prometheus (the k6-vs-JMeter dashboard)
 #
 # Needs JMeter 5.6 on the PATH (brew install jmeter), or JMETER=/path/to/bin/jmeter.
 # Start the stack first:  cd app && docker compose -f docker-compose.yml -f docker-compose.perf.yml up --build -d
@@ -49,6 +50,11 @@ status=0
 node tests/jmeter/lib/jtl-to-junit.mjs "$plan" "$results/results.jtl" "tests/jmeter/results/junit-$plan.xml" || status=1
 if [ "$plan" = soak ]; then
   PROMETHEUS_URL="http://localhost:${prom_port}" node tests/jmeter/lib/soak-memory.mjs "$started" "$(date +%s)" || true
+fi
+# PROMETHEUS_RW=1 also sends the results to the stack's Prometheus, tagged like the k6 runs (tool, load, testid).
+if [ "${PROMETHEUS_RW:-}" = 1 ]; then
+  load="$plan"; [ "$plan" = journey ] && load=orders
+  node tests/jmeter/lib/push-metrics.mjs "$load" "$plan-jmeter-$(date +%Y%m%d-%H%M%S)" "$results/results.jtl" "http://localhost:${prom_port}" || true
 fi
 node tests/jmeter/lib/check-results.mjs "tests/jmeter/results/junit-$plan.xml" || status=1
 echo "Dashboard: $results/dashboard/index.html"

@@ -61,10 +61,13 @@ const check = (name, ok, message) => cases.push({ name, ok, message: message ?? 
 /** Latency, errors and whether JMeter really sent the rate it was asked for (k6's dropped iterations). */
 function rateChecks(ac, label, title, rps, p95Ms, maxErrorRate) {
   const list = where(label);
-  const seconds = Math.max(1, (last - first) / 1000);
+  // The shoppers start over `ramp` seconds, so the rate is measured after that.
+  const rampMs = Number(props.ramp ?? 0) * 1000;
+  const steady = list.filter((s) => s.at - first >= rampMs);
+  const seconds = Math.max(1, (last - first - rampMs) / 1000);
   check(`${ac} latency of ${title} at ${rps}/s: p(95)<${p95Ms}`, p95(list) < p95Ms, `p95 was ${p95(list)} ms`);
   check(`${ac} error rate of ${title}: rate<${maxErrorRate}`, errorRate(list) < maxErrorRate, `error rate was ${(errorRate(list) * 100).toFixed(2)}%`);
-  check(`${ac} requests sent are at least 95% of the ${rps}/s asked for`, list.length / seconds >= 0.95 * Number(rps), `sent ${(list.length / seconds).toFixed(1)}/s`);
+  check(`${ac} requests sent are at least 95% of the ${rps}/s asked for${rampMs ? ' (after the ramp-up)' : ''}`, steady.length / seconds >= 0.95 * Number(rps), `sent ${(steady.length / seconds).toFixed(1)}/s`);
 }
 
 if (plan === 'products') {

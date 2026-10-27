@@ -1,4 +1,4 @@
-// PLS-27.1: GET /products at 50 requests a second for 5 minutes. p95 under 200 ms, errors under 1%.
+// PLS-27.1: GET /products at 50 requests a second for 5 minutes. p95 under the limit in tests/shared/load-model.json (60 ms), errors under 1%.
 //
 //   INJECT_LATENCY_MS=300 ./run.sh products     # slows GET /products: the p95 threshold fails and so does the run
 import http from 'k6/http';

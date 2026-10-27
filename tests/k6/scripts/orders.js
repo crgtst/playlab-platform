@@ -1,4 +1,4 @@
-// PLS-27.2: POST /orders at 10 requests a second for 5 minutes. p95 under 800 ms, errors under 1%.
+// PLS-27.2: POST /orders at 10 requests a second for 5 minutes. p95 under the limit in tests/shared/load-model.json (80 ms), errors under 1%.
 // Each iteration is one shopper: put a product in the cart (timed on its own), then order it (the timed request).
 import http from 'k6/http';
 import { check } from 'k6';

@@ -6,16 +6,16 @@ installed. Run them only against your own local stack.
 | Script | AC | What it does | Pass mark |
 | --- | --- | --- | --- |
 | `smoke.js` | | One user, 30 seconds, the main read paths and a login | no failures, p95 under 500 ms |
-| `products.js` | 27.1 | `GET /products` at 50 requests a second for 5 minutes | p95 under 200 ms, errors under 1% |
-| `orders.js` | 27.2 | `POST /orders` at 10 a second for 5 minutes (a cart add, then the order) | p95 under 800 ms, errors under 1% |
+| `products.js` | 27.1 | `GET /products` at 50 requests a second for 5 minutes | p95 under 60 ms, errors under 1% |
+| `orders.js` | 27.2 | `POST /orders` at 10 a second for 5 minutes (a cart add, then the order) | p95 under 80 ms, errors under 1% |
 | `soak.js` | 27.3 | `GET /products` at 25 a second for an hour | p95 in the last 5 minutes within 20% of the first 5, and the API's memory under its 1 GiB limit |
 | `overload.js` | 27.4 | 100 a second against a limit of 10 a second, then a trickle | 429 with `Retry-After`, no errors or timeouts, back to 200 within a minute |
 | `stress.js` | | The rate climbs in steps (50, 100, 200, 400, 800 a second) until it breaks | finds the limit; stops when over 20% fail |
 | `spike.js` | | 20 a second, a 30-second surge to 300, 20 again | p95 back under the SLO after the spike |
 
 The rates, durations and pass marks are in [`../shared/load-model.json`](../shared/load-model.json), which the
-[JMeter plans](../jmeter/) read too, so the two tools run the same model and their numbers can be compared. They are the starting
-figures in the ACs; calibrating them on a real machine is a later task.
+[JMeter plans](../jmeter/) read too, so the two tools run the same model and their numbers can be compared. The p95 limits were calibrated on a laptop
+with [`tools/calibrate`](../../tools/calibrate/README.md): the worst p95 either tool measured, times 5.
 
 ## Run it
 
@@ -60,15 +60,17 @@ INJECT_LATENCY_MS=300 tests/k6/run.sh products
 adds 300 ms to every `GET /products` with `POST /test/latency`, and the p95 threshold fails, so the run exits 1:
 
 ```
-FAIL PLS-27.1 latency of GET /products at 50/s: p(95)<200
+FAIL PLS-27.1 latency of GET /products at 50/s: p(95)<60
 ```
 
-The script removes the latency when it ends.
+The script removes the latency when it ends. With the calibrated limit even 100 ms is enough to fail it (`INJECT_LATENCY_MS=100`); the first guess of 200 ms would have let that through.
 
 ### Metrics in Grafana
 
 `PROMETHEUS_RW=1 tests/k6/run.sh spike` also sends k6's metrics (`k6_http_req_duration_p95` and so on) to the stack's Prometheus
-over remote write, tagged with a `testid`. The perf profile's Prometheus accepts them; a dashboard that compares k6 and JMeter is a later task.
+over remote write, tagged `tool=k6`, `load=<script>` and a `testid`. The perf profile's Prometheus accepts them, and the **k6 and JMeter**
+dashboard at `http://localhost:3300/d/playlab-load` (Grafana, no login) puts them beside the JMeter runs of the same load
+(`PROMETHEUS_RW=1 tests/jmeter/run.sh ...`), which are tagged the same way.
 
 ## Files
 

@@ -29,7 +29,7 @@ for name in RPS DURATION INJECT_LATENCY_MS BASELINE_WINDOW STEP RATES SURGE OVER
   [ -n "${!name:-}" ] && envs+=(-e "$name=${!name}")
 done
 if [ "${PROMETHEUS_RW:-}" = 1 ]; then
-  args+=(-o experimental-prometheus-rw --tag "testid=$script-$(date +%Y%m%d-%H%M%S)")
+  args+=(-o experimental-prometheus-rw --tag "testid=$script-k6-$(date +%Y%m%d-%H%M%S)" --tag tool=k6 --tag "load=$script")
   envs+=(-e "K6_PROMETHEUS_RW_SERVER_URL=http://host.docker.internal:${prom_port}/api/v1/write" -e "K6_PROMETHEUS_RW_TREND_STATS=avg,p(95),p(99),max")
 fi
 

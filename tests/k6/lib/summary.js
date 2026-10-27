@@ -9,8 +9,8 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 export function thresholdResults(data) {
   const out = [];
   for (const [metric, m] of Object.entries(data.metrics)) {
-    // `max>=0` is how a script makes k6 report a tagged sub-metric. It always passes and says nothing, so it is not a test case.
-    for (const [expression, t] of Object.entries(m.thresholds || {})) if (expression !== 'max>=0') out.push({ metric, expression, ok: t.ok });
+    // `max>=0` and `rate>=0` are how a script makes k6 report a tagged sub-metric. It always passes and says nothing, so it is not a test case.
+    for (const [expression, t] of Object.entries(m.thresholds || {})) if (expression !== 'max>=0' && expression !== 'rate>=0') out.push({ metric, expression, ok: t.ok });
   }
   return out;
 }
@@ -60,8 +60,9 @@ function html(suite, data, cases) {
  *  - ac: the AC ID every case name starts with
  *  - titles: { metric: 'what it measures' } for readable names
  *  - extra: (data) => [{ name, ok, message }] for checks k6 has no threshold for
+ *  - lines: (data) => ['text', ...] printed after the results, for numbers that are not pass or fail (the stress steps)
  */
-export function summaryFor({ suite, ac, titles = {}, extra = () => [] }) {
+export function summaryFor({ suite, ac, titles = {}, extra = () => [], lines = () => [] }) {
   return (data) => {
     const cases = [
       ...thresholdResults(data).map((t) => ({
@@ -72,7 +73,7 @@ export function summaryFor({ suite, ac, titles = {}, extra = () => [] }) {
       ...extra(data).map((c) => ({ ...c, name: `${ac} ${c.name}` })),
     ];
     return {
-      stdout: text(suite, data, cases),
+      stdout: text(suite, data, cases) + lines(data).map((l) => `${l}\n`).join(''),
       [`results/junit-${suite}.xml`]: junit(`k6 ${suite}`, cases),
       [`results/${suite}-summary.json`]: JSON.stringify(data, null, 2),
       [`results/${suite}.html`]: html(suite, data, cases),

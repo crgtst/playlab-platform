@@ -1,5 +1,5 @@
 {
-  "_comment": "The load model every performance suite uses (k6 and JMeter), so their numbers can be compared. The figures are the starting points in PLS-27; calibrate them on your own machine (Phase 3 task 14).",
+  "_comment": "The load model every performance suite uses (k6 and JMeter), so their numbers can be compared. The p95 limits were calibrated on a laptop with tools/calibrate (the worst p95 seen with either tool, times 5): see the note under PLS-27 in docs/ACCEPTANCE_CRITERIA.md.",
   "data": {
     "_comment": "Made by POST /test/generate (the catalogue) and POST /test/users/bulk (the shoppers). The perf products have so much stock that orders never run out.",
     "products": 10000,
@@ -15,7 +15,7 @@
     "path": "/api/v1/products",
     "rps": 50,
     "duration": "5m",
-    "p95Ms": 200,
+    "p95Ms": 60,
     "maxErrorRate": 0.01
   },
   "orders": {
@@ -24,7 +24,7 @@
     "path": "/api/v1/orders",
     "rps": 10,
     "duration": "5m",
-    "p95Ms": 800,
+    "p95Ms": 80,
     "maxErrorRate": 0.01
   },
   "soak": {
