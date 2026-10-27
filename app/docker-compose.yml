@@ -35,10 +35,14 @@ services:
       # The payment iframe is served by the API on its own origin (cross-origin to the shop).
       PAYMENT_FRAME_URL: ${PAYMENT_FRAME_URL:-http://localhost:${API_PORT:-3000}/pay/frame}
       SHOP_ORIGINS: ${SHOP_ORIGINS:-http://localhost:${WEB_PORT:-5173}}
+      # The one internal host the avatar import may fetch from (PLS-9.5). Everything else inside the network is refused (PLS-24.10).
+      AVATAR_IMPORT_ALLOWED_HOSTS: fixtures
     ports:
       - "${API_PORT:-3000}:3000"
     depends_on:
       db:
+        condition: service_healthy
+      fixtures:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health/live || exit 1"]
@@ -46,6 +50,17 @@ services:
       timeout: 3s
       retries: 30
       start_period: 5s
+
+  # Static files the avatar import can fetch in tests (not published on a host port).
+  fixtures:
+    image: nginx:1.29-alpine
+    volumes:
+      - ./fixtures:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/avatar.png > /dev/null || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
   web:
     build: ./web

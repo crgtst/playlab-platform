@@ -198,6 +198,14 @@ curl -X POST localhost:3000/test/chaos -H 'Content-Type: application/json' -d '{
   - Over 2 MB: **413 "File too large"**.
   - The type is detected from the file's first bytes, so a renamed `.exe` gets **415 "Only PNG or JPG images are allowed"**.
   - `GET /users/{id}/avatar` serves the image; `DELETE /users/me/avatar` removes it. `/auth/me` includes `avatarUrl`.
+  - **Import from a URL** (PLS-9.5): `POST /users/me/avatar/import { "url": "http://fixtures/avatar.png" }`. The API fetches the image
+    itself, so it refuses addresses inside the network first (PLS-24.10): `localhost`, other containers such as `db` and `api`,
+    private ranges and the cloud metadata address `169.254.169.254` all return **422 "That address is not allowed"** and no request
+    is made. The address is checked when the connection is made, on what the name resolves to, so a name that points inside is
+    refused as well as a number; redirects are not followed; the image must be a PNG or JPG of at most 2 MB (413 and 415 as
+    above). The one internal host allowed is `fixtures` (`AVATAR_IMPORT_ALLOWED_HOSTS`), a static web server in Compose that
+    serves `app/fixtures/avatar.png`, `avatar.jpg` and `not-an-image.png` and is not published on a host port. With `ssrf-avatar-url` on, none of
+    the checks apply.
 - **Wishlist**: `GET /wishlist`, `POST /wishlist/items` (409 if already there), `DELETE /wishlist/items/{productId}` and `PUT /wishlist/order { productIds }`. The reorder must list exactly the current items, otherwise 422.
 - **Config**: `GET /api/v1/config` returns `{ paymentFrameUrl, testHooks, currencies, bugs }` for the web app. `currencies` holds the display rates (`{ EUR: 1, GBP: 0.85 }`) and `bugs` lists the active bug-mode defects.
 - **Live order status (WebSocket)** at `/ws/orders`:
@@ -368,6 +376,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `no-page-limit` | PLS-24.7 | API | `GET /products` and `GET /orders` accept any `limit`, so `limit=100000` returns everything |
 | `shadow-api-v0` | PLS-24.13 | API | The retired `GET /api/v0/orders` is back: no login, every order with its customer's email |
 | `trust-address-provider` | PLS-24.14 | API | An order sent with an `addressSuggestionId` skips the shipping-address rules, so a suggested 300-character line is stored (search "overflow" for that suggestion) |
+| `ssrf-avatar-url` | PLS-24.10 | API | The avatar import fetches any address, including `localhost`, the `db` and `api` containers and the cloud metadata address `169.254.169.254` |
 | `geolocation-ignored` | PLS-13.1 | API | `/stores/nearest` ignores the position and always returns Dublin stores |
 | `permission-denied-crash` | PLS-13.2 | Web | Denied location leaves `store-finder-loading` spinning forever, with no message |
 | `clipboard-wrong-value` | PLS-15.1 | Web | Each "Copy code" button copies the previous code in the list (`SAVE10` copies `FIXED20`) |
@@ -376,7 +385,7 @@ curl -X DELETE localhost:3000/test/bugs   # all off (so does /test/reset)
 | `offline-stale-prices` | PLS-17.3 | Service worker | The catalogue is served cache-first even when online, so prices go stale (the worker re-registers as `sw.js?bugs=offline-stale-prices`) |
 | `aria-heading-skip` | PLS-19.2 | Web | The order summary's sub-headings are h4 directly under its h2 (axe: `heading-order`) |
 
-There are 46 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
+There are 47 defects. Each one changes only its own behaviour (PLS-12.3). There are two unavoidable overlaps:
 - `discount-not-applied` also breaks PLS-5.6, because a fixed code that is not applied cannot bring the total to €0.
 - `vat-before-discount` also breaks PLS-5.6, because VAT on the pre-discount price leaves a non-zero total.
 

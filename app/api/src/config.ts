@@ -29,6 +29,11 @@ export const config = {
   // Level for request logs on stdout: info (default), warn, error or silent. GET /test/logs keeps them either way.
   logLevel: process.env.LOG_LEVEL ?? 'info',
   // A test session unused for this long is forgotten (PLS-28.8).
+  // Hostnames the avatar import may fetch from even though they resolve to an internal address (the Compose fixtures container).
+  avatarImportAllowedHosts: (process.env.AVATAR_IMPORT_ALLOWED_HOSTS ?? '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean),
   testSessionIdleMs: int(process.env.TEST_SESSION_IDLE_MS, 60 * 60 * 1000),
   // The payment iframe is served by the API on its own origin, like a real provider's hosted fields.
   paymentFrameUrl: process.env.PAYMENT_FRAME_URL ?? 'http://localhost:3000/pay/frame',

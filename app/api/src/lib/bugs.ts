@@ -109,6 +109,11 @@ export const BUGS = {
     side: 'api',
     description: 'An address picked from the suggestions skips the shipping-address rules',
   },
+  'ssrf-avatar-url': {
+    ac: 'PLS-24.10',
+    side: 'api',
+    description: 'The avatar import fetches any address, including localhost, other containers and the cloud metadata address',
+  },
   'aria-heading-skip': { ac: 'PLS-19.2', side: 'web', description: 'The order summary jumps from h2 to h4' },
 } as const;
 

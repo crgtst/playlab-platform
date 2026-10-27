@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import { Request, Response, Router, NextFunction } from 'express';
 import multer from 'multer';
 import { z } from '../lib/zod';
+import { config } from '../config';
+import { BlockedAddressError, FetchFailedError, TooLargeError, safeFetch } from '../lib/safeFetch';
 import { query, withTransaction } from '../db/pool';
 import { isBugOn } from '../lib/bugs';
 import { clock } from '../lib/clock';
@@ -64,13 +66,60 @@ usersRouter.post(
     if (!type) {
       throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Only PNG or JPG images are allowed', { receivedName: file.originalname });
     }
-    const rows = await query<{ updated_at: Date }>(
-      `INSERT INTO avatars (user_id, content_type, data, updated_at) VALUES ($1, $2, $3, $4)
-       ON CONFLICT (user_id) DO UPDATE SET content_type = EXCLUDED.content_type, data = EXCLUDED.data, updated_at = EXCLUDED.updated_at
-       RETURNING updated_at`,
-      [req.user!.id, type, file.buffer, clock.now()],
-    );
-    res.status(201).json({ data: { avatarUrl: avatarUrl(req.user!.id, rows[0].updated_at), contentType: type, sizeBytes: file.size } });
+    res.status(201).json(await storeAvatar(req.user!.id, file.buffer, type));
+  }),
+);
+
+/** Saves an avatar (replacing any earlier one) and returns the 201 body. */
+async function storeAvatar(userId: number, data: Buffer, type: 'image/png' | 'image/jpeg') {
+  const rows = await query<{ updated_at: Date }>(
+    `INSERT INTO avatars (user_id, content_type, data, updated_at) VALUES ($1, $2, $3, $4)
+     ON CONFLICT (user_id) DO UPDATE SET content_type = EXCLUDED.content_type, data = EXCLUDED.data, updated_at = EXCLUDED.updated_at
+     RETURNING updated_at`,
+    [userId, type, data, clock.now()],
+  );
+  return { data: { avatarUrl: avatarUrl(userId, rows[0].updated_at), contentType: type, sizeBytes: data.length } };
+}
+
+const importSchema = z.object({ url: z.string('url is required').trim().min(1, 'url is required').max(2048) });
+
+/**
+ * Imports the avatar from a URL (PLS-9.5). Only public http(s) addresses are fetched: loopback, private, link-local and
+ * cloud-metadata addresses are refused before any request is made (PLS-24.10, OWASP API7). The ssrf-avatar-url defect
+ * fetches anything.
+ */
+usersRouter.post(
+  '/me/avatar/import',
+  noStore,
+  requireAuth,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { url: raw } = parse(importSchema, req.body);
+    let url: URL;
+    try {
+      url = new URL(raw);
+    } catch {
+      throw validationError([{ field: 'url', message: 'Enter a full address, such as https://example.com/me.png' }]);
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw validationError([{ field: 'url', message: 'Use an http or https address' }]);
+    }
+    let fetched: { body: Buffer };
+    try {
+      fetched = await safeFetch(url, {
+        maxBytes: AVATAR_MAX_BYTES,
+        timeoutMs: 5000,
+        allowedHosts: config.avatarImportAllowedHosts,
+        checkAddresses: !isBugOn('ssrf-avatar-url'),
+      });
+    } catch (err) {
+      if (err instanceof BlockedAddressError) throw validationError([{ field: 'url', message: 'That address is not allowed' }]);
+      if (err instanceof TooLargeError) throw new ApiError(413, 'FILE_TOO_LARGE', 'File too large', { maxBytes: AVATAR_MAX_BYTES });
+      if (err instanceof FetchFailedError) throw validationError([{ field: 'url', message: 'Could not fetch an image from that address' }]);
+      throw err;
+    }
+    const type = sniffImageType(fetched.body);
+    if (!type) throw new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Only PNG or JPG images are allowed', { receivedName: url.pathname });
+    res.status(201).json(await storeAvatar(req.user!.id, fetched.body, type));
   }),
 );
 

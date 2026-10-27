@@ -128,6 +128,7 @@ As a user, I want to upload an avatar and export orders, so that I can personali
 | PLS-9.2 | Given a file over 2 MB, when uploaded, then "File too large" shows and the API returns 413 |  |  |
 | PLS-9.3 | Given a non-image file renamed to .png, when uploaded, then it is rejected and the API returns 415 |  | `upload-extension-only` |
 | PLS-9.4 | Given an admin, when they export orders, then a CSV downloads with one row per order and the header row |  |  |
+| PLS-9.5 | Given a URL on a host the API is allowed to fetch from, when it serves a PNG or JPG under 2 MB and the user imports it with `POST /users/me/avatar/import`, then it becomes the avatar; a file that is not an image is refused with 415, one over 2 MB with 413, and a redirect, a missing file or a URL that is not http or https with 422 |  |  |
 
 ## PLS-10 API standards
 
@@ -302,7 +303,7 @@ Built in Phase 1 (API addition 6).
 
 As the shop's owner, I want the API to resist the OWASP API Security Top 10 (2023), so that customer data and money are safe.
 
-Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 and 24.12 hold since Phase 3 task 1 (security headers, and 500 bodies with only the standard fields). The defects for PLS-24.2, 24.3, 24.4 and 24.8 are built (Phase 3 task 2), and so are those for PLS-24.5, 24.7, 24.13 and 24.14 (task 3). Only PLS-24.10, the avatar import, is still to build. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
+Partly built. Checked on 21 Oct 2026: PLS-24.2, 24.3, 24.4, 24.7, 24.9 and 24.13 already hold, and so does 24.1 for reading and tracking. PLS-24.1 also holds for cancelling since Phase 1 task 5, and PLS-24.8 since task 8. PLS-24.6 holds since Phase 1 task 9 (finding A7 fixed). PLS-24.11 and 24.12 hold since Phase 3 task 1 (security headers, and 500 bodies with only the standard fields). The defects for PLS-24.2, 24.3, 24.4 and 24.8 are built (Phase 3 task 2), and so are those for PLS-24.5, 24.7, 24.13 and 24.14 (task 3). PLS-24.10 holds since task 4 (the avatar import, PLS-9.5), so every defect in this story is built. The security lab and its defects arrive with Phases 1 and 3 (API addition 7). The OWASP risk is given in brackets.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
