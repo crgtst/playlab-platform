@@ -30,7 +30,7 @@ token=$(curl -sf -X POST "${host}/test/users" -H 'content-type: application/json
   sed -E 's/.*"accessToken":"([^"]+)".*/\1/')
 [ -n "$token" ] || { echo "Could not create a test user: are the test hooks on?" >&2; exit 2; }
 
-docker run --rm --add-host=host.docker.internal:host-gateway -v "$PWD/${out}:/out" -v "$PWD/tools/contract/schemathesis.toml:/schemathesis.toml:ro" "$image" --config-file /schemathesis.toml run "${inside}/api/openapi.json" \
+docker run --rm --user "$(id -u):$(id -g)" --add-host=host.docker.internal:host-gateway -v "$PWD/${out}:/out" -v "$PWD/tools/contract/schemathesis.toml:/schemathesis.toml:ro" "$image" --config-file /schemathesis.toml run "${inside}/api/openapi.json" \
   --url "${inside}/api/v1" \
   -H "Authorization: Bearer ${token}" \
   --exclude-path-regex '^/(test|pay|metrics)' \

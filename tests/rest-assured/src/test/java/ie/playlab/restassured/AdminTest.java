@@ -160,7 +160,7 @@ class AdminTest extends ApiTest {
         page.then().statusCode(200).body("data", hasSize(2)).body("data.role", everyItem(equalTo("support")))
                 .body("meta.limit", equalTo(2)).header("X-Total-Count", equalTo(String.valueOf((int) page.path("meta.total"))));
         // Every user in the list is an AdminUser (the generated class) and matches its schema.
-        for (AdminUser user : page.as(ie.playlab.api.model.AdminUsersGet200Response.class).getData()) {
+        for (AdminUser user : page.as(ie.playlab.api.model.GetAdminUsers200Response.class).getData()) {
             assertNotNull(user.getLocked());
         }
         try {

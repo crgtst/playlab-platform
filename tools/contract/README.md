@@ -49,3 +49,10 @@ error [response-required-property-removed] in API GET /products
 error [new-required-request-property] in API POST /products
     added the new required request property `price`
 ```
+
+## Changing an `operationId`
+
+The REST Assured suite generates its classes from the file, and names the ones for inline responses after the `operationId`
+(`GetAdminUsers200Response` comes from `getAdminUsers`). Renaming an `operationId` renames those classes, so the suite stops
+compiling until its references are updated. Rebuild with `./mvnw -pl rest-assured clean test-compile` to see it; an incremental
+build can keep stale generated classes and hide the break.
