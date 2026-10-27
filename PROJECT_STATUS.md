@@ -5,9 +5,9 @@ Last updated: 2026-10-27
 
 ## Current phase
 
-Phase 2's four functional suites are written and merged (PRs #25 to #29 and #37), and Gate 2 is met by the traceability
-report. The Playwright workflow (PR #30) is the one Phase 2 item still in CI. Phase 3 is planned (see "Phase 3 tasks" in
-`docs/REVIEW_AND_PLAN.md`); tasks 1 and 2 are built.
+Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
+workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 3 are done, with task 3 awaiting merge.
 
 ## Next task
 
