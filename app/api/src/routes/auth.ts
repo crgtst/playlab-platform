@@ -114,6 +114,15 @@ export function clearSessionCookies(res: Response) {
   res.clearCookie(CART_COOKIE, { path: '/' });
 }
 
+/**
+ * The role a new account gets: always a customer. mass-assignment-role honours a `role` in the request body instead, so
+ * anyone can register as an admin (PLS-24.4).
+ */
+function requestedRole(body: unknown): Role {
+  const asked = (body as { role?: unknown } | null)?.role;
+  return isBugOn('mass-assignment-role') && (asked === 'admin' || asked === 'support') ? asked : 'customer';
+}
+
 authRouter.post(
   '/register',
   asyncHandler(async (req: Request, res: Response) => {
@@ -123,8 +132,8 @@ authRouter.post(
       const existing = await client.query('SELECT 1 FROM users WHERE email = $1', [body.email]);
       if (existing.rowCount) throw conflict('EMAIL_IN_USE', 'An account with this email already exists');
       const rows = await client.query<UserRow>(
-        `INSERT INTO users (email, name, password_hash, created_at) VALUES ($1, $2, $3, $4) RETURNING *`,
-        [body.email, body.name, hash, clock.now()],
+        `INSERT INTO users (email, name, password_hash, role, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [body.email, body.name, hash, requestedRole(req.body), clock.now()],
       );
       const created = rows.rows[0];
       const token = randomToken();
@@ -176,7 +185,8 @@ authRouter.post(
     const rows = await query<UserRow>(`${SELECT_USER} WHERE u.email = $1`, [body.email]);
     const user = rows[0];
     const badCredentials = new ApiError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect');
-    if (!user) throw badCredentials;
+    // user-enumeration: an unknown email and a wrong password are told apart, so anyone can find out who has an account (PLS-24.3).
+    if (!user) throw isBugOn('user-enumeration') ? new ApiError(404, 'USER_NOT_FOUND', 'No account exists for that email') : badCredentials;
 
     const now = clock.now();
     if (user.locked_until && user.locked_until > now) {
@@ -195,7 +205,7 @@ authRouter.post(
       const failed = (user.locked_until ? 0 : user.failed_logins) + 1;
       const lockedUntil = failed >= config.lockoutThreshold ? new Date(now.getTime() + config.lockoutMinutes * 60_000) : null;
       await query('UPDATE users SET failed_logins = $1, locked_until = $2 WHERE id = $3', [lockedUntil ? 0 : failed, lockedUntil, user.id]);
-      throw badCredentials;
+      throw isBugOn('user-enumeration') ? new ApiError(401, 'INVALID_PASSWORD', 'Incorrect password for that account') : badCredentials;
     }
 
     const session = await withTransaction(async (client) => {
@@ -275,6 +285,7 @@ authRouter.post(
     const body = parse(forgotSchema, req.body);
     const rows = await query<UserRow>('SELECT * FROM users WHERE email = $1', [body.email]);
     const user = rows[0];
+    if (!user && isBugOn('user-enumeration')) throw new ApiError(404, 'USER_NOT_FOUND', 'No account exists for that email');
     if (user) {
       const token = randomToken();
       await query(`INSERT INTO email_tokens (user_id, type, token_hash, expires_at) VALUES ($1, 'reset', $2, $3)`, [

@@ -15,6 +15,18 @@ Then Phase 3 task 1, security headers and error bodies.
 
 ## Done
 
+- 2026-10-27: Phase 3 task 2, authentication defects (PLS-24.2, 24.3, 24.4, 24.8), on `feat/auth-defects` (built on task 1).
+  - Four new defects (42 built, 5 planned): `jwt-alg-none` believes an unsigned token (so forged claims make an admin);
+    `user-enumeration` tells an unknown email from a wrong password in login and in forgot-password;
+    `mass-assignment-role` honours `role: admin` or `support` at registration; `bfla-admin-users` skips the role check
+    on `PATCH /admin/users/{id}`. All four hold with the defect off, which the existing criteria already required.
+  - Tests: 11 integration tests, each criterion with the defect off and on, in a session of its own (a signature check
+    still refuses a tampered token with `jwt-alg-none` on; `mass-assignment-role` ignores a role that does not exist;
+    `bfla-admin-users` still refuses a guest). 58 unit, 162 integration, e2e 19, Playwright TypeScript 204 and Postman
+    pass; one Playwright test (PLS-6.7) failed once under load and passed 16 of 16 on repeat, one of the known flakes.
+  - Process: a Karate follow-up commit used `git add -A` while another branch's build folder was untracked, so 304
+    generated files from `tests/rest-assured/target/` reached `main` in PR #29. PR #37 untracks them. From now on commits
+    name their paths.
 - 2026-10-26: Phase 3 task 1, security headers and error bodies (PLS-24.11, 24.12), on `feat/security-headers`.
   - API: every response (errors, `/metrics`, `/test/*` included) carries `X-Content-Type-Options`, `Referrer-Policy`,
     `Content-Security-Policy` and `Permissions-Policy`. The policy allows an API nothing; `/api/docs` and the payment
