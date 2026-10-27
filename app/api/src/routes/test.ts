@@ -1,9 +1,12 @@
+import crypto from 'crypto';
 import { Request, Response, Router } from 'express';
 import { typeErrors, z } from '../lib/zod';
 import { config } from '../config';
 import { pool, query, withTransaction } from '../db/pool';
-import { resetDatabase, SEED_PASSWORD } from '../db/seed/base';
+import { getSeedPasswordHash, resetDatabase, SEED_PASSWORD } from '../db/seed/base';
 import { createUser, FIXTURES } from '../db/seed/fixtures';
+import { generateData } from '../db/seed/generate';
+import { toCsv } from '../lib/csv';
 import { clock } from '../lib/clock';
 import { hashToken, randomToken, signAccessToken } from '../lib/tokens';
 import { resetRateLimits } from '../middleware/rateLimit';
@@ -26,6 +29,8 @@ testRouter.get('/', (_req, res) => {
       'POST /test/sessions',
       'POST /test/seed',
       'POST /test/users',
+      'POST /test/users/bulk',
+      'POST /test/generate',
       'GET /test/mailbox/{email}',
       'GET|POST /test/clock',
       'GET|POST|DELETE /test/latency',
@@ -95,6 +100,61 @@ testRouter.post(
       };
     });
     res.status(201).json(result);
+  }),
+);
+
+const bulkSchema = z.object({
+  count: z
+    .number(typeErrors({ required: 'count is required, e.g. 500', invalid: 'count must be a whole number' }))
+    .int('count must be a whole number')
+    .min(1)
+    .max(5000, 'count can be at most 5000'),
+});
+
+/** Customers for load tests, as CSV (email, password, token) for a JMeter CSV Data Set or a k6 SharedArray. */
+testRouter.post(
+  '/users/bulk',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { count } = parse(bulkSchema, req.body ?? {});
+    const batch = crypto.randomBytes(4).toString('hex');
+    const users = await withTransaction(async (client) => {
+      const emails = Array.from({ length: count }, (_, i) => `bulk-${batch}-${String(i + 1).padStart(5, '0')}@playlab.test`);
+      const { rows } = await client.query(
+        `INSERT INTO users (email, name, password_hash, role, email_verified, created_at)
+         SELECT e, 'Bulk User ' || ord, $2, 'customer', TRUE, $3
+           FROM unnest($1::text[]) WITH ORDINALITY AS g(e, ord)
+         RETURNING *`,
+        [emails, getSeedPasswordHash(), clock.now()],
+      );
+      return rows.sort((a: any, b: any) => a.id - b.id);
+    });
+    res
+      .status(201)
+      .type('text/csv')
+      .send(
+        toCsv(
+          ['email', 'password', 'token'],
+          users.map((u: any) => [u.email, SEED_PASSWORD, signAccessToken(u)]),
+        ),
+      );
+  }),
+);
+
+const generateSchema = z.object({
+  products: z.number().int().min(0).max(50_000).default(1000),
+  users: z.number().int().min(0).max(5000).default(100),
+  ordersPerUser: z.number().int().min(0).max(20).default(3),
+  seed: z.number().int().min(0).max(2_147_483_647).default(1),
+});
+
+/** The same seed always creates the same data. Reset first to get the same ids and order numbers too. */
+testRouter.post(
+  '/generate',
+  asyncHandler(async (req: Request, res: Response) => {
+    const body = parse(generateSchema, req.body ?? {});
+    const started = Date.now();
+    const result = await withTransaction((client) => generateData(client, body));
+    res.status(201).json({ ...result, seed: body.seed, durationMs: Date.now() - started });
   }),
 );
 

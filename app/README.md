@@ -107,6 +107,8 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | `POST /test/sessions` | Starts an isolated test session and returns `{ id, idleTimeoutMs }`. See [Test sessions](#test-sessions). |
 | `POST /test/seed` | Creates named fixtures; body `{ "fixtures": ["…"] }`. Returns the created ids and codes. |
 | `POST /test/users` | Body `{ "role"?: "customer"\|"admin"\|"support", "name"?, "email"? }`. Returns `{ user, password, accessToken, refreshToken }`. |
+| `POST /test/users/bulk` | Body `{ "count": 500 }` (1 to 5000). Creates that many customers and returns CSV (`email,password,token`) for a JMeter CSV Data Set or a k6 `SharedArray`. Every call makes new accounts. The tokens last as long as any access token, so log in for a long run. |
+| `POST /test/generate` | Body `{ "products"?: 1000, "users"?: 100, "ordersPerUser"?: 3, "seed"?: 1 }` (up to 50,000 products, 5,000 users, 20 orders each). Adds products `G<seed>-000001…`, users `gen-<seed>-000001@playlab.test` (password `Password123!`) and their orders. The same body and seed after a reset gives the same data, ids and timestamps; the response has a `checksum` to compare. The same seed twice without a reset is a 409 `GENERATE_CONFLICT`. |
 | `GET /test/mailbox/{email}` | Emails the app "sent" (registration confirmation, password reset), newest first, each with a `link`. |
 | `DELETE /test/mailbox/{email}` | Empties that mailbox. |
 | `GET /test/logs?correlationId=` | The redacted log lines for one request. Keeps the last 5,000 lines; `POST /test/reset` clears them. |
