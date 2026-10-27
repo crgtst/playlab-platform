@@ -1,0 +1,64 @@
+# REST Assured tests (tests/rest-assured) run with the Maven wrapper against a fresh Compose stack.
+name: rest-assured
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rest-assured:
+    name: REST Assured
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Configure the stack from .env.example on non-default ports
+        working-directory: app
+        run: sed -e 's/^API_PORT=.*/API_PORT=3002/' -e 's/^WEB_PORT=.*/WEB_PORT=5174/' .env.example > .env
+
+      - name: Start the stack
+        working-directory: app
+        run: docker compose up --build --detach --wait --wait-timeout 300
+
+      - name: Run the tests
+        working-directory: tests
+        run: ./mvnw --batch-mode -pl rest-assured test -Drestassured.env=ci
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: rest-assured-reports
+          path: tests/rest-assured/target/surefire-reports/
+          retention-days: 14
+
+      - name: Save Compose logs
+        if: failure()
+        working-directory: app
+        run: docker compose logs --no-color > compose.log
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: compose-log
+          path: app/compose.log
+          retention-days: 7
+
+      - name: Stop the stack
+        if: always()
+        working-directory: app
+        run: docker compose down -v
