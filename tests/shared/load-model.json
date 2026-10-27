@@ -1,0 +1,48 @@
+{
+  "_comment": "The load model every performance suite uses (k6 and JMeter), so their numbers can be compared. The figures are the starting points in PLS-27; calibrate them on your own machine (Phase 3 task 14).",
+  "data": {
+    "_comment": "Made by POST /test/generate (the catalogue) and POST /test/users/bulk (the shoppers). The perf products have so much stock that orders never run out.",
+    "products": 10000,
+    "users": 1000,
+    "ordersPerUser": 0,
+    "seed": 42,
+    "perfProducts": 20,
+    "perfProductStock": 1000000
+  },
+  "products": {
+    "ac": "PLS-27.1",
+    "title": "GET /products",
+    "path": "/api/v1/products",
+    "rps": 50,
+    "duration": "5m",
+    "p95Ms": 200,
+    "maxErrorRate": 0.01
+  },
+  "orders": {
+    "ac": "PLS-27.2",
+    "title": "POST /orders",
+    "path": "/api/v1/orders",
+    "rps": 10,
+    "duration": "5m",
+    "p95Ms": 800,
+    "maxErrorRate": 0.01
+  },
+  "soak": {
+    "ac": "PLS-27.3",
+    "title": "GET /products",
+    "rps": 25,
+    "duration": "1h",
+    "baselineWindow": "5m",
+    "maxDriftPercent": 20,
+    "memoryLimitBytes": 1073741824
+  },
+  "overload": {
+    "ac": "PLS-27.4",
+    "title": "GET /products",
+    "limitPerMin": 600,
+    "overloadRps": 100,
+    "overloadDuration": "1m",
+    "recoverySeconds": 60,
+    "recoveryRps": 2
+  }
+}

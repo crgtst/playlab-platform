@@ -407,6 +407,8 @@ bash perf/smoke.sh               # checks the profile did what it says
 - The API runs with `NODE_ENV=production`, `LOG_LEVEL=warn` and no rate limit (`RATE_LIMIT_PER_MIN=0` switches it off), limited to 2 CPUs and 1 GB. The database gets 2 CPUs and 2 GB.
 - Prometheus (`PROMETHEUS_PORT`, default 9091) scrapes `/metrics` every 5 seconds.
 - Grafana (`GRAFANA_PORT`, default 3300, no login) shows the "PlayLab API" dashboard: request rate, p95 latency, error rate, per-route rate and latency, orders and declined payments, database pool.
+- Three settings change the profile for a test (set them on the `docker compose` command): `PERF_RATE_LIMIT_PER_MIN` (default `0`; `600` for the overload test, which needs a limit to hit), `PERF_ACCESS_TOKEN_TTL_SEC` (default `7200`, so a one-hour soak outlives its tokens) and `PROMETHEUS_PORT`. Prometheus accepts remote write, so k6 can send it metrics.
+- The load tests are [`tests/k6`](../tests/k6/README.md) and [`tests/jmeter`](../tests/jmeter/README.md); both read `tests/shared/load-model.json`.
 - Go back to the normal stack with `docker compose down -v` and a plain `docker compose up --build -d`.
 
 ## Locators: `data-testid` conventions

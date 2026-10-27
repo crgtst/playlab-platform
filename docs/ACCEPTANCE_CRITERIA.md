@@ -352,11 +352,11 @@ Built in Phase 3: `POST /test/provider-states` (26.5), the Spectral lint, the `o
 | PLS-26.6 | Given a path the OpenAPI file lists, when it is called with a method the file does not list for it, then the API returns 405 `METHOD_NOT_ALLOWED` with an `Allow` header; a path that is not in the file is still 404 | | |
 | PLS-26.7 | Given an id larger than the biggest the database holds (2147483647), when it is looked up, then the response is 404, not 500 | | |
 
-## PLS-27 Performance and capacity (planned: Phase 3)
+## PLS-27 Performance and capacity (built: Phase 3)
 
 As the shop's owner, I want the shop to stay fast under expected load and fail gracefully beyond it, so that busy days don't lose sales.
 
-Not built yet: these run against the `perf` Compose profile with generated data (API addition 8). The figures are starting points; calibrate them on your machine in Phase 3.
+Built in Phase 3 tasks 12 and 13: the k6 scripts (`tests/k6`) and the JMeter plans (`tests/jmeter`) run these against the perf profile with generated data (API addition 8), from one load model, `tests/shared/load-model.json`. On a laptop the API is well inside every figure (a `GET /products` p95 of about 10 ms against the 200 ms limit, and a `POST /orders` p95 of about 15 ms against 800 ms with k6), so the figures are starting points: calibrating them on a real machine is task 14. 27.4 needs the rate limit on (`PERF_RATE_LIMIT_PER_MIN=600`), because the perf profile has none to refuse with.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |

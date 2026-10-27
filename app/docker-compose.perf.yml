@@ -11,7 +11,10 @@ services:
     environment:
       NODE_ENV: production
       PLAYLAB_ALLOW_UNSAFE: "true"
-      RATE_LIMIT_PER_MIN: "0"
+      # Off for the load and soak tests. The overload test (PLS-27.4) needs the limit on: PERF_RATE_LIMIT_PER_MIN=600.
+      RATE_LIMIT_PER_MIN: "${PERF_RATE_LIMIT_PER_MIN:-0}"
+      # A one-hour soak outlives the normal 15-minute access token.
+      ACCESS_TOKEN_TTL_SEC: "${PERF_ACCESS_TOKEN_TTL_SEC:-7200}"
       LOG_LEVEL: warn
     deploy:
       resources:
@@ -28,7 +31,8 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.5.0
-    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d"]
+    # The remote-write receiver lets k6 send its metrics here (K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9091/api/v1/write).
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d", "--web.enable-remote-write-receiver"]
     volumes:
       - ./perf/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:

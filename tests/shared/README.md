@@ -9,6 +9,7 @@ stack straight after `POST /test/reset`.
 | `products.json` | The 5 categories and 40 products, with the `id` each gets after a reset |
 | `cards.json` | Test cards (`success`, `decline`, `timeout`, and `invalid`, which fails the Luhn check) and default expiry, CVC and name |
 | `discounts.json` | The seeded codes, and the codes each discount fixture creates |
+| `load-model.json` | The load model for k6 and JMeter: the data to generate, the rates and durations, the SLOs. Checked by the API's unit tests against the ACs and the hooks' limits |
 | `fixtures.json` | Every fixture for `POST /test/seed`, in order, with what it creates |
 | `schemas/` | One JSON Schema (draft-07) per OpenAPI component, for validating responses |
 

@@ -7,13 +7,27 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 11 are done; tasks 0 to 9 are merged, task 10 is merged (PR #47) and task 11 is in PR #48.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 12 are done; tasks 0 to 11 are merged and task 12 (branch `tests/k6`) is not pushed.
 
 ## Next task
 
-Phase 3 task 12, the k6 suite against the perf profile (PLS-27.1 to 27.4). The perf profile, `/test/generate` and `/test/users/bulk` are ready for it.
+Phase 3 task 13, the JMeter suite (the same load model).
 ## Done
 
+- 2026-10-27: Phase 3 task 12, the k6 suite (PLS-27.1 to 27.4), on `tests/k6`. You asked for the load suites to be written, so these are.
+  - `tests/k6/scripts`: smoke, `products` (27.1), `orders` (27.2), `soak` (27.3), `overload` (27.4), stress and spike. Run with
+    `tests/k6/run.sh <script>` (k6 2.3.0 in Docker, nothing to install). Each script sets up its own data through the test hooks
+    (10,000 generated products, 1,000 bulk shoppers, 20 products of its own with a million in stock).
+  - One load model for both tools: `tests/shared/load-model.json` (rates, durations, SLOs, data), checked by a unit test against the AC text
+    and the hooks' limits. `handleSummary` writes JUnit (every threshold a case named after its AC, which traceability reads), JSON and HTML.
+    The soak's drift between its first and last windows and the API's peak memory (asked of Prometheus) are extra cases, because k6 has no threshold for them.
+  - Results at the real durations on this machine: `GET /products` 50/s for 5 minutes, p95 9.8 ms (limit 200); `POST /orders` 10/s for 5 minutes,
+    p95 15 ms (limit 800); overload at 100/s against a limit of 10/s: refused with 429 and `Retry-After`, no errors, back to 200 in the minute;
+    soak run for 3 minutes (the hour is for the nightly run): drift under 3%, memory peak 141 MiB of 1 GiB. The figures leave a lot of room, so
+    calibrating them is task 14.
+  - `INJECT_LATENCY_MS=300 tests/k6/run.sh products` makes the p95 threshold fail the run (exit 1), as the plan asks.
+    `PROMETHEUS_RW=1` sends k6's metrics to the perf stack's Prometheus, which now accepts remote write.
+  - The perf profile gained `PERF_RATE_LIMIT_PER_MIN` (the overload test needs a limit to reach) and `PERF_ACCESS_TOKEN_TTL_SEC` (default 2 hours).
 - 2026-10-27: Phase 3 task 11, the security suite and ZAP (PLS-24.1 to 24.14), on `tests/security`. You asked me to write the
   suite, so this one is written, not just scaffolded.
   - `tests/security`: Playwright Test with the `request` fixture, one spec for each of the ten OWASP API risks. Every AC has a secure
