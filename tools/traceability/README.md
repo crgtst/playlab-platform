@@ -22,5 +22,5 @@ The reports are whatever the last run wrote, so run a whole suite first (a parti
 Playwright that is `cd tests/playwright-ts && npx playwright test`, which writes `results/junit.xml`.
 
 [`scope.json`](scope.json) lists what is not a gap: ACs the platform does not build yet, ACs another tool or the app's
-own tests cover, the three defects added in Phase 1 (so "original defects" is 33), and the Gate 2 story range. Update
+own tests cover, the three defects added in Phase 1 and the eleven added in Phase 3 (so "original defects" is 33), and the Gate 2 story range. Update
 it when the platform builds something new.

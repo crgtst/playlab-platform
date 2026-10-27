@@ -39,6 +39,34 @@ describe('bug registry', () => {
     expect(BUG_NAMES.length + PLANNED_DEFECTS.length).toBe(47);
   });
 
+  it('has a test that names every defect', () => {
+    // The platform's own tests (api, e2e) and the tool suites under tests/ are where a defect is proved to be caught.
+    const roots = [
+      'app/api/test',
+      'app/e2e/specs',
+      'app/web/src',
+      'tests/playwright-ts/specs',
+      'tests/karate/src',
+      'tests/rest-assured/src',
+    ];
+    const repo = path.join(__dirname, '../../..');
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      if (!fs.existsSync(dir)) return;
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) walk(full);
+        else if (/(\.(spec|test|int\.test)\.tsx?|Test\.java|\.feature)$/.test(e.name) && e.name !== 'bugs.test.ts') files.push(full);
+      }
+    };
+    for (const r of roots) walk(path.join(repo, r));
+    const text = files.map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+    expect(
+      BUG_NAMES.filter((n) => !text.includes(n)),
+      'defects no test names',
+    ).toEqual([]);
+  });
+
   it('starts with every defect off', () => {
     config.testHooks = true;
     expect(bugs.active()).toEqual([]);

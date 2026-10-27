@@ -170,7 +170,9 @@ export function gate2({ rows, defects }, scope) {
   const { from, to } = scope.gate2Stories;
   const original = rows.filter((r) => r.story >= from && r.story <= to);
   const uncovered = original.filter((r) => r.result !== 'pass' && !r.note);
-  const originalDefects = defects.filter((d) => d.built && !scope.phase1Defects.includes(d.name));
+  const originalDefects = defects.filter(
+    (d) => d.built && !scope.phase1Defects.includes(d.name) && !(scope.phase3Defects ?? []).includes(d.name),
+  );
   const missed = originalDefects.filter((d) => d.caught.length === 0);
   return { original, uncovered, originalDefects, missed, passed: uncovered.length === 0 && missed.length === 0 };
 }
