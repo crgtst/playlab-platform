@@ -33,7 +33,7 @@ The fixed seed is deliberate: CI gives the same result on every run until the AP
 The first runs found real defects, now fixed (all under PLS-26.2, 26.6 and 26.7):
 
 - A `500` for a huge id (`/users/1307674368000/avatar`, `/orders/55146753715`): ids above 2147483647 are now a 404.
-- A `500` for a null character (`?q=%00`) in a query string or JSON body: now a 422.
+- A `500` for a null character (`?q=%00`) in a query string or JSON body, or for a number beyond a 32-bit integer in a body (`{"productId": 53287031635}`): now a 422.
 - A `500` for `{"refreshToken": {}}`: now a 401, because a token that is not a string counts as missing.
 - A `500` for a malformed multipart upload and for `DELETE /wishlist/items/0.5`: now a 400 and a 404.
 - `TRACE`, `GET /orders/bulk-status` and the like returned 404 or 401: now 405 with an `Allow` header, and `OPTIONS` lists exactly the methods in the file.

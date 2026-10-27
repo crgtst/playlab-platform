@@ -10,7 +10,7 @@ import { correlation } from './lib/requestContext';
 import { resolveTestSession } from './lib/testSessions';
 import { trustedProxies, trustProxy } from './lib/trustedProxy';
 import { createMethodGuard, createNotFoundHandler, createOptionsHandler, errorHandler } from './middleware/errorHandler';
-import { rejectNullCharacters } from './middleware/validate';
+import { rejectUnstorableValues } from './middleware/validate';
 import { apiRateLimit } from './middleware/rateLimit';
 import { requestLog } from './middleware/requestLog';
 import { securityHeaders } from './middleware/securityHeaders';
@@ -61,7 +61,7 @@ export function createApp() {
     req.body ??= {};
     next();
   });
-  app.use(rejectNullCharacters);
+  app.use(rejectUnstorableValues);
   const spec = loadOpenApi();
   app.use(createOptionsHandler(spec, config.testHooks));
   app.use(createMethodGuard(spec, config.testHooks));
