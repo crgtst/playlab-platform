@@ -1,0 +1,19 @@
+# ZAP rules for the API scan. Format: <rule id><TAB><IGNORE|INFO|WARN|FAIL><TAB><name>
+# Every rule not listed is a WARN; -I stops warnings failing the run, so only FAIL fails it.
+# The reason for each rule is in NOTES.md, which the security report prints.
+#
+# Injection and disclosure: a finding here fails the run.
+40018	FAIL	SQL Injection
+40012	FAIL	Cross Site Scripting (Reflected)
+40014	FAIL	Cross Site Scripting (Persistent)
+6	FAIL	Path Traversal
+90020	FAIL	Remote OS Command Injection
+90019	FAIL	Server Side Code Injection
+40046	FAIL	Server Side Request Forgery
+90022	FAIL	Application Error Disclosure
+100000	IGNORE	A Client Error response code was returned by the server
+100001	IGNORE	Unexpected Content-Type was returned
+10111	IGNORE	Authentication Request Identified
+10049	IGNORE	Non-Storable Content
+90004	IGNORE	Insufficient Site Isolation Against Spectre Vulnerability
+10106	IGNORE	HTTP Only Site

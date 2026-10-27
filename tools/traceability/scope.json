@@ -1,11 +1,6 @@
 {
   "_comment": "What the report should not count as a gap. Edit this when the platform builds something new.",
   "notBuilt": {
-    "PLS-24.5": "excessive-data-exposure is a Phase 3 defect",
-    "PLS-24.10": "ssrf-avatar-url and its feature are Phase 3",
-    "PLS-24.11": "security headers are Phase 3",
-    "PLS-24.12": "verbose-errors is a Phase 3 defect",
-    "PLS-24.14": "trust-address-provider is a Phase 3 defect",
     "PLS-28.3": "Built in Phase 3 task 6; covered by integration tests in app/api, used by the k6 and JMeter suites",
     "PLS-28.4": "Built in Phase 3 task 6; covered by integration tests in app/api, used by the k6 and JMeter suites"
   },
@@ -20,7 +15,7 @@
     "PLS-12.3": "Covered by the API integration tests in app/api",
     "PLS-12.4": "Covered by the API integration tests in app/api",
     "PLS-12.5": "Covered by the API integration and e2e smoke tests in app",
-    "PLS-9.5": "Phase 3: covered by integration and e2e tests in app (51 and 2); the Phase 3 security suite adds the tool tests"
+    "PLS-9.5": "Phase 3: covered by integration and e2e tests in app (51 and 2) and the security suite (PLS-24.10 imports through it)"
   },
   "phase1Defects": ["status-any-transition", "lost-update", "rate-limit-bypass"],
   "gate2Stories": {

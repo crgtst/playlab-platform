@@ -1,0 +1,17 @@
+{
+  "name": "playlab-security",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OWASP API Security Top 10 (2023) tests for PlayLab, with the defect that makes each one fail.",
+  "scripts": {
+    "test": "playwright test",
+    "test:defects": "node run-defect-matrix.mjs",
+    "report": "node ../../tools/security-report/report.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3"
+  }
+}

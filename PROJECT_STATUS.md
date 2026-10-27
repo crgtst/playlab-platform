@@ -7,13 +7,30 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 10 are done; tasks 0 to 9 are merged (task 9 is PR #46) and task 10 (branch `feat/pact`) is not pushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 11 are done; tasks 0 to 9 are merged, task 10 is merged (PR #47) and task 11 is in PR #48.
 
 ## Next task
 
-Phase 3 task 11, the security suite (`tests/security`) and the ZAP baseline and API scans. This one is yours to write; the platform side is done (all 11 security defects exist and have integration tests).
+Phase 3 task 12, the k6 suite against the perf profile (PLS-27.1 to 27.4). The perf profile, `/test/generate` and `/test/users/bulk` are ready for it.
 ## Done
 
+- 2026-10-27: Phase 3 task 11, the security suite and ZAP (PLS-24.1 to 24.14), on `tests/security`. You asked me to write the
+  suite, so this one is written, not just scaffolded.
+  - `tests/security`: Playwright Test with the `request` fixture, one spec for each of the ten OWASP API risks. Every AC has a secure
+    test and a defect test (`PLS-24.n defect <name> ...`, which switches the defect on in the test's own session and shows the exploit).
+    31 tests. `npm run test:defects` switches each of the 15 defects on and runs the secure test of its AC, which must fail: 15 of 15 do
+    (checked that they fail for the right reason, for example `alg: none` returns 200 instead of 401).
+  - ZAP 2.17.0 in `tests/security/zap`: a baseline scan of the web app (with the AJAX spider, 86 URLs) and an active API scan from the
+    API's own OpenAPI file without the test hooks, as a throwaway admin. Rules mark injection, XSS, SSRF, error disclosure and missing
+    headers as FAIL; the accepted alerts are explained in `NOTES.md`. The API scan found nothing above informational; SQL injection and XSS
+    rules passed.
+  - ZAP's real findings, fixed: the web policy allowed any `ws:`/`wss:` host (now `'self'`, live order status still works), and the API
+    and docs policies had no `form-action`. Accepted and written down: inline styles (React) and `unsafe-inline` scripts on the Swagger page.
+  - New `security` workflow (`owasp` and `zap` jobs) and `docs/security-report.md`, written by `npm run security:report` from the JUnit file,
+    the defect matrix and the ZAP JSON. New stack settings: `ACCESS_TOKEN_TTL_SEC` and `WEB_ALLOWED_HOSTS` (both default to the old behaviour).
+  - Traceability: 145 of 145 in-scope ACs covered, 47 of 47 defects caught (it was 36). Gate 2 still met. 59 unit, 262 integration, e2e 17, Playwright 204,
+    Postman, Karate and REST Assured pass.
+  - Not done: the `security` workflow has not run in CI yet; its first run is the pull request.
 - 2026-10-27: Phase 3 task 10, Pact (PLS-26.4), on `feat/pact`. Built on task 9 (PR #46, merged). That PR's first CI run found things fixed there: Schemathesis's
   container could not write its report (now runs as the CI user) and a REST Assured and a Karate admin test renamed a throwaway
   product so it stopped sorting last, which duplicated a product across pages in the paging test (names now keep the `zz` prefix);
