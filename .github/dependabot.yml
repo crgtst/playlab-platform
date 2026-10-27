@@ -19,6 +19,14 @@ updates:
       - dependency-name: typescript
         update-types: [version-update:semver-major]
 
+  - package-ecosystem: maven
+    directories: ["/tests", "/tests/karate", "/tests/rest-assured"]
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
   - package-ecosystem: docker
     directories: ["/app/api", "/app/web"]
     schedule:

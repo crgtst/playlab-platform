@@ -1,0 +1,6 @@
+# The error body's `details` is a oneOf (a list of field errors, or an object), which the generator cannot turn into
+# classes that compile. Errors are read with the small ErrorBody class in the tests instead.
+**/Error.java
+**/ErrorError.java
+**/ErrorErrorDetails.java
+**/ErrorErrorDetailsOneOfInner.java

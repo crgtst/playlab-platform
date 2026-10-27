@@ -1,17 +1,18 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-24
+Last updated: 2026-10-27
 
 ## Current phase
 
-Phase 2's four functional suites are written and Gate 2 is met by the traceability report (PRs #25 to #27 merged; Karate, REST Assured and Playwright CI are in review). Phase 3 is planned: see "Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`.
+Phase 2's four functional suites are written and merged (PRs #25 to #29 and #37), and Gate 2 is met by the traceability
+report. The Playwright workflow (PR #30) is the one Phase 2 item still in CI. Phase 3 is planned (see "Phase 3 tasks" in
+`docs/REVIEW_AND_PLAN.md`); tasks 1 and 2 are built.
 
 ## Next task
 
-Phase 3 task 0: close Phase 2 by getting the playwright, newman, karate and rest-assured workflows green on `main`
-together (PR #29 for Karate is green and waiting to merge; the REST Assured and Playwright workflow branches are local).
-Then Phase 3 task 1, security headers and error bodies.
+Phase 3 task 3: the data and inventory defects (`excessive-data-exposure`, `no-page-limit`, `shadow-api-v0`,
+`trust-address-provider`). Phase 3 task 0 closes when the Playwright workflow is green on `main`.
 
 ## Done
 
@@ -47,6 +48,41 @@ Then Phase 3 task 1, security headers and error bodies.
   AC (PLS-9.5, the positive path of the avatar import) is added in task 4. Karate CI: the first run hung for 15 minutes
   (cause not seen, because a cancelled job keeps no log); the Java helpers now have timeouts and the workflow prints a
   thread dump if it runs over 5 minutes, and the next run passed in 2 minutes.
+- 2026-10-26: Added the REST Assured suite (Phase 2), on `tests/rest-assured-suite` (built on the Karate branch), at
+  Craig's request. This completes the Phase 2 suites.
+  - `tests/rest-assured/`: 112 tests in 10 classes, with the AC ID first in each `@DisplayName` and as a `@Tag`.
+    `RequestSpecBuilder` specs with a test session per class, response classes **generated from the OpenAPI file**
+    (openapi-generator) and read with `.as(...)`, a JSON Schema matcher over `tests/shared/schemas/`, `@CsvFileSource`
+    and `@MethodSource` data, forged JWTs, and parallel classes. The showcase is `ConcurrencyTest`: 20 threads order the
+    last item at the same moment and exactly one succeeds.
+  - Checked with defects switched on (`-Ddefects=...`): stock-oversell (all 20 orders succeed), status-any-transition,
+    order-leak, lost-update, price-tamper, single-use-reused and rate-limit-bypass each fail tests. 112 of 112 pass on 3
+    runs in a row; the stack is left with 40 products and every stock level seeded.
+  - New workflow `rest-assured.yml`; Dependabot watches the folder. The parent POM now manages the REST Assured and
+    OpenAPI generator versions.
+  - The traceability report reads 26 reports (994 tests); Gate 2 is met.
+  - Details worth knowing (all in the README): subclass `@AfterEach` runs before the base class's; REST Assured sends no
+    cookies, unlike Karate; the REST Assured schema matcher is draft-04 only so the suite uses `networknt`; the OpenAPI
+    `error.details` `oneOf` cannot be generated, so the `Error` classes are skipped.
+  - Not done: Allure reports (the plan lists them; the JUnit XML feeds traceability instead).
+  - Phase 2 is now: Playwright TypeScript, Postman/Newman, Karate and REST Assured written, with traceability and the
+    Gate 2 check passing. What is left for the Phase 2 gate is review and a run of every suite in CI together.
+- 2026-10-26: Added the Karate suite (Phase 2), on `tests/karate-suite` (built on `main` after PR #27), at Craig's request.
+  - `tests/karate/`: 7 features and 116 scenarios (auth, registration with a 22-row data-driven outline, catalogue, cart
+    and discounts, orders, admin and accounts, standards with observability and sessions), run in parallel by one JUnit 5
+    runner. Scenario names start with their AC ID; responses are checked against `tests/shared/schemas/` through a Java
+    helper; Java helpers also run simultaneous requests (a 20-customer race, paying twice, a single-use code) and forge
+    tokens (PLS-24.2). Karate uploads a real PNG, so it covers PLS-9.1 as well as the rejections.
+  - Maven: a parent POM and the Maven Wrapper in `tests/` (only Java is needed; `./mvnw -pl karate test`), shared with the
+    REST Assured and Playwright Java suites to come. New workflow `karate.yml`; Dependabot watches Maven.
+  - The traceability report now reads Karate's JUnit XML: 882 tests in 17 reports; Gate 2 still met.
+  - `-Ddefects=a,b` switches defects on for a run; checked with lost-update, status-any-transition, order-leak,
+    logout-incomplete and rate-limit-bypass, each of which fails scenarios.
+  - Hard-won details, all in the README: scenarios (not just features) run in parallel; `configure headers` beats a
+    per-request header and is inherited by called features; Karate's cookie jar keeps `test_session` and the cookie wins
+    over the header; `match` splits at the first `==`; Java's HTTP client needs HTTP/1.1 against this API.
+  - Checked: 116 of 116 pass on 4 runs in a row; the stack is left with 40 products and every stock level seeded.
+  - Not done: the Karate mock server and the Gatling load scenario (both belong with later phases), and REST Assured.
 - 2026-10-26: Added the Postman/Newman suite (Phase 2), on `tests/postman-suite` (built on `chore/traceability`), at
   Craig's request.
   - `tests/postman/`: 8 collections (auth, registration, a 50-row data-driven registration run, catalogue, cart and
