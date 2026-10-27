@@ -63,6 +63,19 @@ const STATES: ProviderState[] = [
     pattern: /^the catalogue has products$/,
     run: async (c) => ({ products: (await c.query('SELECT COUNT(*)::int AS n FROM products')).rows[0].n }),
   },
+  {
+    example: 'a user with email customer@playlab.test exists',
+    pattern: /^a user with email (\S+@\S+) exists$/,
+    run: async (c, m) => {
+      const { rows } = await c.query('SELECT email, role FROM users WHERE lower(email) = $1', [m[1]]);
+      if (!rows[0])
+        throw validationError(
+          [{ field: 'state', message: `No user has the email ${m[1]}` }],
+          `Provider state failed: no user has the email ${m[1]}`,
+        );
+      return { email: rows[0].email, role: rows[0].role };
+    },
+  },
   { example: 'a customer exists', pattern: /^a customer exists$/, run: (c) => accountWith(c, 'customer') },
   { example: 'an admin exists', pattern: /^an admin exists$/, run: (c) => accountWith(c, 'admin') },
   {

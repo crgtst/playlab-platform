@@ -2,6 +2,8 @@
 #   spectral      lints the file with the repo's ruleset (.spectral.yaml)
 #   oasdiff       on a pull request, fails if the change breaks /api/v1 for an existing client
 #   schemathesis  fuzzes the running API: every response must match the file and no request may cause a 500
+#   pact-consumer runs the web app's Pact consumer tests and fails if the committed pact files are out of date. The provider side
+#                 (the API keeps every promise in those files) runs with the API integration tests in the quality workflow.
 name: contract
 
 on:
@@ -57,6 +59,29 @@ jobs:
           echo
           echo "## Breaking changes"
           docker run --rm -v "$RUNNER_TEMP/oas:/oas" "$OASDIFF" breaking /oas/base.yaml /oas/head.yaml --fail-on ERR
+
+  pact-consumer:
+    name: Pact consumer tests (web)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: app/web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/web/package-lock.json
+      - run: npm ci
+      - run: npm run test:pact
+      - name: The committed pact files match what the tests write
+        run: |
+          git diff --exit-code -- pacts || {
+            echo "::error::app/web/pacts is out of date. Run 'npm run test:pact' in app/web and commit the result."
+            exit 1
+          }
 
   schemathesis:
     name: API fuzzing (Schemathesis)

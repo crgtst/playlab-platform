@@ -48,6 +48,12 @@ describe('POST /test/provider-states', () => {
     }
   });
 
+  it('PLS-26.5 checks that a user with a given email exists', async () => {
+    const res = await state({ state: 'A user with email Customer@playlab.test exists' }).expect(200);
+    expect(res.body.data[0].result).toEqual({ email: 'customer@playlab.test', role: 'customer' });
+    await state({ state: 'a user with email nobody@playlab.test exists' }).expect(422);
+  });
+
   it('PLS-26.5 runs any fixture by name', async () => {
     const res = await state({ state: 'fixture customer-with-orders' }).expect(200);
     expect(res.body.data[0].result.orders).toHaveLength(3);

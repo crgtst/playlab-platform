@@ -7,13 +7,25 @@ Last updated: 2026-10-27
 
 Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
 workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 9 are done; tasks 0 to 8 are merged and task 9 (branch `feat/contract-checks`) is not pushed.
+"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 10 are done; tasks 0 to 8 are merged, task 9 is in PR #46 and task 10 (branch `feat/pact`, built on task 9) is not pushed.
 
 ## Next task
 
-Phase 3 task 10, Pact: consumer tests in the web app and provider verification in the API, using the provider states (PLS-26.4).
+Phase 3 task 11, the security suite (`tests/security`) and the ZAP baseline and API scans. This one is yours to write; the platform side is done (all 11 security defects exist and have integration tests).
 ## Done
 
+- 2026-10-27: Phase 3 task 10, Pact (PLS-26.4), on `feat/pact`. Built on task 9 (PR #46); the same CI run found two things fixed there: Schemathesis's
+  container could not write its report (now runs as the CI user) and a REST Assured and a Karate admin test renamed a throwaway
+  product so it stopped sorting last, which duplicated a product across pages in the paging test (names now keep the `zz` prefix).
+  - Consumer: `app/web/pact/web-api.pact.test.ts`, 11 interactions run through the web app's own `api()` helper against a Pact
+    mock server (products, categories, config, login, cart); `npm run test:pact` in `app/web` writes `app/web/pacts/`, which is committed
+    (and in `.prettierignore`, so it stays byte for byte what the tests write). Added `vitest` and `@pact-foundation/pact` to the web app.
+  - Provider: `app/api/test/integration/pact.int.test.ts` starts the API and replays them; each state is set up through
+    `POST /test/provider-states` (new state: `a user with email {email} exists`), and a placeholder token is swapped for a real one.
+    Renaming `priceCents` in the product response fails two interactions (checked, then reverted).
+  - CI: new `pact-consumer` job in the `contract` workflow fails if the committed pact is out of date; the API integration job runs
+    the provider side. 59 unit and 261 integration tests pass; web typecheck clean.
+  - Not done: a broker (decision 5: files first), message pacts, and interactions for checkout and admin pages.
 - 2026-10-27: Phase 3 task 9, contract checks (PLS-26.1 to 26.3, new 26.6 and 26.7), on `feat/contract-checks`. Task 8 is merged
   (PR #45); an earlier note here said the `/test` hooks are not in the OpenAPI file, which was wrong, and the three new hooks
   (`/test/generate`, `/test/users/bulk`, `/test/provider-states`) are now in it.

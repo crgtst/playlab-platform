@@ -6,6 +6,7 @@ Three checks keep the OpenAPI file (`app/api/openapi/openapi.yaml`) honest. They
 | --- | --- | --- | --- |
 | Spectral lint | PLS-26.1 | `npm run lint:openapi` | A rule in [`.spectral.yaml`](../../.spectral.yaml): every operation has an `operationId` (camelCase) and a summary, paths are kebab-case, and every rate-limited operation documents an error response |
 | `oasdiff` | PLS-26.3 | pull requests only | A change that breaks an existing client of `/api/v1`: a removed or renamed response field, a new required request field, a removed path |
+| Pact | PLS-26.4 | `npm run test:pact` in `app/web`, then `npm run test:int` in `app/api` | See below |
 | Schemathesis | PLS-26.2 | `bash tools/contract/schemathesis.sh` | A response that does not match the file, an undocumented status code, a 500, a wrong `Allow` header |
 
 ## Schemathesis locally
@@ -56,3 +57,21 @@ The REST Assured suite generates its classes from the file, and names the ones f
 (`GetAdminUsers200Response` comes from `getAdminUsers`). Renaming an `operationId` renames those classes, so the suite stops
 compiling until its references are updated. Rebuild with `./mvnw -pl rest-assured clean test-compile` to see it; an incremental
 build can keep stale generated classes and hide the break.
+
+## Pact (PLS-26.4)
+
+The web app is the consumer and the API the provider. Contracts are files in the repo, not a broker.
+
+- **Consumer** (`app/web/pact/web-api.pact.test.ts`): 11 interactions, each run through the web app's own `api()` helper against a Pact
+  mock server: products (list, one in stock, one sold out, a 404), categories, config, login (success, wrong password, empty form
+  with field errors), and the cart (empty, add an item). Ids, dates and tokens are matched by type; the values the app branches on
+  (`stock`, `inStock`, error codes) are exact. `npm run test:pact` writes `app/web/pacts/playlab-web-playlab-api.json`; commit it.
+- **Provider** (`app/api/test/integration/pact.int.test.ts`, part of `npm run test:int`): starts the API and replays every
+  interaction. Each `given("...")` is set up by calling `POST /test/provider-states`, and the contract's placeholder
+  `Authorization` header is swapped for a real token of a new user.
+- **In CI**: the `pact-consumer` job fails if the committed pact is out of date, and the API integration job fails if the API
+  breaks it. Rename `priceCents` in the product response and the provider test fails on the two interactions that read a product
+  (the `oasdiff` gate fails on the same change).
+
+To add a contract: write the interaction, run `npm run test:pact`, and if it names a provider state that does not exist, add it to
+`app/api/src/db/seed/providerStates.ts`.
