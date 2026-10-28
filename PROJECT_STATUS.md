@@ -1,19 +1,35 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-27
+Last updated: 2026-10-28
 
 ## Current phase
 
-Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
-workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 15 are done; tasks 0 to 14 are merged (tasks 12 to 14 are PR #49) and task 15 is on `ci/pipelines` (not pushed).
+Phase 2 is closed (Gate 2 met). Phase 3 tasks 0 to 15 are done; task 15 is PR #50 (`ci/pipelines`), and task 16's files are written on `release/v1.0.0` (built on `ci/pipelines`, not pushed). GitHub did not start any job on PR #50: every one failed in 2 to 3 seconds with "recent account payments have failed or your spending limit needs to be increased", so no workflow has run in CI yet and nothing in the PR is shown to fail or pass.
 
 ## Next task
 
-Phase 3 task 16, Gate 3 and v1.0.0: the release checklist (README, SECURITY.md, badges, making the repository public). Making it public also unlocks the merge rule and Pages (task 15).
+Finish Gate 3 and v1.0.0. What only the owner can do, in order:
+
+1. Fix the Actions billing (Settings, Billing and plans), or make the repository public (Actions minutes are free for public repositories), and re-run PR #50's checks. Fix whatever the first real run finds (the `nightly`, `pages` and refactored workflows, and the new `codeql`, `trivy` and `secrets`).
+2. Merge PR #50, then the `release/v1.0.0` branch. Check the `performance` workflow has run on `main` so PLS-27.1 to 27.4 show as covered, then `trace.mjs --gate3` passes.
+3. Make the repository public. Then run `tools/ci/apply-ruleset.sh`, set Settings, Pages, Source to "GitHub Actions", switch on Discussions, and make the two GHCR packages public after the first image publish.
+4. Record the GIF for the README, edit `docs/WRITEUP.md` (a draft in Craig's voice), set the date in `CHANGELOG.md`, and tag `v1.0.0` (the tag runs the `images` workflow).
+5. Run the quickstart on Windows (WSL 2) and Linux, and `docker-compose.images.yml` once images exist.
+
+After v1.0.0: the AI assistant phase (planned as PLS-31, because PLS-30 is PlayLab Pay), then Phase 4 (Playwright Java and Python).
+
 ## Done
 
+- 2026-10-28: Phase 3 task 16, Gate 3 and v1.0.0 (the parts that can be written before the repository is public), on `release/v1.0.0`.
+  - **Community files**: `CHANGELOG.md` (1.0.0, date left open), `CONTRIBUTING.md`, issue templates (platform bug, defect idea, Discussions link) and a pull request template.
+  - **Security workflows** (written, not run, because no job can start yet): `codeql` (JavaScript and TypeScript, Java, workflows), `trivy` (files and both images, a fixable critical fails), `secrets` (gitleaks over all history), `images` (API and web for amd64 and arm64 to GHCR on a `v*` tag) and `app/docker-compose.images.yml` to run them without a build. Action versions are the ones I believe current (`codeql-action@v4`, `trivy-action@0.33.1`, `gitleaks:v8.30.0`); the first run will confirm them.
+  - **Secrets check**: gitleaks over all 122 commits found 214 hits, every one in `tests/rest-assured/target/surefire-reports/` (the build folder PR #29 committed by mistake): throwaway test-user tokens signed with the published dev secret. History is not rewritten; `.gitleaks.toml` allows that path and the published defaults, and the scan is then clean. Every commit carries `craig.bennett34@gmail.com` as its author address (139 of 179), which becomes public with the repository; the noreply address would hide it, but only by rewriting history.
+  - **Exercises and answers**: `docs/exercises/` (six skills, three levels each) and `docs/answers/` (a defect key generated from `bugs.ts`, worked solutions that point into `tests/`), behind a spoiler notice. AC IDs in them were checked against `ACCEPTANCE_CRITERIA.md`.
+  - **README rewritten** (it still said 36 defects and every suite "Planned"): 47 defects, 172 ACs in 29 stories, a badge for each pipeline, the skills table with exercises, the architecture with the perf profile. The "see a defect get caught" demo was run for real, and the first draft was wrong: a global `POST /test/bugs` does not reach the Playwright suite, which gives every test its own session, so the demo uses `DEFECTS=name` (red) and plain (green).
+  - `docs/WRITEUP.md` is a draft in Craig's voice, from the lessons in this file. The plan's release checklist is ticked where done and annotated where not.
+  - Checked on the rebuilt stack (API on 3001): health all up, checkout (PLS-6.1) passes, `traceability:sources` passes, lint 0 errors, Prettier clean apart from the untracked `.vscode/`.
+  - Not done: the GIF (needs a screen recording), Windows and Linux runs, the `v1.0.0` tag and release, going public, applying the merge rule, Pages and Discussions.
 - 2026-10-27: Phase 3 task 15, CI/CD pipelines (PLS-29.1 to 29.4), on `ci/pipelines` (built on tasks 12 to 14). Pipelines are documented in `docs/CI.md`.
   - **A reusable action** `.github/actions/start-stack` (`.env.example` on ports 3002/5174, optional perf profile, rate limit and extra env, wait until
     healthy) replaces the same two steps copied into eight workflows (52 lines fewer).

@@ -11,6 +11,10 @@ action (`.env.example` on ports 3002 and 5174, Docker Compose, wait until health
 | `contract` | every pull request, push to main | Spectral lint, `oasdiff` breaking changes, Pact consumer tests, Schemathesis fuzzing as a customer and as an admin (PLS-26) | yes |
 | `security` | every pull request, push to main | The OWASP API Top 10 suite and its defect matrix, and the ZAP baseline and API scans (PLS-24) | yes |
 | `performance` | a pull request that touches a load suite, the load model or the perf profile; push to main; by hand | k6 and JMeter at the real rates for 30 seconds (`full` for 5 minutes) (PLS-27) | no (it runs on only some pull requests) |
+| `codeql` | every pull request, push to main, weekly | CodeQL static analysis of the JavaScript and TypeScript, Java and workflow files | no (not yet run) |
+| `trivy` | every pull request, push to main, weekly | Trivy over the files and the two images: a fixable critical vulnerability fails | no (not yet run) |
+| `secrets` | every pull request, push to main | gitleaks over the files and all history (`.gitleaks.toml` lists what is allowed on purpose) | no (not yet run) |
+| `images` | a `v*` tag; by hand | Builds the API and web images for Intel/AMD and Apple silicon and publishes them to GHCR | n/a |
 | `nightly` | 02:17 UTC every day; by hand | **The defect sweep** (PLS-29.3) | n/a |
 | `pages` | after a pipeline finishes on main; by hand | Collects the latest reports into one site, publishes it, and runs the release gate | n/a |
 

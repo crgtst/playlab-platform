@@ -463,9 +463,9 @@ This is Gate 3. It's what a hiring manager or another tester judges in the first
 
 **First impression**
 
-- [ ] Landing README: one-line pitch, architecture diagram, "what you can practise" table by skill, quickstart, and a GIF of a defect being caught
-- [ ] Status badges for every pipeline, plus links to the latest reports on GitHub Pages
-- [ ] `docker compose up` works first time on macOS (Apple silicon), Windows (WSL 2) and Linux. Images published to GHCR so nobody has to build
+- [x] Landing README: one-line pitch, architecture diagram, "what you can practise" table by skill, quickstart, and a defect being caught (a command demo; a GIF still needs recording by hand)
+- [x] Status badges for every pipeline, plus links to the latest reports on GitHub Pages (the badges and the Pages link work once the repository is public)
+- [ ] `docker compose up` works first time on macOS (Apple silicon), Windows (WSL 2) and Linux. Images published to GHCR so nobody has to build. _macOS checked; the `images` workflow and `docker-compose.images.yml` are written and run on the first `v*` tag; Windows and Linux not run_
 
 **Proof it works**
 
@@ -476,13 +476,13 @@ This is Gate 3. It's what a hiring manager or another tester judges in the first
 **Safe to share**
 
 - [ ] `SECURITY.md`, a local-only warning in the README, and the production guard
-- [ ] Answer key in `docs/answers/` behind a spoiler notice; graded exercises (beginner, intermediate, advanced) per skill in `docs/exercises/`
-- [ ] No secrets in history; Dependabot and CodeQL on; Trivy clean of critical vulnerabilities
+- [x] Answer key in `docs/answers/` behind a spoiler notice; graded exercises (beginner, intermediate, advanced) per skill in `docs/exercises/`
+- [ ] No secrets in history; Dependabot and CodeQL on; Trivy clean of critical vulnerabilities. _gitleaks over all 122 commits is clean (a build folder from PR #29 is allowlisted); CodeQL, Trivy and the secret scan are written and run on the next pull request_
 
 **Looks maintained**
 
-- [ ] CHANGELOG, `v1.0.0` tag and release notes; CONTRIBUTING and issue templates; Discussions on
-- [ ] A short write-up on what you built, what bug mode taught you and what you'd do on a real team. It can double as a LinkedIn post and an interview talking point
+- [ ] CHANGELOG, `v1.0.0` tag and release notes; CONTRIBUTING and issue templates; Discussions on. _CHANGELOG, CONTRIBUTING and the templates are done; the tag, the release and Discussions are switched on at release_
+- [ ] A short write-up (`docs/WRITEUP.md`, a draft for Craig to edit) on what you built, what bug mode taught you and what you'd do on a real team. It can double as a LinkedIn post and an interview talking point
 
 ## Decisions needed
 
