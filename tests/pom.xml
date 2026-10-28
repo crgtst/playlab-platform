@@ -24,9 +24,9 @@
     <karate.version>1.5.2</karate.version>
     <junit.version>5.13.4</junit.version>
     <json-schema-validator.version>1.5.9</json-schema-validator.version>
-    <surefire.version>3.5.4</surefire.version>
+    <surefire.version>3.6.1</surefire.version>
     <rest-assured.version>5.5.7</rest-assured.version>
-    <openapi-generator.version>7.19.0</openapi-generator.version>
+    <openapi-generator.version>7.26.0</openapi-generator.version>
   </properties>
 
   <dependencyManagement>
