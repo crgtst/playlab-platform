@@ -54,7 +54,7 @@ services:
 
   # Static files the avatar import can fetch in tests (not published on a host port).
   fixtures:
-    image: nginx:1.29-alpine
+    image: nginx:1.31-alpine
     volumes:
       - ./fixtures:/usr/share/nginx/html:ro
     healthcheck:
