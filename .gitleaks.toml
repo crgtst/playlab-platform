@@ -1,0 +1,15 @@
+title = "PlayLab Platform"
+
+[extend]
+useDefault = true
+
+# PR #29 committed REST Assured's build folder by mistake (PR #37 untracked it). It holds throwaway test-user tokens signed with the
+# published development secret, so they grant nothing. History is not rewritten; the path is allowed instead.
+[[allowlists]]
+description = "REST Assured build output committed in PR #29"
+paths = ['''tests/rest-assured/target/''']
+
+# The development secret and the seeded password are published on purpose (SECURITY.md).
+[[allowlists]]
+description = "Published development defaults"
+regexes = ['''playlab-dev-secret-not-for-production''', '''Password123!''']
