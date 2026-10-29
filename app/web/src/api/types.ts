@@ -196,3 +196,15 @@ export interface Offer {
   value: number;
   minSpendCents: number;
 }
+
+/** GET /test/guide: what the Test guide page shows (PLS-12.6). */
+export interface TestGuide {
+  accounts: { email: string; name: string; role: string; password: string }[];
+  cards: { defaults: { expiry: string; cvc: string }; list: { kind: string; number: string; result: string }[] };
+  discounts: { code: string; description: string }[];
+  fixtures: { name: string; description: string }[];
+  scenarios: { title: string; ac: string; steps: string[] }[];
+  links: { label: string; href: string }[];
+  hooks: string[];
+  bugs: { name: string; enabled: boolean; ac: string; side: string; description: string }[];
+}

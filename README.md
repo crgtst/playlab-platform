@@ -31,7 +31,7 @@ Most practice sites let you write tests but can't tell you whether those tests w
 - **Bug mode.** 47 named defects across the API, web app, payment frame and service worker. Switch any of them on with
   one HTTP call; each changes only its own behaviour and maps to the acceptance criterion it breaks. A nightly run switches on
   random ones and fails if no test notices.
-- **A real specification.** 29 Jira-ready stories with 172 numbered acceptance criteria
+- **A real specification.** 29 Jira-ready stories with 174 numbered acceptance criteria
   ([`docs/ACCEPTANCE_CRITERIA.md`](docs/ACCEPTANCE_CRITERIA.md)), so every test traces back to a requirement. The
   [traceability report](docs/traceability.md) shows which tool covers which criterion.
 - **Test hooks a real team would want.** A reset in about 50 ms, isolated test sessions, named fixtures, throwaway and bulk
@@ -84,7 +84,7 @@ is taken, set `API_PORT`, `WEB_PORT` or `DB_PORT`, for example `API_PORT=3001 do
 
 1. Open the shop at <http://localhost:5173> and log in as `customer@playlab.test` with password `Password123!`.
 2. Add a product to the cart and pay with card `4242 4242 4242 4242`, any future expiry and any CVC.
-3. Browse the API at <http://localhost:3000/api/docs>.
+3. Open the **Test guide** from the footer (<http://localhost:5173/guide>) for every test account, card, discount code, fixture, scenario and defect in one place. Browse the API at <http://localhost:3000/api/docs>.
 4. Stop and wipe all data with `docker compose down -v`.
 
 > [!NOTE]

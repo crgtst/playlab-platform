@@ -17,6 +17,7 @@ import { logs } from '../lib/logger';
 import { requireKnownTestSession, TEST_SESSION_COOKIE, testSessions } from '../lib/testSessions';
 import { BUG_NAMES, bugs } from '../lib/bugs';
 import { events } from '../lib/events';
+import { TEST_HOOK_LIST, testGuide } from '../lib/testGuide';
 import { asyncHandler, parse } from '../middleware/validate';
 
 /** Only mounted when TEST_HOOKS=true. Otherwise every /test/* path is a 404. */
@@ -26,25 +27,14 @@ testRouter.use(requireKnownTestSession);
 testRouter.get('/', (_req, res) => {
   res.json({
     testHooks: true,
-    hooks: [
-      'POST /test/reset',
-      'POST /test/sessions',
-      'POST /test/seed',
-      'POST /test/users',
-      'POST /test/users/bulk',
-      'POST /test/generate',
-      'GET|POST /test/provider-states',
-      'GET /test/mailbox/{email}',
-      'GET|POST /test/clock',
-      'GET|POST|DELETE /test/latency',
-      'GET|POST|DELETE /test/chaos',
-      'GET|POST|DELETE /test/bugs',
-      'GET /test/logs?correlationId=',
-    ],
+    hooks: TEST_HOOK_LIST,
     bugs: BUG_NAMES,
     fixtures: Object.keys(FIXTURES),
   });
 });
+
+/** Accounts, cards, codes, fixtures, scenarios and defects on one page (the web app's Test guide). */
+testRouter.get('/guide', (_req, res) => res.json(testGuide()));
 
 testRouter.post(
   '/reset',

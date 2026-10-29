@@ -4,7 +4,7 @@ _Draft for Craig to edit: it is written in your voice from the project history. 
 
 ## What I built
 
-PlayLab Platform is a small online shop made to be tested. It has 47 planted defects that switch on with one HTTP call, 172
+PlayLab Platform is a small online shop made to be tested. It has 47 planted defects that switch on with one HTTP call, 174
 numbered acceptance criteria, and eight test suites (Playwright, Postman/Newman, Karate, REST Assured, contract, security, k6 and
 JMeter) that all run in CI against the same Docker stack. A traceability report ties every acceptance criterion to the tests
 that cover it, and a nightly job switches defects on at random and fails if no test notices.

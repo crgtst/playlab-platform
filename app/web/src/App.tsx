@@ -30,6 +30,7 @@ import { Products } from './pages/Products';
 import { Receipt } from './pages/Receipt';
 import { Register } from './pages/Register';
 import { ResetPassword } from './pages/ResetPassword';
+import { TestGuide } from './pages/TestGuide';
 import { Track } from './pages/Track';
 import { Wishlist } from './pages/Wishlist';
 
@@ -89,6 +90,7 @@ export const routes: RouteObject[] = [
       { path: '/reset-password', element: <ResetPassword /> },
       { path: '/confirm-email', element: <ConfirmEmail /> },
       { path: '/mailbox', element: <Mailbox /> },
+      { path: '/guide', element: <TestGuide /> },
       {
         path: '/checkout/shipping',
         element: (

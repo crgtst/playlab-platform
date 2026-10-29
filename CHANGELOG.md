@@ -15,7 +15,8 @@ The first public release: the platform, its 47 defects and the suites that catch
   stock over Server-Sent Events.
 - **Bug mode.** 47 named defects, each switched on with `POST /test/bugs` (or per test session) and each mapped to the
   acceptance criterion it breaks.
-- **A specification.** 29 stories and 172 numbered acceptance criteria in `docs/ACCEPTANCE_CRITERIA.md`.
+- **A specification.** 29 stories and 174 numbered acceptance criteria in `docs/ACCEPTANCE_CRITERIA.md`.
+- **A Test guide.** A page in the shop (`/guide`, linked from the footer when test hooks are on) and `GET /test/guide` that list the test accounts, cards, discount codes, fixtures, scenarios and every defect in one place (PLS-12.6, PLS-12.7).
 - **Test hooks.** Test sessions (isolated defects, clock, latency, chaos and rate limit for each test), reset, named fixtures,
   throwaway and bulk users, a seeded data generator, provider states, a test mailbox, logs and Prometheus metrics.
 - **Platform behaviour for testing.** Correlation IDs and JSON logs, an order lifecycle with allowed transitions, optimistic

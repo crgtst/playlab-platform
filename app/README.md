@@ -26,6 +26,7 @@ If one of the ports is already in use, override it, for example `API_PORT=3001 d
 | Liveness (API and DB only) | http://localhost:3000/api/v1/health/live |
 | Metrics (Prometheus) | http://localhost:3000/metrics |
 | Test hooks | http://localhost:3000/test/* (also proxied at http://localhost:5173/test/*) |
+| Test guide (accounts, cards, codes, fixtures, scenarios, defects) | http://localhost:5173/guide (linked from the footer when test hooks are on) |
 | Test mailbox page | http://localhost:5173/mailbox?email=you@example.com |
 | Admin area | http://localhost:5173/admin/orders and `/admin/products` (admin and support users) |
 | Payment iframe | http://localhost:3000/pay/frame (embedded by checkout; a different origin from the shop) |
@@ -103,6 +104,7 @@ Test hooks exist only when `TEST_HOOKS=true`, which is the default in `docker-co
 | Hook | What it does |
 | --- | --- |
 | `GET /test` | Lists the hooks and fixture names. |
+| `GET /test/guide` | Everything on the Test guide page as JSON: accounts with passwords, test cards, discount codes, every fixture with a description, scenarios to try, and every defect with its AC and whether it is on for your session. Built from the data the app seeds, so it cannot disagree with it (PLS-12.6). |
 | `POST /test/reset` | Truncates every table, reloads the base seed, resets the clock and the rate-limit counters. Takes about 50 ms. |
 | `POST /test/sessions` | Starts an isolated test session and returns `{ id, idleTimeoutMs }`. See [Test sessions](#test-sessions). |
 | `POST /test/seed` | Creates named fixtures; body `{ "fixtures": ["…"] }`. Returns the created ids and codes. |

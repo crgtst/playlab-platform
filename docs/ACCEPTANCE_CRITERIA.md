@@ -167,6 +167,8 @@ As a tester, I want reliable test hooks, so that every run starts from a known s
 | PLS-12.3 | Given a named defect, when switched on through `/test/bugs`, then only that behaviour changes |  |  |
 | PLS-12.4 | Given the stack is starting, when `/health` reports ready, then the web app, API and database all respond |  |  |
 | PLS-12.5 | Given `app/.env` copied from `.env.example` with non-default `API_PORT` and `WEB_PORT`, when a customer checks out and requests a password reset, then the payment frame loads from the API port and takes payment, and the reset link uses the web port |  |  |
+| PLS-12.6 | Given `TEST_HOOKS=true`, when `GET /test/guide` is called, then it returns the seeded accounts with their password, the test cards, the discount codes, every fixture with a description, the scenarios, and every defect with whether it is on for the caller's session |  |  |
+| PLS-12.7 | Given `TEST_HOOKS=true`, when a visitor follows "Test guide" in the footer, then the page lists the same accounts, cards, codes, fixtures, scenarios and defects and links to the API docs and the mailbox; given `TEST_HOOKS=false`, then the footer has no such link and the page says test hooks are switched off |  |  |
 
 ## PLS-13 Store finder (Phase 4)
 

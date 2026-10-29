@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TestGuide",
+  "type": "object",
+  "required": [
+    "accounts",
+    "cards",
+    "discounts",
+    "fixtures",
+    "scenarios",
+    "links",
+    "hooks",
+    "bugs"
+  ],
+  "properties": {
+    "accounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "email",
+          "name",
+          "role",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "examples": [
+              "customer@playlab.test"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "admin",
+              "support"
+            ]
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cards": {
+      "type": "object",
+      "required": [
+        "defaults",
+        "list"
+      ],
+      "properties": {
+        "defaults": {
+          "type": "object",
+          "required": [
+            "expiry",
+            "cvc"
+          ],
+          "properties": {
+            "expiry": {
+              "type": "string",
+              "examples": [
+                "12/30"
+              ]
+            },
+            "cvc": {
+              "type": "string"
+            }
+          }
+        },
+        "list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "number",
+              "result"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "decline",
+                  "timeout",
+                  "invalid"
+                ]
+              },
+              "number": {
+                "type": "string",
+                "examples": [
+                  "4242 4242 4242 4242"
+                ]
+              },
+              "result": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "discounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "description"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "description"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "ac",
+          "steps"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "ac": {
+            "type": "string",
+            "examples": [
+              "PLS-5.2"
+            ]
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "href"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "hooks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bugs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "enabled",
+          "ac",
+          "side",
+          "description"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "ac": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

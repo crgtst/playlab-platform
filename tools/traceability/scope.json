@@ -14,6 +14,8 @@
     "PLS-12.3": "Covered by the API integration tests in app/api",
     "PLS-12.4": "Covered by the API integration tests in app/api",
     "PLS-12.5": "Covered by the API integration and e2e smoke tests in app",
+    "PLS-12.6": "Covered by the API integration tests in app/api",
+    "PLS-12.7": "Covered by the e2e tests in app/e2e (the footer link and the page, with test hooks on and off) and the API integration tests",
     "PLS-9.5": "Phase 3: covered by integration and e2e tests in app (51 and 2) and the security suite (PLS-24.10 imports through it)",
     "PLS-27.5": "Checked by app/perf/smoke.sh against the real perf stack (limits, Prometheus, Grafana); not a test suite"
   },
