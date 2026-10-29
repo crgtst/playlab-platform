@@ -31,9 +31,14 @@ export function Footer() {
             {t('footer.apiDocs')}
           </a>
           {config.testHooks && (
-            <Link to="/mailbox" data-testid="footer-mailbox-link">
-              {t('footer.mailbox')}
-            </Link>
+            <>
+              <Link to="/guide" data-testid="footer-test-guide-link">
+                {t('footer.testGuide')}
+              </Link>
+              <Link to="/mailbox" data-testid="footer-mailbox-link">
+                {t('footer.mailbox')}
+              </Link>
+            </>
           )}
         </nav>
       </div>

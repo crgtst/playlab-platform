@@ -91,13 +91,9 @@ jobs:
       - uses: actions/checkout@v7
 
       # The rate limit is off: the fuzzer sends thousands of requests, and a 429 is not what is being tested.
-      - name: Configure the stack from .env.example on non-default ports
-        working-directory: app
-        run: sed -e 's/^API_PORT=.*/API_PORT=3002/' -e 's/^WEB_PORT=.*/WEB_PORT=5174/' -e 's/^RATE_LIMIT_PER_MIN=.*/RATE_LIMIT_PER_MIN=0/' .env.example > .env
-
-      - name: Start the stack
-        working-directory: app
-        run: docker compose up --build --detach --wait --wait-timeout 300
+      - uses: ./.github/actions/start-stack
+        with:
+          rate-limit: "0"
 
       - name: Fuzz the API as a customer
         run: bash tools/contract/schemathesis.sh

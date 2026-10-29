@@ -1,0 +1,12 @@
+# Runs the published images instead of building them, so a first start takes seconds, not minutes.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.images.yml up -d
+#
+# `pull_policy: always` makes Compose pull the image rather than build it. Pin a release with PLAYLAB_VERSION=1.0.0.
+services:
+  api:
+    image: ghcr.io/crgtst/playlab-api:${PLAYLAB_VERSION:-latest}
+    pull_policy: always
+  web:
+    image: ghcr.io/crgtst/playlab-web:${PLAYLAB_VERSION:-latest}
+    pull_policy: always

@@ -36,6 +36,9 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test:tools # the traceability script's own tests
+      # PLS-29.4: a test that names an AC ID that does not exist fails here, on the pull request, with no test results needed.
+      - run: npm run traceability:sources
+      - run: node tools/ci/check-ruleset.mjs # the merge rule only names checks that exist
 
   typecheck:
     name: Typecheck (${{ matrix.app }})

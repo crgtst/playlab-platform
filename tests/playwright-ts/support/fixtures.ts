@@ -12,7 +12,18 @@ interface Fixtures {
   testSession: string;
   hooks: TestHooks;
   customer: TestUser;
+  /** Switches DEFECTS on for the test, unless the test is a defect story. Needs no use in a test. */
+  forcedDefects: void;
 }
+
+/**
+ * The defects the nightly sweep forces on (tools/nightly/defect-sweep.mjs sets DEFECTS=name,name). A test that proves a defect
+ * switches it on itself and has "defect <name>" in its title; every other test must fail with the defect on, if the suite is any good.
+ */
+const FORCED = (process.env.DEFECTS ?? '')
+  .split(',')
+  .map((d) => d.trim())
+  .filter(Boolean);
 
 export const test = base.extend<Fixtures>({
   testSession: async ({}, use) => {
@@ -34,6 +45,14 @@ export const test = base.extend<Fixtures>({
   customer: async ({ hooks }, use) => {
     await use(await hooks.createUser('customer'));
   },
+
+  forcedDefects: [
+    async ({ hooks }, use, testInfo) => {
+      if (!/(^| )defect /.test(testInfo.title)) await hooks.enableDefects(...FORCED);
+      await use();
+    },
+    { auto: true },
+  ],
 });
 
 export { expect } from '@playwright/test';

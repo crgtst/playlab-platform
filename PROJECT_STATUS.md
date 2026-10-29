@@ -1,19 +1,58 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-27
+Last updated: 2026-10-28
 
 ## Current phase
 
-Phase 2 is closed: the four functional suites are written, run in CI (playwright, newman, karate and rest-assured
-workflows) and are merged (PRs #25 to #30 and #37), and Gate 2 is met by the traceability report. Phase 3 is planned (see
-"Phase 3 tasks" in `docs/REVIEW_AND_PLAN.md`); tasks 0 to 14 are done; tasks 0 to 11 are merged, tasks 12 and 13 are on `tests/k6` and task 14 on `tests/load-dashboard` (stacked, none pushed).
+Phase 2 is closed (Gate 2 met). Phase 3 tasks 0 to 15 are done; task 15 is PR #50 (`ci/pipelines`), and task 16's files are written on `release/v1.0.0` (built on `ci/pipelines`, not pushed). GitHub did not start any job on PR #50: every one failed in 2 to 3 seconds with "recent account payments have failed or your spending limit needs to be increased", so no workflow has run in CI yet and nothing in the PR is shown to fail or pass.
 
 ## Next task
 
-Phase 3 task 15, CI/CD pipelines: a reusable "start the stack" action, required gates on pull requests, reports published to GitHub Pages, and a nightly run that switches on random defects and fails if one is missed (PLS-29.1 to 29.4).
+Finish Gate 3 and v1.0.0. What only the owner can do, in order:
+
+1. Fix the Actions billing (Settings, Billing and plans), or make the repository public (Actions minutes are free for public repositories), and re-run PR #50's checks. Fix whatever the first real run finds (the `nightly`, `pages` and refactored workflows, and the new `codeql`, `trivy` and `secrets`).
+2. Merge PR #50, then the `release/v1.0.0` branch. Check the `performance` workflow has run on `main` so PLS-27.1 to 27.4 show as covered, then `trace.mjs --gate3` passes.
+3. Make the repository public. Then run `tools/ci/apply-ruleset.sh`, set Settings, Pages, Source to "GitHub Actions", switch on Discussions, and make the two GHCR packages public after the first image publish.
+4. Record the GIF for the README, edit `docs/WRITEUP.md` (a draft in Craig's voice), set the date in `CHANGELOG.md`, and tag `v1.0.0` (the tag runs the `images` workflow).
+5. Run the quickstart on Windows (WSL 2) and Linux, and `docker-compose.images.yml` once images exist.
+
+After v1.0.0: the AI assistant phase (planned as PLS-31, because PLS-30 is PlayLab Pay), then Phase 4 (Playwright Java and Python).
+
 ## Done
 
+- 2026-10-29: The Test guide (new PLS-12.6 and PLS-12.7), on `feat/test-guide` (built on `release/v1.0.0`). Asked for by Craig: quick access to test accounts, scenarios and test data from the shop, instead of digging through `tests/shared` and the README.
+  - **API**: `GET /test/guide` (`lib/testGuide.ts`) returns the accounts (from the seed constants), the test cards, discount codes, every fixture with a description, seven scenarios (each names its AC), links, the hook list and every defect with whether it is on for the caller's session. A fixture without a description is a compile error (the descriptions are typed against `FIXTURES`). In the OpenAPI file with a `TestGuide` schema; `tests/shared/schemas/TestGuide.json` is regenerated. 404 with hooks off.
+  - **Web**: a footer link "Test guide" (Irish: "Treoir tástála"), shown only with test hooks on, and a page at `/guide` with copy buttons for emails, passwords and card numbers. The route is `/guide`, not `/test-guide`: Vite proxies every path starting with `/test` to the API, so a reload of `/test-guide` returned the API's 404 JSON (found by the e2e test; the footer link worked only because it is a client-side route).
+  - **Tests**: 6 integration tests (accounts log in with the password shown; agrees with `tests/shared` accounts, cards and codes; every fixture described and seedable; defects per session; 404 with hooks off), 4 e2e tests (page content, the account shown logs in and the copy button copies, a defect shows On, hooks off hides the link). 60 unit, 268 integration, e2e 21 (smoke) plus 4 new, Playwright 204 pass. The response validates against the schema. `scope.json` lists PLS-12.6 and 12.7 as covered by tests in `app`, like PLS-12.1 to 12.5.
+  - **Gate 1 baselines regenerated**: every page's screenshot differs by the same 317 pixels (the new footer link), checked before updating.
+  - Not done: switching defects on from the page (it is read-only), and the guide's accounts and cards are not shown in Irish (the page is English, like the mailbox). `docs/traceability.md` still says 172 ACs until `pages` regenerates it.
+- 2026-10-28: Phase 3 task 16, Gate 3 and v1.0.0 (the parts that can be written before the repository is public), on `release/v1.0.0`.
+  - **Community files**: `CHANGELOG.md` (1.0.0, date left open), `CONTRIBUTING.md`, issue templates (platform bug, defect idea, Discussions link) and a pull request template.
+  - **Security workflows** (written, not run, because no job can start yet): `codeql` (JavaScript and TypeScript, Java, workflows), `trivy` (files and both images, a fixable critical fails), `secrets` (gitleaks over all history), `images` (API and web for amd64 and arm64 to GHCR on a `v*` tag) and `app/docker-compose.images.yml` to run them without a build. Action versions are the ones I believe current (`codeql-action@v4`, `trivy-action@0.33.1`, `gitleaks:v8.30.0`); the first run will confirm them.
+  - **Secrets check**: gitleaks over all 122 commits found 214 hits, every one in `tests/rest-assured/target/surefire-reports/` (the build folder PR #29 committed by mistake): throwaway test-user tokens signed with the published dev secret. History is not rewritten; `.gitleaks.toml` allows that path and the published defaults, and the scan is then clean. Every commit carries `craig.bennett34@gmail.com` as its author address (139 of 179), which becomes public with the repository; the noreply address would hide it, but only by rewriting history.
+  - **Exercises and answers**: `docs/exercises/` (six skills, three levels each) and `docs/answers/` (a defect key generated from `bugs.ts`, worked solutions that point into `tests/`), behind a spoiler notice. AC IDs in them were checked against `ACCEPTANCE_CRITERIA.md`.
+  - **README rewritten** (it still said 36 defects and every suite "Planned"): 47 defects, 172 ACs in 29 stories, a badge for each pipeline, the skills table with exercises, the architecture with the perf profile. The "see a defect get caught" demo was run for real, and the first draft was wrong: a global `POST /test/bugs` does not reach the Playwright suite, which gives every test its own session, so the demo uses `DEFECTS=name` (red) and plain (green).
+  - `docs/WRITEUP.md` is a draft in Craig's voice, from the lessons in this file. The plan's release checklist is ticked where done and annotated where not.
+  - Checked on the rebuilt stack (API on 3001): health all up, checkout (PLS-6.1) passes, `traceability:sources` passes, lint 0 errors, Prettier clean apart from the untracked `.vscode/`.
+  - Not done: the GIF (needs a screen recording), Windows and Linux runs, the `v1.0.0` tag and release, going public, applying the merge rule, Pages and Discussions.
+- 2026-10-27: Phase 3 task 15, CI/CD pipelines (PLS-29.1 to 29.4), on `ci/pipelines` (built on tasks 12 to 14). Pipelines are documented in `docs/CI.md`.
+  - **A reusable action** `.github/actions/start-stack` (`.env.example` on ports 3002/5174, optional perf profile, rate limit and extra env, wait until
+    healthy) replaces the same two steps copied into eight workflows (52 lines fewer).
+  - **The nightly defect sweep** (`nightly.yml`, `tools/nightly/defect-sweep.mjs`): picks defects at random (seeded by the date, repeatable), forces each on for
+    the tests of its ACs (`DEFECTS=name`, which the Playwright suite now honours like the security suite) and requires a failing test. All 47 defects are caught.
+    With the forcing switched off it reports the defect missed and fails (checked). `--all`, `--count`, `--seed`, `--only`.
+  - **The report site** (`pages.yml`, `tools/pages`): downloads the latest report artifacts from each pipeline's last good run on main (tested against real
+    runs), rewrites the traceability report from them, builds an index and the Markdown reports as HTML, deploys to GitHub Pages, then runs the release gate.
+  - **The gate**: `trace.mjs --check-sources` (a pull request fails if a test names an AC that does not exist; wired into `quality`) and `--gate3` (every AC
+    covered, nothing failing, every defect caught). Run over main's real artifacts it reports only PLS-27.1 to 27.4 uncovered, which is right until the
+    performance workflow (now also on push to main) has run there.
+  - **The merge rule** `.github/rulesets/main-gates.json` (17 required checks) with `tools/ci/check-ruleset.mjs` (in `quality`: fails if a required check does not
+    exist or only runs on some pull requests) and `tools/ci/apply-ruleset.sh`.
+  - **Not switched on, and why:** GitHub answers "Upgrade to GitHub Pro or make this repository public" for rulesets, branch protection and Pages. So PLS-29.1 and
+    29.2 are written and checked but not live. Run `tools/ci/apply-ruleset.sh` and set Pages to "GitHub Actions" when the repository goes public (task 16).
+    Until then nothing stops a merge, and the Pages site is the `pages-site` artifact of each `pages` run.
+  - Not run in CI yet: `nightly`, `pages` and the refactored workflows (the pull request is their first run; `nightly` and `pages` only run from main).
 - 2026-10-27: Phase 3 task 14, the k6 and JMeter dashboard and the SLO calibration (PLS-27.1 to 27.4), on `tests/load-dashboard` (built on tasks 12 and 13).
   - Grafana dashboard "k6 and JMeter" (`/d/playlab-load`, provisioned): p95, p99, throughput and error rate for each tool, one line for each run, and a
     table of runs; pick the load and the request. k6 sends its metrics over Prometheus remote write (`PROMETHEUS_RW=1`, tagged `tool`, `load`, `testid`).

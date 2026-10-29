@@ -1487,6 +1487,22 @@ paths:
             application/json:
               schema: { type: object }
         '404': { $ref: '#/components/responses/NotFound' }
+  /test/guide:
+    get:
+      operationId: getTestGuide
+      tags: [Test hooks]
+      summary: 'GET /test/guide - test accounts, cards, discount codes, fixtures, scenarios and defects in one response'
+      description: |
+        What the web app's Test guide shows (PLS-12.6). Built from the same data the app seeds, so it cannot
+        disagree with it. `bugs` shows the defects switched on for the caller's test session.
+      servers: [{ url: / }]
+      responses:
+        '200':
+          description: The guide
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TestGuide' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /test/reset:
     post:
       operationId: postTestReset
@@ -2049,6 +2065,84 @@ components:
           schema: { $ref: '#/components/schemas/Error' }
 
   schemas:
+    TestGuide:
+      type: object
+      required: [accounts, cards, discounts, fixtures, scenarios, links, hooks, bugs]
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            required: [email, name, role, password]
+            properties:
+              email: { type: string, example: customer@playlab.test }
+              name: { type: string }
+              role: { type: string, enum: [customer, admin, support] }
+              password: { type: string }
+        cards:
+          type: object
+          required: [defaults, list]
+          properties:
+            defaults:
+              type: object
+              required: [expiry, cvc]
+              properties:
+                expiry: { type: string, example: 12/30 }
+                cvc: { type: string }
+            list:
+              type: array
+              items:
+                type: object
+                required: [kind, number, result]
+                properties:
+                  kind: { type: string, enum: [success, decline, timeout, invalid] }
+                  number: { type: string, example: 4242 4242 4242 4242 }
+                  result: { type: string }
+        discounts:
+          type: array
+          items:
+            type: object
+            required: [code, description]
+            properties:
+              code: { type: string }
+              description: { type: string }
+        fixtures:
+          type: array
+          items:
+            type: object
+            required: [name, description]
+            properties:
+              name: { type: string }
+              description: { type: string }
+        scenarios:
+          type: array
+          items:
+            type: object
+            required: [title, ac, steps]
+            properties:
+              title: { type: string }
+              ac: { type: string, example: PLS-5.2 }
+              steps: { type: array, items: { type: string } }
+        links:
+          type: array
+          items:
+            type: object
+            required: [label, href]
+            properties:
+              label: { type: string }
+              href: { type: string }
+        hooks: { type: array, items: { type: string } }
+        bugs:
+          type: array
+          items:
+            type: object
+            required: [name, enabled, ac, side, description]
+            properties:
+              name: { type: string }
+              enabled: { type: boolean }
+              ac: { type: string }
+              side: { type: string }
+              description: { type: string }
     Error:
       type: object
       required: [error]

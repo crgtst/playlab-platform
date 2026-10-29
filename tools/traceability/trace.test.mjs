@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { acIds, analyse, gate2, parseBugNames, parseCriteria, parseJUnit, resultOf } from './trace.mjs';
+import { acIds, acIdsInSources, analyse, gate2, gate3, parseBugNames, parseCriteria, parseJUnit, resultOf } from './trace.mjs';
 
 const CRITERIA = `## PLS-1 Login
 | AC ID | Given / When / Then | Test ID | Defect it catches |
@@ -107,4 +107,45 @@ test('gate2 leaves out defects listed as phase 1 or phase 3', () => {
     gate2(result, scope).missed.map((d) => d.name),
     ['b-defect'],
   );
+});
+
+test('gate3 needs every AC covered, nothing failing and every defect caught', () => {
+  const { stories, criteria } = parseCriteria(CRITERIA);
+  const scope = { notBuilt: {}, otherTools: {}, phase1Defects: [], gate2Stories: { from: 1, to: 2 } };
+  const covered = [
+    { name: 'PLS-1.1 works', status: 'passed', tool: 'T', ids: ['PLS-1.1'] },
+    { name: 'PLS-1.4 detects the logout-incomplete defect', status: 'passed', tool: 'T', ids: ['PLS-1.4'] },
+    { name: 'PLS-2.1 works', status: 'passed', tool: 'T', ids: ['PLS-2.1'] },
+  ];
+  const every = analyse({ criteria, stories, bugNames: ['logout-incomplete'], scope, tests: covered });
+  assert.equal(gate3(every).passed, true);
+
+  const missing = analyse({ criteria, stories, bugNames: ['logout-incomplete', 'a-defect'], scope, tests: covered });
+  assert.deepEqual(
+    gate3(missing).missed.map((d) => d.name),
+    ['a-defect'],
+  );
+  assert.equal(gate3(missing).passed, false);
+
+  const failing = analyse({
+    criteria,
+    stories,
+    bugNames: ['logout-incomplete'],
+    scope,
+    tests: [{ ...covered[0], status: 'failed' }, ...covered.slice(1)],
+  });
+  assert.deepEqual(
+    gate3(failing).failing.map((r) => r.id),
+    ['PLS-1.1'],
+  );
+});
+
+test('acIdsInSources finds the AC IDs a test source names', () => {
+  // The real repo: every ID found must be a plain PLS-n.m and each comes with the files that name it.
+  const found = acIdsInSources();
+  assert.ok(found.size > 100, 'the test sources name many ACs');
+  for (const [id, files] of found) {
+    assert.match(id, /^PLS-\d+\.\d+$/);
+    assert.ok(files.length > 0);
+  }
 });

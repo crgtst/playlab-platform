@@ -1,0 +1,51 @@
+# Scans the repository's files and the two images it builds. A critical vulnerability with a fix fails the run.
+name: trivy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  files:
+    name: Trivy (files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,misconfig
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+  images:
+    name: Trivy (${{ matrix.image }} image)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [api, web]
+    steps:
+      - uses: actions/checkout@v7
+      - run: docker build -t playlab-${{ matrix.image }}:scan app/${{ matrix.image }}
+      - uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: playlab-${{ matrix.image }}:scan
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

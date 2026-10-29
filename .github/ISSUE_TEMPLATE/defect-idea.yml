@@ -1,0 +1,20 @@
+name: Defect or exercise idea
+description: A new planted defect, or a better exercise
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What goes wrong, or what should the learner practise?
+    validations:
+      required: true
+  - type: input
+    id: ac
+    attributes:
+      label: The acceptance criterion it breaks, or the new one it needs
+      placeholder: PLS-5.2, or "new"
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Skill it teaches
+      options: [Playwright, API testing, Postman, Karate, REST Assured, Contract, Security, Performance, CI/CD, Other]

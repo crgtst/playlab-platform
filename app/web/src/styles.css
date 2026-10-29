@@ -1082,6 +1082,31 @@ address {
   border: 1px solid var(--border);
 }
 
+/* Test guide */
+.test-guide .panel {
+  margin-top: 1.5rem;
+}
+.guide-link {
+  margin-right: 1.25rem;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.guide-table th,
+.guide-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.guide-table .copy-button {
+  margin-left: 0.5rem;
+}
+
 @media (max-width: 640px) {
   .cart-table thead {
     display: none;

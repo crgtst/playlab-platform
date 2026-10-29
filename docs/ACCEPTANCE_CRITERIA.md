@@ -167,6 +167,8 @@ As a tester, I want reliable test hooks, so that every run starts from a known s
 | PLS-12.3 | Given a named defect, when switched on through `/test/bugs`, then only that behaviour changes |  |  |
 | PLS-12.4 | Given the stack is starting, when `/health` reports ready, then the web app, API and database all respond |  |  |
 | PLS-12.5 | Given `app/.env` copied from `.env.example` with non-default `API_PORT` and `WEB_PORT`, when a customer checks out and requests a password reset, then the payment frame loads from the API port and takes payment, and the reset link uses the web port |  |  |
+| PLS-12.6 | Given `TEST_HOOKS=true`, when `GET /test/guide` is called, then it returns the seeded accounts with their password, the test cards, the discount codes, every fixture with a description, the scenarios, and every defect with whether it is on for the caller's session |  |  |
+| PLS-12.7 | Given `TEST_HOOKS=true`, when a visitor follows "Test guide" in the footer, then the page lists the same accounts, cards, codes, fixtures, scenarios and defects and links to the API docs and the mailbox; given `TEST_HOOKS=false`, then the footer has no such link and the page says test hooks are switched off |  |  |
 
 ## PLS-13 Store finder (Phase 4)
 
@@ -387,11 +389,13 @@ Partly built: test sessions (28.1, 28.2, 28.6 to 28.10) and the production guard
 | PLS-28.9 | Given several test sessions, when `POST /test/reset` is called, then every session is removed and hook calls with their ids return 404 |  |  |
 | PLS-28.10 | Given a session with `button-moves` switched on, when that session's checkout opens the payment frame, then the frame shows the defect, and a checkout with no session does not |  |  |
 
-## PLS-29 Delivery pipeline (planned: Phase 3)
+## PLS-29 Delivery pipeline (built: Phase 3, two parts waiting for a public repository)
 
 As a maintainer, I want every change checked by the same gates, so that a broken build or an uncaught defect never reaches `main`.
 
-Partly built: the quality workflow runs on every pull request. The other gates arrive with their suites.
+Built in Phase 3 task 15; the pipelines are described in [`CI.md`](CI.md). Every pipeline starts the stack with one shared action.
+**29.1 and 29.2 are written but cannot be switched on yet**: GitHub only allows branch rules and Pages on a public repository or a paid plan, and this repository is private on the free plan. The merge rule is `.github/rulesets/main-gates.json` (apply it with `tools/ci/apply-ruleset.sh` when the repository goes public) and the Pages site is built on every run and kept as an artifact until then.
+29.3 is the nightly sweep (`tools/nightly/defect-sweep.mjs`): run against all 47 defects, each one is caught by at least one test, and with the forcing switched off it reports the defect as missed and fails. 29.4 is checked on a pull request by `npm run traceability:sources` and `app/api/test/bugs.test.ts`, and over all the reports by `trace.mjs --gate3`.
 
 | AC ID | Given / When / Then | Test ID | Defect it catches |
 | --- | --- | --- | --- |
