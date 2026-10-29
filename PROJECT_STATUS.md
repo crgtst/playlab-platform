@@ -11,10 +11,10 @@ Phase 3 is built and the repository is public. PRs #50 (CI pipelines) and #55 (r
 
 Finish Gate 3 and v1.0.0. In order:
 
-1. Merge PR #57 (`fix/k6-negative-test-order`). The `pages` gate has failed on main because the deliberate slow-API run overwrote the real PLS-27.1 junit file; #57 fixes that and makes the gate advisory. Then check `pages` goes green and `trace.mjs --gate3` passes.
-2. Run `tools/ci/apply-ruleset.sh` (no ruleset or branch protection exists yet). Set Settings, Pages, Source to "GitHub Actions" (it is currently "main /").
-3. Review the open Dependabot PRs #51 to #54 (Prometheus, Grafana 13, nginx, actions).
-4. Record the GIF for the README, edit `docs/WRITEUP.md`, set the date in `CHANGELOG.md` (still "Unreleased"), and tag `v1.0.0` (the tag runs the `images` workflow). Then make the two GHCR packages public.
+1. (Done) Merge PR #57 (`fix/k6-negative-test-order`). The `pages` gate has failed on main because the deliberate slow-API run overwrote the real PLS-27.1 junit file; #57 fixes that and makes the gate advisory. Then check `pages` goes green and `trace.mjs --gate3` passes.
+2. (Done) The "main gates" ruleset is applied and Pages builds from GitHub Actions.
+3. (Done) Dependabot: #51 (Prometheus) and #52 (Grafana 13) merged with all checks green; #53 closed, #54 replaced by #58. Other Dependabot PRs remain open.
+4. Record the GIF for the README, edit `docs/WRITEUP.md`, the `CHANGELOG.md` date is set (2026-10-29), and tag `v1.0.0` (the tag runs the `images` workflow). Then make the two GHCR packages public.
 5. Run the quickstart on Windows (WSL 2) and Linux, and `docker-compose.images.yml` once images exist.
 
 After v1.0.0: the AI assistant phase (planned as PLS-31, because PLS-30 is PlayLab Pay), then Phase 4 (Playwright Java and Python).
