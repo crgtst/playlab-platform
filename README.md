@@ -101,10 +101,12 @@ Accounts, test cards, hooks, URLs and locator conventions are documented in the 
 | --- | --- | --- | --- |
 | Playwright (UI) | `data-testid` on every control, every awkward browser pattern above, clock control, test sessions for parallel runs | [`tests/playwright-ts`](tests/playwright-ts/) | [exercises](docs/exercises/playwright.md) |
 | API testing | 78 operations in OpenAPI, one error shape, `Idempotency-Key`, ETag and `If-Match`, an order lifecycle | [`tests/postman`](tests/postman/), [`karate`](tests/karate/), [`rest-assured`](tests/rest-assured/) | [exercises](docs/exercises/api-testing.md) |
-| Contract testing | A design-first OpenAPI file, a breaking-change gate, fuzzing, consumer contracts and provider states | [`tests/contract`](tests/contract/), `app/web/pact` | [exercises](docs/exercises/contract.md) |
+| Contract testing | A design-first OpenAPI file, a breaking-change gate, fuzzing, and Pact contracts for the shop's main calls (products, login, cart) with provider states | [`tests/contract`](tests/contract/), `app/web/pact` | [exercises](docs/exercises/contract.md) |
 | API security | The OWASP API Top 10 as 15 planted defects, each with a secure test and an exploit; ZAP scans | [`tests/security`](tests/security/) | [exercises](docs/exercises/security.md) |
 | Performance | A production-mode profile with Prometheus and Grafana, generated data, one load model for two tools | [`tests/k6`](tests/k6/), [`tests/jmeter`](tests/jmeter/) | [exercises](docs/exercises/performance.md) |
 | CI/CD | 17 required checks, a nightly defect sweep, a published report site, CodeQL, Trivy and a secret scan | [`.github/workflows`](.github/workflows/) | [exercises](docs/exercises/cicd.md) |
+
+Not built yet: Playwright in Java and Python (phase 4, see the roadmap). Contracts for checkout and the admin pages are not written.
 
 Each exercise has a beginner, intermediate and advanced level. The [answer key](docs/answers/) (with spoilers) says where each
 one is solved in this repository.
@@ -134,6 +136,12 @@ flowchart LR
 The browser talks to one origin: the web app proxies `/api`, `/test` and `/ws` to the API, so cookies are first-party.
 The payment iframe is served by the API on its own origin, so checkout is genuinely cross-origin, as with a real payment
 provider.
+
+## Known limits
+
+- The k6 and JMeter limits are calibrated on one machine, so a slower computer may need a wider margin (`FACTOR=` in `tools/calibrate`). The soak test has been run for three minutes, not an hour.
+- A few Playwright tests (PLS-5.11, PLS-8.1, PLS-8.4) have failed now and then under a full parallel run; they pass alone and on repeat.
+- Developed on macOS with Apple silicon. Windows and Linux are untested (see the note under Quickstart).
 
 ## Repository layout
 
