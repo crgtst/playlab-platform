@@ -63,8 +63,11 @@ jobs:
         with:
           path: out/site
 
-      # After the site is published, so a failing gate does not hide the reports that explain it.
-      - name: Release gate over the collected reports
+      # After the site is published, so a failing gate does not hide the reports that explain it. It reports and does not fail the run:
+      # the CI runs never include the one-hour soak (PLS-27.3), so this gate cannot pass here. The hard gate is the local release step
+      # `npm run traceability:gate3`, run after the suites and before tagging.
+      - name: Release gate over the collected reports (advisory)
+        continue-on-error: true
         run: node tools/traceability/trace.mjs --reports out/trace --gate3
 
   deploy:

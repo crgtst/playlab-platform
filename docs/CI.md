@@ -40,7 +40,7 @@ The result is in the run summary and the `nightly-sweep` artifact.
 
 `pages` runs `tools/pages/collect.sh` (downloads the report artifacts from each pipeline's latest successful run on main),
 `tools/traceability/trace.mjs --reports ... --out` (rewrites the traceability report from them) and `tools/pages/build-site.mjs` (the index
-and the Markdown reports as HTML). Then it deploys to GitHub Pages and runs `trace.mjs --gate3`.
+and the Markdown reports as HTML). Then it deploys to GitHub Pages and runs `trace.mjs --gate3` as an advisory step: it never fails the run.
 
 Pages is not available to a private repository on the free plan either, so for now the site is built and kept as the `pages-site` artifact of
 the run, and the deploy job is skipped. When the repository is public, set Settings, Pages, Source to "GitHub Actions" once.
@@ -50,7 +50,7 @@ the run, and the deploy job is skipped. When the repository is public, set Setti
 Two checks, the second over everything the pipelines produced:
 
 - `npm run traceability:sources` fails a pull request if a test source names an AC ID that does not exist (no results needed).
-- `trace.mjs --gate3`, in `pages`, fails if an in-scope AC has no passing test, a test fails, or a defect is built that no passing test catches.
+- `trace.mjs --gate3` fails if an in-scope AC has no passing test, a test fails, or a defect is built that no passing test catches. In `pages` it is advisory (it shows in the log and as a warning), because CI never runs the one-hour soak (PLS-27.3). Run it locally with `npm run traceability:gate3` after the suites and before tagging; that is the hard gate.
   A defect no test names also fails the API unit tests (`app/api/test/bugs.test.ts`), on the pull request.
 
 ## Running a pipeline's steps locally
