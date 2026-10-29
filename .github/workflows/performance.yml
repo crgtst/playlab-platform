@@ -59,18 +59,20 @@ jobs:
       - name: Smoke
         run: tests/k6/run.sh smoke
 
-      - name: PLS-27.1 GET /products
-        run: DURATION="$SHORT" tests/k6/run.sh products
-
-      - name: PLS-27.2 POST /orders
-        run: DURATION="$SHORT" tests/k6/run.sh orders
-
+      # This runs first on purpose: run.sh rewrites tests/k6/results/junit-products.xml, so the real PLS-27.1 run must come after it,
+      # or the failing result of this deliberate run is what the report site reads.
       - name: A threshold fails when GET /products is slow (the run must exit 1)
         run: |
           if INJECT_LATENCY_MS=300 DURATION=15s tests/k6/run.sh products; then
             echo "::error::p95 went to 300 ms and the run still passed"
             exit 1
           fi
+
+      - name: PLS-27.1 GET /products
+        run: DURATION="$SHORT" tests/k6/run.sh products
+
+      - name: PLS-27.2 POST /orders
+        run: DURATION="$SHORT" tests/k6/run.sh orders
 
       - name: PLS-27.3 soak, shortened to 3 minutes
         if: ${{ inputs.full }}
