@@ -30,7 +30,7 @@ services:
           memory: 2g
 
   prometheus:
-    image: prom/prometheus:v3.5.0
+    image: prom/prometheus:v3.15.1
     # The remote-write receiver lets k6 send its metrics here (K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9091/api/v1/write).
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d", "--web.enable-remote-write-receiver"]
     volumes:
@@ -42,7 +42,7 @@ services:
         condition: service_healthy
 
   grafana:
-    image: grafana/grafana:12.1.0
+    image: grafana/grafana:13.2.4
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
