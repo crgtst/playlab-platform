@@ -4,7 +4,7 @@ All notable changes to PlayLab Platform. The format follows [Keep a Changelog](h
 project uses [Semantic Versioning](https://semver.org/): a new defect, a changed acceptance criterion or a changed test hook is
 a minor version at least; a breaking change to a hook or to the shared test data is a major one.
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-10-29
 
 The first public release: the platform, its 47 defects and the suites that catch them.
 

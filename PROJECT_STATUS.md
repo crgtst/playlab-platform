@@ -1,20 +1,20 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-28
+Last updated: 2026-10-29
 
 ## Current phase
 
-Phase 2 is closed (Gate 2 met). Phase 3 tasks 0 to 15 are done; task 15 is PR #50 (`ci/pipelines`), and task 16's files are written on `release/v1.0.0` (built on `ci/pipelines`, not pushed). GitHub did not start any job on PR #50: every one failed in 2 to 3 seconds with "recent account payments have failed or your spending limit needs to be increased", so no workflow has run in CI yet and nothing in the PR is shown to fail or pass.
+Phase 3 is built and the repository is public. PRs #50 (CI pipelines) and #55 (release files, Test guide) are merged, and every workflow now runs in CI (all 12 checks pass on PR #57). What is left is the release itself.
 
 ## Next task
 
-Finish Gate 3 and v1.0.0. What only the owner can do, in order:
+Finish Gate 3 and v1.0.0. In order:
 
-1. Fix the Actions billing (Settings, Billing and plans), or make the repository public (Actions minutes are free for public repositories), and re-run PR #50's checks. Fix whatever the first real run finds (the `nightly`, `pages` and refactored workflows, and the new `codeql`, `trivy` and `secrets`).
-2. Merge PR #50, then the `release/v1.0.0` branch. Check the `performance` workflow has run on `main` so PLS-27.1 to 27.4 show as covered, then `trace.mjs --gate3` passes.
-3. Make the repository public. Then run `tools/ci/apply-ruleset.sh`, set Settings, Pages, Source to "GitHub Actions", switch on Discussions, and make the two GHCR packages public after the first image publish.
-4. Record the GIF for the README, edit `docs/WRITEUP.md` (a draft in Craig's voice), set the date in `CHANGELOG.md`, and tag `v1.0.0` (the tag runs the `images` workflow).
+1. (Done) Merge PR #57 (`fix/k6-negative-test-order`). The `pages` gate has failed on main because the deliberate slow-API run overwrote the real PLS-27.1 junit file; #57 fixes that and makes the gate advisory. Then check `pages` goes green and `trace.mjs --gate3` passes.
+2. (Done) The "main gates" ruleset is applied and Pages builds from GitHub Actions.
+3. (Done) Dependabot: #51 (Prometheus) and #52 (Grafana 13) merged with all checks green; #53 closed, #54 replaced by #58. Other Dependabot PRs remain open.
+4. Record the GIF for the README, edit `docs/WRITEUP.md`, the `CHANGELOG.md` date is set (2026-10-29), and tag `v1.0.0` (the tag runs the `images` workflow). Then make the two GHCR packages public.
 5. Run the quickstart on Windows (WSL 2) and Linux, and `docker-compose.images.yml` once images exist.
 
 After v1.0.0: the AI assistant phase (planned as PLS-31, because PLS-30 is PlayLab Pay), then Phase 4 (Playwright Java and Python).
