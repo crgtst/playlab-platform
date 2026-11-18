@@ -1,7 +1,7 @@
 # PlayLab Platform: Project Status
 
 Plan: `docs/REVIEW_AND_PLAN.md`
-Last updated: 2026-10-29
+Last updated: 2026-11-18
 
 ## Current phase
 
@@ -17,10 +17,11 @@ Finish Gate 3 and v1.0.0. In order:
 4. Record the GIF for the README, edit `docs/WRITEUP.md`, the `CHANGELOG.md` date is set (2026-10-29), and tag `v1.0.0` (the tag runs the `images` workflow). Then make the two GHCR packages public.
 5. Run the quickstart on Windows (WSL 2) and Linux, and `docker-compose.images.yml` once images exist.
 
-After v1.0.0: the AI assistant phase (planned as PLS-31, because PLS-30 is PlayLab Pay), then Phase 4 (Playwright Java and Python).
+After v1.0.0: Phase 4 (Playwright Java, then Python), with tasks now in `docs/REVIEW_AND_PLAN.md`. Claude writes these two suites (Craig's decision on 2026-11-18; the other suites stay his). The AI assistant phase (PLS-31, because PLS-30 is PlayLab Pay) moves to after Phase 4; it is not in the plan yet.
 
 ## Done
 
+- 2026-11-18: Phase 4 planned. `docs/REVIEW_AND_PLAN.md` gets a Phase 4 task table (tasks 0 to 10): the parity core is pinned to 34 ACs and the 14 defects that map to them, and each language must catch all 14 rather than one (agreed). `playwright-java` and `playwright-python` join the required checks once each has passed on `main` for a week (agreed).
 - 2026-10-29: The Test guide (new PLS-12.6 and PLS-12.7), on `feat/test-guide` (built on `release/v1.0.0`). Asked for by Craig: quick access to test accounts, scenarios and test data from the shop, instead of digging through `tests/shared` and the README.
   - **API**: `GET /test/guide` (`lib/testGuide.ts`) returns the accounts (from the seed constants), the test cards, discount codes, every fixture with a description, seven scenarios (each names its AC), links, the hook list and every defect with whether it is on for the caller's session. A fixture without a description is a compile error (the descriptions are typed against `FIXTURES`). In the OpenAPI file with a `TestGuide` schema; `tests/shared/schemas/TestGuide.json` is regenerated. 404 with hooks off.
   - **Web**: a footer link "Test guide" (Irish: "Treoir tástála"), shown only with test hooks on, and a page at `/guide` with copy buttons for emails, passwords and card numbers. The route is `/guide`, not `/test-guide`: Vite proxies every path starting with `/test` to the API, so a reload of `/test-guide` returned the API's 404 JSON (found by the e2e test; the footer link worked only because it is a client-side route).
