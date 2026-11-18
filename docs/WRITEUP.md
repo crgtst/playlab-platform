@@ -1,7 +1,5 @@
 # What I built, what bug mode taught me, and what I'd do on a real team
 
-_Draft for Craig to edit: it is written in your voice from the project history. Change anything that isn't true to you._
-
 ## What I built
 
 PlayLab Platform is a small online shop made to be tested. It has 47 planted defects that switch on with one HTTP call, 174
