@@ -397,7 +397,7 @@ Tasks 1 to 7 are independent of each other and can be done in any order; 8 close
 
 Phase 4 starts once `v1.0.0` is tagged. It adds no platform behaviour, ACs or defects. Its job is to make the Java and Python suites match `playwright-ts` on the parity core, following the parity rules above. Java comes first (decision 3), then Python.
 
-The parity core is 34 ACs: PLS-1.1 to 1.8, PLS-2.1 to 2.6, PLS-3.1 to 3.6, PLS-4.1 to 4.7, PLS-5.1, 5.2, PLS-6.1 to 6.3, PLS-7.2 and PLS-8.2. Fourteen defects map to these ACs: `logout-incomplete`, `token-never-expires`, `fada-rejected`, `wrong-status-code`, `missing-label`, `search-apostrophe`, `pagination-duplicate`, `quantity-negative`, `stock-oversell`, `cart-total-rounding`, `currency-switch-stale`, `discount-not-applied`, `expired-discount-accepted` and `order-leak`. **Proposed change:** the original plan asks for "one bug-mode run proving a defect is caught". This plan has each language catch all 14, because a test that has never been shown to fail has not been shown to work.
+The parity core is 34 ACs: PLS-1.1 to 1.8, PLS-2.1 to 2.6, PLS-3.1 to 3.6, PLS-4.1 to 4.7, PLS-5.1, 5.2, PLS-6.1 to 6.3, PLS-7.2 and PLS-8.2. Fourteen defects map to these ACs: `logout-incomplete`, `token-never-expires`, `fada-rejected`, `wrong-status-code`, `missing-label`, `search-apostrophe`, `pagination-duplicate`, `quantity-negative`, `stock-oversell`, `cart-total-rounding`, `currency-switch-stale`, `discount-not-applied`, `expired-discount-accepted` and `order-leak`. Each language must catch all 14 (agreed 2026-11-18; the original plan asked for "one bug-mode run proving a defect is caught"), because a test that has never been shown to fail has not been shown to work.
 
 | # | Task | ACs | Defects | Tests |
 | --- | --- | --- | --- | --- |
@@ -413,7 +413,7 @@ The parity core is 34 ACs: PLS-1.1 to 1.8, PLS-2.1 to 2.6, PLS-3.1 to 3.6, PLS-4
 | 9 | Parity table (parity rule 5): `trace.mjs` writes a table of the 34 core ACs × three languages into `docs/traceability.md` and the README, and `--parity` exits 1 if a core AC has no passing test, or a core defect is not caught, in any language | | | `trace.test.mjs` covers the table and the check; the check runs in CI |
 | 10 | Gate 4: every core AC passes and every core defect is caught in TypeScript, Java and Python; `CHANGELOG.md` gets 1.1.0 and the suite READMEs drop "Phase 4, after…" | all 34 | all 14 | `trace.mjs --parity` passes in CI; tag `v1.1.0` |
 
-Tasks 1 to 5 come before 6 to 8, so Python copies a Java suite that has already settled the naming. Task 9 can be done at any point after task 1. One decision is open: whether the two new workflows join the required checks in the "main gates" ruleset (recommended once each has passed on `main` for a week).
+Tasks 1 to 5 come before 6 to 8, so Python copies a Java suite that has already settled the naming. Task 9 can be done at any point after task 1. Each new workflow joins the required checks in the "main gates" ruleset once it has passed on `main` for a week (agreed 2026-11-18).
 
 ## Phase 5 (stretch): PlayLab Pay
 
