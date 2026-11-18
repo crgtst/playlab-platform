@@ -8,7 +8,7 @@ function fn() {
     var envFile = java.nio.file.Paths.get('../../app/.env');
     var dotenv = java.nio.file.Files.exists(envFile) ? karate.readAsString('file:../../app/.env') : '';
     var match = /^API_PORT=(\d+)/m.exec(dotenv);
-    if (!match) karate.fail('Set BASE_URL, or API_PORT in app/.env, so the suite knows where the API is.');
+    if (!match) throw new Error('Set BASE_URL, or API_PORT in app/.env, so the suite knows where the API is.');
     baseUrl = 'http://localhost:' + match[1];
   }
 
@@ -31,7 +31,7 @@ function fn() {
   config.product = function (sku) {
     var list = karate.get('shared').products.products;
     for (var i = 0; i < list.length; i++) if (list[i].sku === sku) return list[i];
-    karate.fail('No product with SKU ' + sku + ' in tests/shared/products.json');
+    throw new Error('No product with SKU ' + sku + ' in tests/shared/products.json');
   };
   config.productId = function (sku) { return karate.get('product')(sku).id; };
   config.deliveryDate = function (days) { return new Date(Date.now() + (days || 5) * 86400000).toISOString().slice(0, 10); };
