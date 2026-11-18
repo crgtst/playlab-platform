@@ -100,7 +100,7 @@ Playwright has four official bindings: Node (TypeScript or JavaScript), Python, 
 4. Every suite writes JUnit XML, the input to the traceability report.
 5. A parity table in the README shows which ACs each language covers, generated from those reports.
 
-**Parity core (about 35 ACs).** Login and lockout (PLS-1), registration via the mailbox (PLS-2), search, filter and pagination (PLS-3), cart and stock (PLS-4), one discount path (PLS-5.1, 5.2), checkout with the payment iframe including decline (PLS-6.1 to 6.3), order access (PLS-7.2), admin status change with WebSocket update (PLS-8.2), and one bug-mode run proving a defect is caught.
+**Parity core (34 ACs, listed under Phase 4 tasks).** Login and lockout (PLS-1), registration via the mailbox (PLS-2), search, filter and pagination (PLS-3), cart and stock (PLS-4), one discount path (PLS-5.1, 5.2), checkout with the payment iframe including decline (PLS-6.1 to 6.3), order access (PLS-7.2), admin status change with WebSocket update (PLS-8.2), and one bug-mode run proving a defect is caught.
 
 Python and Java can test the newer browser features too: clock control, WebSocket routing and aria snapshots are all available outside Node. Keep them out of the parity core, though, until the core is green in every language.
 
@@ -392,6 +392,28 @@ Platform first, as in Phase 1: every new behaviour has an AC, every new defect m
 | 16 | Gate 3 = v1.0.0: the release checklist below, all 47 defects caught, repo public | all | | the checklist is ticked |
 
 Tasks 1 to 7 are independent of each other and can be done in any order; 8 closes the platform work. Tasks 9 to 15 each need the platform tasks named above them: the contract suite needs 7, the security suite needs 1 to 4, k6 and JMeter need 5 and 6. The new ACs for these tasks (PLS-9.5) are added in the task that builds them, so no built AC describes behaviour that is not there yet.
+
+**Phase 4 tasks**
+
+Phase 4 starts once `v1.0.0` is tagged. It adds no platform behaviour, ACs or defects. Its job is to make the Java and Python suites match `playwright-ts` on the parity core, following the parity rules above. Java comes first (decision 3), then Python.
+
+The parity core is 34 ACs: PLS-1.1 to 1.8, PLS-2.1 to 2.6, PLS-3.1 to 3.6, PLS-4.1 to 4.7, PLS-5.1, 5.2, PLS-6.1 to 6.3, PLS-7.2 and PLS-8.2. Fourteen defects map to these ACs: `logout-incomplete`, `token-never-expires`, `fada-rejected`, `wrong-status-code`, `missing-label`, `search-apostrophe`, `pagination-duplicate`, `quantity-negative`, `stock-oversell`, `cart-total-rounding`, `currency-switch-stale`, `discount-not-applied`, `expired-discount-accepted` and `order-leak`. **Proposed change:** the original plan asks for "one bug-mode run proving a defect is caught". This plan has each language catch all 14, because a test that has never been shown to fail has not been shown to work.
+
+| # | Task | ACs | Defects | Tests |
+| --- | --- | --- | --- | --- |
+| 0 | Close Gate 3: `v1.0.0` tagged, the `images` workflow green, the GHCR packages public | | | the release exists on GitHub; `docker-compose.images.yml` starts the stack |
+| 1 | Java scaffolding: a `playwright-java` module in `tests/pom.xml`, JUnit 5 with `@UsePlaywright`, the base URL read from the environment (never port 3000), a loader for `tests/shared/*.json`, a fixture that gives each test its own `X-Test-Session` and honours `DEFECTS=name,name` for the nightly sweep, and Surefire writing `TEST-*.xml` | 1.1 | | `./mvnw -pl playwright-java test` passes PLS-1.1 locally; the report appears in `docs/traceability.md` as tool `playwright-java` |
+| 2 | Java page objects: the same class and method names as `playwright-ts/pages` (`LoginPage`, `Header`, `RegisterPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `ProductListingPage`, `ProductPage`, `CartPage`, `CheckoutPage`, `OrdersPage`, `AdminPage`), with `data-testid` and role locators only | | | used by tasks 3 and 4 |
+| 3 | Java specs, PLS-1 to PLS-4: login and lockout, registration through the mailbox, search, filter and pagination, cart and stock | 1.1–1.8, 2.1–2.6, 3.1–3.6, 4.1–4.7 | the 11 that map to PLS-1 to 4 | each AC passes with defects off; each defect test fails its AC with the defect on |
+| 4 | Java specs, discount, checkout, orders and admin: one discount path, checkout with the payment iframe including decline, order access, and admin status change with the WebSocket update | 5.1, 5.2, 6.1–6.3, 7.2, 8.2 | `discount-not-applied`, `expired-discount-accepted`, `order-leak` | as task 3 |
+| 5 | Java in CI: a `playwright-java` workflow on the shared "start the stack" action, added to the nightly defect sweep and to the reports on Pages | | | the workflow passes on a pull request; a nightly run with a core defect on fails in Java |
+| 6 | Python scaffolding: `pytest`, `pytest-playwright` and `pytest-xdist` with pinned versions, `conftest.py` fixtures matching task 1 (session, `DEFECTS`, shared data, base URL), and `--junitxml=junit.xml` | 1.1 | | `pytest -n auto` passes PLS-1.1 locally; the report appears as tool `playwright-python` |
+| 7 | Python page objects and specs: the same names as task 2 (in `snake_case` method form, documented in the README), and every parity-core AC and defect from tasks 3 and 4 | all 34 | all 14 | as tasks 3 and 4 |
+| 8 | Python in CI: a `playwright-python` workflow, added to the nightly sweep and to Pages | | | as task 5 |
+| 9 | Parity table (parity rule 5): `trace.mjs` writes a table of the 34 core ACs × three languages into `docs/traceability.md` and the README, and `--parity` exits 1 if a core AC has no passing test, or a core defect is not caught, in any language | | | `trace.test.mjs` covers the table and the check; the check runs in CI |
+| 10 | Gate 4: every core AC passes and every core defect is caught in TypeScript, Java and Python; `CHANGELOG.md` gets 1.1.0 and the suite READMEs drop "Phase 4, after…" | all 34 | all 14 | `trace.mjs --parity` passes in CI; tag `v1.1.0` |
+
+Tasks 1 to 5 come before 6 to 8, so Python copies a Java suite that has already settled the naming. Task 9 can be done at any point after task 1. One decision is open: whether the two new workflows join the required checks in the "main gates" ruleset (recommended once each has passed on `main` for a week).
 
 ## Phase 5 (stretch): PlayLab Pay
 
